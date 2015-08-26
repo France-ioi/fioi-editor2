@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<title>Editor component testing, development mode</title>
+
+<script type="text/javascript" src="../bower_components/requirejs/require.js"></script>
+
+<script type="text/javascript">
+requirejs.config({
+  "baseUrl": '..',
+  "paths": {
+    "angular": "bower_components/angular/angular"
+  },
+  "shim": {
+    "angular": {"exports": "angular"}
+  }
+});
+require(['angular', 'js/main', 'build/templates'], function (angular) {
+  angular.element(document).ready(function () {
+    var app = angular.module('main', ['fioi-editor2', 'fioi-editor2-templates']);
+    app.controller('Main', ['$scope', function ($scope) {
+      console.log('Main controller');
+      $scope.editorGroupId = 1;
+      $scope.onEditorInit = function (api) {
+        this.editorApi = api;
+        console.log('api', api);
+      };
+      $scope.testEditorApi = function () {
+        this.editorApi.placeholder();
+      };
+    }]);
+    angular.bootstrap(document, ['main'], {strictDi: true});
+  });
+});
+</script>
+
+<style type="text/css">
+*[ng-cloak] { display: none !important; }
+</style>
+
+<div ng-cloak ng-controller="Main">
+  <fioi-editor2 group-id="{{::editorGroupId}}" on-init="onEditorInit(api)"></fioi-editor2>
+  <button type="button" ng-click="testEditorApi()">test Editor API</button>
+</div>
