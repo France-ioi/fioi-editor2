@@ -13,8 +13,7 @@ requirejs.config({
     "fioi-editor2": "dist/fioi-editor2"
   },
   "shim": {
-    "angular": {"exports": "angular"},
-    "fioi-editor2": {deps: ["angular"]}
+    "angular": {"exports": "angular"}
   }
 });
 require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
