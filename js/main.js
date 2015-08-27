@@ -1,7 +1,7 @@
 'use strict';
-define(['angular', 'lodash'], function (angular, _) {
+define(['angular', 'lodash', 'angular-ui-ace'], function (angular, _) {
 
-var m = angular.module('fioi-editor2', []);
+var m = angular.module('fioi-editor2', ['ui.ace']);
 require('./services/tabsets')(m);
 require('./services/tabs')(m);
 require('./services/buffers')(m);

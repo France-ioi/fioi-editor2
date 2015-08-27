@@ -52,6 +52,12 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
    border-top: none;
 }
 
+.fioi-editor2_buffers .ace_editor {
+   width: 760px;
+   height: 350px; /* 14px * 25 lines */
+   border: 1px solid #CCCCCC;
+   border-top: none;
+}
 
 /*
 #sourcesEditor {

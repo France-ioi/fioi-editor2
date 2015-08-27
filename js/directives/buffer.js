@@ -28,6 +28,7 @@ function BufferController ($rootScope, buffers) {
 
    var controller = this;
    var buffer = buffers.get(this.buffer);
+   var editor = null; // the ACE object
 
    // Load from service and hook up events.
    onBufferChanged();
@@ -39,8 +40,19 @@ function BufferController ($rootScope, buffers) {
    });
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
-      buffer.update({text: this.text, language: this.language && this.language.name});
+      buffer.update({
+         text: editor.getValue(),
+         language: this.language && this.language.name
+      });
    }.bind(this);
+
+   this.aceLoaded = function (editor_) {
+      console.log('ACE Loaded');
+      window.editor = editor_;
+      editor = editor_;
+      editor.setValue(buffer.text);
+      editor.focus();
+   };
 
    function onBufferChanged () {
       controller.languageOptions = buffer.getLanguages();

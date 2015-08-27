@@ -21,8 +21,11 @@
   ],
   "dependencies": {
     "angular": "~1.4.4",
+    "angular-ui-ace": "~0.2.3",
     "es5-shim": "~4.1.10",
-    "lodash": "~3.10.1",
+    "lodash": "~3.10.1"
+  },
+  "devDependencies": {
     "requirejs": "~2.1.20"
   }
 }

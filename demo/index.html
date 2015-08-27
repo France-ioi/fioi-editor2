@@ -7,19 +7,22 @@
 requirejs.config({
   "baseUrl": '..',
   "paths": {
-    "angular": "bower_components/angular/angular",
-    "es5-shim": "bower_components/es5-shim/es5-shim",
+    "angular": "bower_components/angular/angular.min",
+    "angular-ui-ace": "bower_components/angular-ui-ace/ui-ace.min",
+    "es5-shim": "bower_components/es5-shim/es5-shim.min",
     "lodash": "bower_components/lodash/lodash.min",
+    "ace": "bower_components/ace-builds/src-min-noconflict/ace",
     "fioi-editor2": "dist/fioi-editor2"
   },
   "shim": {
-    "angular": {"exports": "angular"}
+    "angular": {"exports": "angular"},
+    "angular-ui-ace": {"deps": ["angular", "ace"]}
   }
 });
 require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
   angular.element(document).ready(function () {
 
-    var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos &gt;= 0; --iPos)\n  {\n    if(hauteur(iPos) &lt; hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille &lt; nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
+    var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos >= 0; --iPos)\n  {\n    if(hauteur(iPos) < hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille < nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
 
     var app = angular.module('main', ['fioi-editor2']);
     var sourceLanguages = [
