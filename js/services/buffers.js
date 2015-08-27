@@ -18,8 +18,11 @@ function BuffersFactory ($rootScope) {
       this.text = (text || "").toString();
       this.language = this.options.language || 'text';
    }
-   Buffer.prototype.setText = function (text) {
-      this.text = text;
+   Buffer.prototype.update = function (attrs) {
+      if ('text' in attrs)
+         this.text = attrs.text;
+      if ('language' in attrs)
+         this.language = attrs.language;
       this._emit('changed');
    };
    Buffer.prototype.getLanguages = function () {
