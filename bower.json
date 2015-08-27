@@ -11,11 +11,8 @@
   "ignore": [
     "**/.*",
     "bower_components",
-    "build",
-    "html",
-    "js",
     "node_modules",
-    "build-paths.json",
+    "src",
     "gulpfile.js",
     "package.json"
   ],
