@@ -27,7 +27,6 @@ function editorDirective () {
    return {
       restrict: 'E',
       scope: {
-         groupId: '@',
          onInit: '&'
       },
       template: require('./editor.jade'),
@@ -40,15 +39,66 @@ function editorDirective () {
    };
 }
 
-EditorController.$inject = ['FioiEditor2Storage']
-function EditorController (storage) {
+EditorController.$inject = ['FioiEditor2Tabs']
+function EditorController (tabs) {
+
+   var controller = this;
+   var newTabPrefix = 'Code';
+   var nextTabId = 1;
+
    var api = {};
    api.placeholder = function () {
       alert('placeholder');
    };
+   api.trigger = function (event) {
+      if (event === 'tabs-changed')
+         return load();
+      console.log('event', event);
+   };
+
+   this.addTab = function () {
+      var tab_name = freshTabName();
+      var tab = tabs.add(tab_name);
+      tab.addBuffer('');
+      this.selectTab(tab);
+   }.bind(this);
+
+   controller.selectTab = function (tab) {
+      controller.tab = tab;
+   };
+
+   // Initialize controller data from service.
+   load();
+
+   // Bind the editor component to the storage service.
+   tabs.bind(api);
+
+   // Pass the editor component's API to the enclosing controller.
    if (typeof this.onInit === 'function')
       this.onInit({api: api});
-  this.tabs = [{name: 'Code1'}, {name: 'Code2'}, {name: 'Code3'}];
+
+   //
+   // Private function
+   //
+
+   // Load state from the tabs service.
+   function load () {
+      controller.tabs = tabs.list();
+      if (!controller.tab)
+         controller.tab = controller.tabs[0];
+   }
+
+   // Generate a fresh tab name.
+   function freshTabName () {
+      var tabsByName = {};
+      while (true) {
+         var name = newTabPrefix + nextTabId;
+         if (!tabs.exists(name))
+            return name;
+         nextTabId += 1;
+      }
+   }
+
 }
 
 };
