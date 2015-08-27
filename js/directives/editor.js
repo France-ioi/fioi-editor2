@@ -64,9 +64,10 @@ function EditorController ($rootScope, tabsets) {
       this.selectTab(tab);
    }.bind(this);
 
-   this.closeTab = function () {
-
-   }
+   this.closeTab = function (tab) {
+      console.log('closeTab', tab.name);
+      tabset.removeTab(tab.name);
+   };
 
    this.selectTab = function (tab) {
       tabset.setActiveTab(tab.name);
