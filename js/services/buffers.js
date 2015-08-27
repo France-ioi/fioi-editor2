@@ -16,6 +16,7 @@ function BuffersFactory ($rootScope) {
       this.options = options || {};
       this.name = name;
       this.text = (text || "").toString();
+      this.selection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
       this.language = this.options.language || 'text';
    }
    Buffer.prototype.update = function (attrs) {
@@ -23,6 +24,8 @@ function BuffersFactory ($rootScope) {
          this.text = attrs.text;
       if ('language' in attrs)
          this.language = attrs.language;
+      if ('selection' in attrs)
+         this.selection = _.clone(attrs.selection);
       this._emit('changed');
    };
    Buffer.prototype.getLanguages = function () {

@@ -42,7 +42,8 @@ function BufferController ($rootScope, buffers) {
       _.each(unhookers, function (func) { func(); });
       buffer.update({
          text: editor.getValue(),
-         language: this.language && this.language.name
+         language: this.language && this.language.name,
+         selection: editor.selection.getRange()
       });
    }.bind(this);
 
@@ -51,6 +52,7 @@ function BufferController ($rootScope, buffers) {
       window.editor = editor_;
       editor = editor_;
       editor.setValue(buffer.text);
+      editor.selection.setRange(buffer.selection);
       editor.focus();
    };
 
