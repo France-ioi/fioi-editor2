@@ -72,7 +72,7 @@ function staticJadeify () {
 }
 
 var scriptOpts = {
-    entry: 'js/main.js',
+    entry: 'src/main.js',
     output: 'fioi-editor2.js',
     watch: false,
     uglify: false
