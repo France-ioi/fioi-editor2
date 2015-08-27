@@ -49,8 +49,7 @@ function buildScript (options) {
             .on('error', gutil.log.bind(gutil, 'Browserify Error'))
             .pipe(source(options.output))
             .pipe(buffer())
-            .pipe(sourcemaps.init({loadMaps: true}))
-            .pipe(wrap({deps: ['angular'], params: ['angular']}));
+            .pipe(sourcemaps.init({loadMaps: true}));
         if (options.uglify)
             p = p.pipe(uglify());
         return p
