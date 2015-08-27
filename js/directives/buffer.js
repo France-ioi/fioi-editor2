@@ -39,7 +39,8 @@ function BufferController ($rootScope, buffers) {
    });
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
-   };
+      buffer.setText(this.text);
+   }.bind(this);
 
    this.setLanguage = function (language) {
       // TODO

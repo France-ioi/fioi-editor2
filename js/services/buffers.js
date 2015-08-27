@@ -18,10 +18,17 @@ function BuffersFactory ($rootScope) {
       this.text = (text || "").toString();
       this.language = this.options.language || 'text';
    }
+   Buffer.prototype.setText = function (text) {
+      this.text = text;
+      this._emit('changed');
+   };
    Buffer.prototype.getLanguages = function () {
       if (this.options.languages)
          return this.options.languages;
       return this.tab.getLanguages();
+   };
+   Buffer.prototype._emit = function (name) {
+      $rootScope.$emit('fioi-editor2_buffer-'+this.name+'_'+name);
    };
 
    service.add = function (text, options) {

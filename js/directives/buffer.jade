@@ -1,6 +1,5 @@
 div
-   textarea(rows=25)
-      | {{vm.text}}
+   textarea(ng-model="vm.text", rows=25)
    div
       span Language du fichier :
       select(ng-model="vm.language", ng-options="option.name for option in vm.languageOptions track by option.name", ng-change="vm.setLanguage(option)")
