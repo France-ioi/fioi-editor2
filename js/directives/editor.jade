@@ -1,0 +1,9 @@
+div.fioi-editor2
+   ul.fioi-editor2-tabs
+      li.fioi-editor2-new-tab(ng-click="newTab()")
+         | +
+      li.fioi-editor2-tab(ng-repeat="tab in vm.tabs track by tab.name")
+         | {{tab.name}}
+   div
+      | buffers for the current tab
+      fioi-editor2-buffer

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>Editor component testing, development mode</title>
+<title>Editor component testing</title>
 
 <script type="text/javascript" src="../bower_components/requirejs/require.js"></script>
 
@@ -7,15 +7,22 @@
 requirejs.config({
   "baseUrl": '..',
   "paths": {
-    "angular": "bower_components/angular/angular"
+    "angular": "bower_components/angular/angular",
+    "es5-shim": "bower_components/es5-shim/es5-shim",
+    "fioi-editor2": "dist/fioi-editor2"
   },
   "shim": {
-    "angular": {"exports": "angular"}
+    "angular": {"exports": "angular"},
+    "fioi-editor2": {deps: ["angular"]}
   }
 });
-require(['angular', 'js/main', 'build/templates'], function (angular) {
+require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
   angular.element(document).ready(function () {
-    var app = angular.module('main', ['fioi-editor2', 'fioi-editor2-templates']);
+    var app = angular.module('main', ['fioi-editor2']);
+    app.run(['FioiEditor2Storage', function (storage) {
+      storage.addTab('main.c');
+      console.log(storage.dump());
+    }]);
     app.controller('Main', ['$scope', function ($scope) {
       console.log('Main controller');
       $scope.editorGroupId = 1;

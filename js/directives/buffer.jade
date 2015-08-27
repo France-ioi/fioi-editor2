@@ -1,0 +1,28 @@
+div
+   textarea
+      | #include "lib.h"
+      | 
+      | const int LARGEUR_MAX = 1000000;
+      | 
+      | int destinationBille[LARGEUR_MAX+1];
+      | 
+      | int main()
+      | {
+      |   for(int iPos = nbMarches() - 2; iPos &gt;= 0; --iPos)
+      |   {
+      |     if(hauteur(iPos) &lt; hauteur(iPos+1))
+      |       destinationBille[iPos] = iPos;
+      |     else
+      |       destinationBille[iPos] = destinationBille[iPos+1];
+      |   }
+      | 
+      |   for(int iBille = 0; iBille &lt; nbLancers(); ++iBille)
+      |   {
+      |     int posBille = marcheLancer(iBille);
+      |     positionFinale(destinationBille[posBille]);
+      |   }
+      |   return 0;
+      | }
+   div
+      span Language du fichier :
+      select(ng-model="vm.language", ng-options="option.name for option in vm.languageOptions track by option.name")
