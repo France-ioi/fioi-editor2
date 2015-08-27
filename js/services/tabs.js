@@ -23,6 +23,9 @@ function TabsServiceFactory ($rootScope, buffers) {
       this.buffers = [];
    }
    Tab.prototype.addBuffer = function (text, options) {
+      options = _.clone(options) || {};
+      if (!('language' in options))
+         options.language = this.options.language;
       var buffer = buffers.add(text, options);
       this.buffers.push(buffer.name);
       buffer.tab = this;
