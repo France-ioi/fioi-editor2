@@ -14,6 +14,7 @@ var sourcemaps = require("gulp-sourcemaps");
 var wrap = require('gulp-wrap-amd');
 var browserify = require('browserify');
 var watchify = require('watchify');
+var cssify = require('cssify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var assign = require('lodash.assign');
@@ -23,26 +24,17 @@ var browserifyThrough = require('browserify-through');
 
 var firstBuild = true;
 
-gulp.task("styles", function() {
-    var outputFileName = "fioi-editor2.css";
-    return gulp.src(['css/main.css'])
-        .pipe(concat(outputFileName))
-        .pipe(gulp.dest("dist"));
-});
-
 function buildScript (options) {
     var browserifyOpts = {
         entries: [options.entry],
         debug: true,
-        transform: []
+        transform: [staticJadeify(), cssify]
     };
     if (options.watch)
         browserifyOpts = assign({}, watchify.args, browserifyOpts);
     var bundler = browserify(browserifyOpts);
     if (options.watch)
         bundler = watchify(bundler);
-
-    bundler = bundler.transform(staticJadeify());
 
     function rebundle () {
         var p = bundler.bundle()
@@ -79,10 +71,6 @@ function staticJadeify () {
     });
 }
 
-gulp.task("watch", function() {
-    gulp.watch('css/*.css', ["styles"]);
-});
-
 var scriptOpts = {
     entry: 'js/main.js',
     output: 'fioi-editor2.js',
@@ -90,18 +78,18 @@ var scriptOpts = {
     uglify: false
 };
 
-gulp.task('js', [], function () {
+gulp.task('build', [], function () {
     return buildScript(scriptOpts);
 });
 
-gulp.task('watch_js', [], function () {
-    return buildScript(assign({}, scriptOpts, {watch: true}));
-});
-
-gulp.task('js_min', [], function () {
+gulp.task('build_min', [], function () {
     return buildScript(assign({}, scriptOpts, {
         output: 'fioi-editor2.min.js', uglify: true
     }));
 });
 
-gulp.task('default', ['js', 'js_min']);
+gulp.task('watch', [], function () {
+    return buildScript(assign({}, scriptOpts, {watch: true}));
+});
+
+gulp.task('default', ['build', 'build_min']);
