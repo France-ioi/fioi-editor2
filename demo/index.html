@@ -41,7 +41,10 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
 
 <style type="text/css">
 *[ng-cloak] { display: none !important; }
+body { background-color: #eee; }
+.fioi-editor2 { background-color: #fff; }
 </style>
+<link rel="stylesheet" href="../css/style.css">
 
 <div ng-cloak ng-controller="Main">
   <fioi-editor2 group-id="{{::editorGroupId}}" on-init="onEditorInit(api)"></fioi-editor2>

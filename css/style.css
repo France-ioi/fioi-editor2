@@ -1,3 +1,79 @@
 .fioi-editor2 {
    width: 762px;
 }
+
+ul.fioi-editor2-tabs {
+   font: bold 11px Verdana, Arial, sans-serif;
+   list-style-type: none;
+   padding-bottom: 24px;
+   border-bottom: 1px solid #CCCCCC;
+   margin: 0;
+}
+
+ul.fioi-editor2-tabs > li {
+   float: left;
+   height: 21px;
+   line-height: 21px;
+   padding: 0 7px;
+   background-color: #E0F3DB;
+   margin: 2px 2px 0 2px;
+   border: 1px solid #CCCCCC;
+   cursor: pointer;
+}
+
+ul.fioi-editor2-tabs > li.active {
+   border-bottom: 1px solid #fff;
+   background-color: #FFFFFF;
+}
+
+.fioi-editor2-tabs > li.active a {
+   color: #000000;
+}
+
+.fioi-editor2-tabs a {
+   float: left;
+   display: block;
+   color: black;
+   text-decoration: none;
+   padding: 4px;
+}
+
+.fioi-editor2-tabs a:hover {
+   background: #FFFFFF;
+}
+
+.fioi-editor2-buffers {
+   width: 100%;
+}
+
+.fioi-editor2-tabs textarea {
+   width: 100%;
+   text-align: left;
+   border: 1px solid #CCCCCC;
+   border-top: none;
+}
+
+
+/*
+#sourcesEditor {
+   width:762px;
+}
+
+#testsEditor {
+   width:762px;
+}
+
+.CodeMirror {
+  text-align: left;
+  border: 1px solid #CCCCCC;
+  border-top: none;
+}
+
+.CodeMirror.basic {
+  border-top: 1px solid #CCCCCC;
+}
+
+.tooltip {
+   display:none;
+}
+*/
