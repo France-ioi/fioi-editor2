@@ -23,27 +23,34 @@ function bufferDirective () {
    };
 }
 
-BufferController.$inject = ['FioiEditor2Buffers'];
-function BufferController (buffers) {
+BufferController.$inject = ['$rootScope', 'FioiEditor2Buffers'];
+function BufferController ($rootScope, buffers) {
 
    var controller = this;
    var buffer = buffers.get(this.buffer);
 
-   // Bind the buffer service to the directive's API.
-   var api = {};
-   buffer.bind(api);
-
-   controller.cleanup = function () {
-      buffer.unbind(api);
+   // Load from service and hook up events.
+   onBufferChanged();
+   var eventMap = {
+      changed: onBufferChanged
+   };
+   var unhookers = _.map(eventMap, function (func, name) {
+      return $rootScope.$on('fioi-editor2_buffer-'+buffer.name+'_'+name, func);
+   });
+   this.cleanup = function () {
+      _.each(unhookers, function (func) { func(); });
    };
 
-   controller.setLanguage = function (language) {
+   this.setLanguage = function (language) {
       // TODO
    };
 
-   controller.languageOptions = buffers.languages;
-   controller.language = buffer.language;
-   controller.text = buffer.text;
+   function onBufferChanged () {
+      controller.languageOptions = buffer.getLanguages();
+      controller.language = buffer.language;
+      controller.text = buffer.text;
+   }
+
 }
 
 };

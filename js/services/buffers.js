@@ -5,30 +5,29 @@ module.exports = function (m) {
 This service maintains a set of named buffers.
 */
 m.factory('FioiEditor2Buffers', BuffersFactory);
-function BuffersFactory () {
+BuffersFactory.$inject = ['$rootScope'];
+function BuffersFactory ($rootScope) {
+
    var service = {};
    var buffers = {};
    var nextId = 1;
 
-   function Buffer (name, text, language) {
+   function Buffer (name, text, options) {
+      this.options = options || {};
       this.name = name;
       this.text = (text || "").toString();
-      this.language = language || service.languages[0];
-      this.client = null;
+      this.language = this.options.language || 'text';
    }
-   Buffer.prototype.bind = function (client) {
-      if (!this.client)
-         this.client = client;
-   };
-   Buffer.prototype.unbind = function (client) {
-      if (this.client == client)
-         this.client = null;
+   Buffer.prototype.getLanguages = function () {
+      if (this.options.languages)
+         return this.options.languages;
+      return this.tab.getLanguages();
    };
 
-   service.add = function (text, language) {
+   service.add = function (text, options) {
       var name = 'b' + nextId;
       nextId += 1;
-      var buffer = buffers[name] = new Buffer(name, text, language);
+      var buffer = buffers[name] = new Buffer(name, text, options);
       return buffer;
    };
 
@@ -42,16 +41,6 @@ function BuffersFactory () {
    service.get = function (name) {
       return buffers[name];
    };
-
-   service.languages = [
-      {name: "C", ext: 'c'},
-      {name: "C++", ext: 'cpp'},
-      {name: "Pascal", ext: 'pas'},
-      {name: "OCaml", ext: 'ml'},
-      {name: "Java", ext: 'java'},
-      {name: "JavaScool", ext: 'java'},
-      {name: "Python", ext: 'py'}
-   ];
 
    return service;
 }

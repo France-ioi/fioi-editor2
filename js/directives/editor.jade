@@ -1,9 +1,10 @@
 div.fioi-editor2
-   ul.fioi-editor2-tabs
-      li.fioi-editor2-new-tab(ng-click="vm.addTab()")
+   ul.fioi-editor2_tabs
+      li.fioi-editor2_new-tab(ng-click="vm.addTab()")
          | +
-      li.fioi-editor2-tab(ng-repeat="tab in vm.tabs track by tab.name", ng-class="{'active':tab===vm.tab}", ng-click="vm.selectTab(tab)")
-         | {{tab.name}}
-   div.fioi-editor2-buffers
-      div(ng-repeat="buffer in vm.tab.buffers track by buffer.name")
-         fioi-editor2-buffer(buffer="{{::buffer.name}}")
+      li.fioi-editor2_tab(ng-repeat="tab in vm.tabs track by tab.name", ng-class="{'active':tab===vm.tab}", ng-click="vm.selectTab(tab)")
+         span.fioi-editor2_tab-title {{tab.title}}
+         span.fioi-editor2_close-tab(ng-click="closeTab(tab)") ×
+   div.fioi-editor2_buffers
+      div(ng-repeat="buffer in vm.tab.buffers track by buffer")
+         fioi-editor2-buffer(buffer="{{::buffer}}")

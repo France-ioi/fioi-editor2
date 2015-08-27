@@ -2,7 +2,7 @@
    width: 762px;
 }
 
-ul.fioi-editor2-tabs {
+ul.fioi-editor2_tabs {
    font: bold 11px Verdana, Arial, sans-serif;
    list-style-type: none;
    padding-bottom: 24px;
@@ -10,7 +10,7 @@ ul.fioi-editor2-tabs {
    margin: 0;
 }
 
-ul.fioi-editor2-tabs > li {
+ul.fioi-editor2_tabs > li {
    float: left;
    height: 21px;
    line-height: 21px;
@@ -21,32 +21,30 @@ ul.fioi-editor2-tabs > li {
    cursor: pointer;
 }
 
-ul.fioi-editor2-tabs > li.active {
+ul.fioi-editor2_tabs > li.active {
    border-bottom: 1px solid #fff;
    background-color: #FFFFFF;
 }
 
-.fioi-editor2-tabs > li.active a {
-   color: #000000;
+ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
+   text-decoration: underline;
 }
 
-.fioi-editor2-tabs a {
-   float: left;
-   display: block;
-   color: black;
-   text-decoration: none;
-   padding: 4px;
+.fioi-editor2_close-tab {
+   padding: 0px 2px;
+   margin-left: 2px;
+   border-radius: 3px;
 }
 
-.fioi-editor2-tabs a:hover {
-   background: #FFFFFF;
+.fioi-editor2_close-tab:hover {
+   background-color: #D8D8D8;
 }
 
-.fioi-editor2-buffers {
+.fioi-editor2_buffers {
    width: 100%;
 }
 
-.fioi-editor2-buffers textarea {
+.fioi-editor2_buffers textarea {
    width: 756px;
    height: auto;
    text-align: left;

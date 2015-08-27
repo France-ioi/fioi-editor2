@@ -9,65 +9,46 @@ The service can dump/load its state to/from a JSON object.
 
 */
 m.factory('FioiEditor2Tabs', TabsServiceFactory);
-TabsServiceFactory.$inject = ['FioiEditor2Buffers'];
-function TabsServiceFactory (buffers) {
+TabsServiceFactory.$inject = ['$rootScope', 'FioiEditor2Buffers'];
+function TabsServiceFactory ($rootScope, buffers) {
 
    var service = {};
    var tabs = {};
-   var orderedTabs = [];
-   var boundEditor = null;
+   var nextId = 1;
 
-   function Tab (name) {
+   function Tab (name, options) {
       this.name = name;
+      this.options = options || {};
+      this.title = this.options.title || "Tab";
       this.buffers = [];
    }
-   Tab.prototype.addBuffer = function (text) {
-      var buf_name = buffers.add(text);
-      this.buffers.push(buf_name);
-      trigger('buffers-changed', this.name);
+   Tab.prototype.addBuffer = function (text, options) {
+      var buffer = buffers.add(text, options);
+      this.buffers.push(buffer.name);
+      buffer.tab = this;
+      return buffer;
+   };
+   Tab.prototype.getLanguages = function () {
+      if (this.options.languages)
+         return this.options.languages;
+      return this.tabset.getLanguages();
    };
 
-   service.bind = function (api) {
-      boundEditor = api;
-   };
-
-   service.unbind = function (api) {
-      if (boundEditor == api)
-         boundEditor = null;
-   };
-
-   service.add = function (name) {
-      if (name in tabs)
-         return null;
-      var tab = tabs[name] = new Tab(name);
-      orderedTabs.push(tab);
-      trigger('tabs-changed');
+   service.add = function (options) {
+      var name = 'b' + nextId;
+      nextId += 1;
+      var tab = tabs[name] = new Tab(name, options);
       return tab;
    };
 
    service.remove = function (name) {
       var tab = tabs[name];
-      _.pull(orderedTabs, tab);
       delete tabs[name];
-      trigger('tabs-changed');
    };
 
-   service.list =  function () {
-      return _.clone(orderedTabs);
+   service.get = function (name) {
+      return tabs[name];
    };
-
-   service.exists = function (name) {
-      return name in tabs;
-   };
-
-   service.dump = function () {
-      return {tabs: tabs};
-   };
-
-   function trigger (event) {
-      if (boundEditor)
-         boundEditor.trigger(event);
-   }
 
    return service;
 }

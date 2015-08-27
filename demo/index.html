@@ -22,10 +22,19 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
     var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos &gt;= 0; --iPos)\n  {\n    if(hauteur(iPos) &lt; hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille &lt; nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
 
     var app = angular.module('main', ['fioi-editor2']);
-    app.run(['FioiEditor2Tabs', function (tabs) {
-      var tab_name = 'Code1';
-      var tab = tabs.add(tab_name);
-      tab.addBuffer(sampleText);
+    var sourceLanguages = [
+      {name: "C", ext: 'c'},
+      {name: "C++", ext: 'cpp'},
+      {name: "Pascal", ext: 'pas'},
+      {name: "OCaml", ext: 'ml'},
+      {name: "Java", ext: 'java'},
+      {name: "JavaScool", ext: 'java'},
+      {name: "Python", ext: 'py'}
+    ];
+    app.run(['FioiEditor2Tabsets', function (tabsets) {
+      var sources = tabsets.add('sources', {mode: 'sources', languages: sourceLanguages, titlePrefix: 'Code'});
+      var code1 = sources.addTab({title: 'Code1', language: 'C++'});
+      var buffer = code1.addBuffer(sampleText);
     }]);
     app.controller('Main', ['$scope', function ($scope) {
       $scope.onEditorInit = function (api) {
@@ -48,6 +57,6 @@ body { background-color: #eee; }
 <link rel="stylesheet" href="../css/style.css">
 
 <div ng-cloak ng-controller="Main">
-  <fioi-editor2 on-init="onEditorInit(api)"></fioi-editor2>
+  <fioi-editor2 on-init="onEditorInit(api)" tabset="sources"></fioi-editor2>
   <button type="button" ng-click="testEditorApi()">test Editor API</button>
 </div>

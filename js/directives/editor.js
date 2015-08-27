@@ -27,7 +27,8 @@ function editorDirective () {
    return {
       restrict: 'E',
       scope: {
-         onInit: '&'
+         onInit: '&',
+         tabset: '@'
       },
       template: require('./editor.jade'),
       controllerAs: 'vm',
@@ -35,16 +36,18 @@ function editorDirective () {
       replace: true,
       controller: EditorController,
       link: function (scope, iElement, iAttrs, controller) {
+         scope.$on('$destroy', function () {
+            scope.vm.cleanup();
+         });
       }
    };
 }
 
-EditorController.$inject = ['FioiEditor2Tabs']
-function EditorController (tabs) {
+EditorController.$inject = ['$rootScope', 'FioiEditor2Tabsets']
+function EditorController ($rootScope, tabsets) {
 
+   var tabset = tabsets.get(this.tabset);
    var controller = this;
-   var newTabPrefix = 'Code';
-   var nextTabId = 1;
 
    var api = {};
    api.placeholder = function () {
@@ -53,25 +56,30 @@ function EditorController (tabs) {
    api.trigger = function (event) {
       if (event === 'tabs-changed')
          return load();
-      console.log('event', event);
    };
 
    this.addTab = function () {
-      var tab_name = freshTabName();
-      var tab = tabs.add(tab_name);
+      var tab = tabset.addTab();
       tab.addBuffer('');
       this.selectTab(tab);
    }.bind(this);
 
-   controller.selectTab = function (tab) {
-      controller.tab = tab;
+   this.closeTab = function () {
+
+   }
+
+   this.selectTab = function (tab) {
+      tabset.setActiveTab(tab.name);
    };
 
-   // Initialize controller data from service.
-   load();
-
-   // Bind the editor component to the storage service.
-   tabs.bind(api);
+   // Initialize controller data and reload it on 'changed' event.
+   onTabsetChanged();
+   var unhookers = [
+      $rootScope.$on('fioi-editor2_tabset-'+this.tabset+'_changed', onTabsetChanged)
+   ];
+   this.cleanup = function () {
+      _.each(unhookers, function (func) { func(); });
+   };
 
    // Pass the editor component's API to the enclosing controller.
    if (typeof this.onInit === 'function')
@@ -82,21 +90,9 @@ function EditorController (tabs) {
    //
 
    // Load state from the tabs service.
-   function load () {
-      controller.tabs = tabs.list();
-      if (!controller.tab)
-         controller.tab = controller.tabs[0];
-   }
-
-   // Generate a fresh tab name.
-   function freshTabName () {
-      var tabsByName = {};
-      while (true) {
-         var name = newTabPrefix + nextTabId;
-         if (!tabs.exists(name))
-            return name;
-         nextTabId += 1;
-      }
+   function onTabsetChanged () {
+      controller.tabs = tabset.getTabs();
+      controller.tab = tabset.getActiveTab();
    }
 
 }
