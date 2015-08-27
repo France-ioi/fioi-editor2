@@ -46,8 +46,9 @@ ul.fioi-editor2-tabs > li.active {
    width: 100%;
 }
 
-.fioi-editor2-tabs textarea {
-   width: 100%;
+.fioi-editor2-buffers textarea {
+   width: 756px;
+   height: auto;
    text-align: left;
    border: 1px solid #CCCCCC;
    border-top: none;
