@@ -18,17 +18,18 @@ requirejs.config({
 });
 require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
   angular.element(document).ready(function () {
+
+    var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos &gt;= 0; --iPos)\n  {\n    if(hauteur(iPos) &lt; hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille &lt; nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
+
     var app = angular.module('main', ['fioi-editor2']);
-    app.run(['FioiEditor2Storage', function (storage) {
-      storage.addTab('main.c');
-      console.log(storage.dump());
+    app.run(['FioiEditor2Tabs', function (tabs) {
+      var tab_name = 'Code1';
+      var tab = tabs.add(tab_name);
+      tab.addBuffer(sampleText);
     }]);
     app.controller('Main', ['$scope', function ($scope) {
-      console.log('Main controller');
-      $scope.editorGroupId = 1;
       $scope.onEditorInit = function (api) {
         this.editorApi = api;
-        console.log('api', api);
       };
       $scope.testEditorApi = function () {
         this.editorApi.placeholder();
@@ -47,6 +48,6 @@ body { background-color: #eee; }
 <link rel="stylesheet" href="../css/style.css">
 
 <div ng-cloak ng-controller="Main">
-  <fioi-editor2 group-id="{{::editorGroupId}}" on-init="onEditorInit(api)"></fioi-editor2>
+  <fioi-editor2 on-init="onEditorInit(api)"></fioi-editor2>
   <button type="button" ng-click="testEditorApi()">test Editor API</button>
 </div>
