@@ -48,7 +48,8 @@ function BufferController ($rootScope, buffers) {
 
    function onBufferChanged () {
       controller.languageOptions = buffer.getLanguages();
-      controller.language = buffer.language;
+      controller.language = _.find(controller.languageOptions,
+         function (language) { return language.name == buffer.language; });
       controller.text = buffer.text;
    }
 
