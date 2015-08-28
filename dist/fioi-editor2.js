@@ -1,7 +1,46 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded, mode: \'c_cpp\'}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option.name for option in vm.languageOptions track by option.name\" ng-change=\"vm.setLanguage(option)\"></select></div></div>";
+module.exports = function (css, customDocument) {
+  var doc = customDocument || document;
+  if (doc.createStyleSheet) {
+    var sheet = doc.createStyleSheet()
+    sheet.cssText = css;
+    return sheet.ownerNode;
+  } else {
+    var head = doc.getElementsByTagName('head')[0],
+        style = doc.createElement('style');
+
+    style.type = 'text/css';
+
+    if (style.styleSheet) {
+      style.styleSheet.cssText = css;
+    } else {
+      style.appendChild(doc.createTextNode(css));
+    }
+
+    head.appendChild(style);
+    return style;
+  }
+};
+
+module.exports.byUrl = function(url) {
+  if (document.createStyleSheet) {
+    return document.createStyleSheet(url).ownerNode;
+  } else {
+    var head = document.getElementsByTagName('head')[0],
+        link = document.createElement('link');
+
+    link.rel = 'stylesheet';
+    link.href = url;
+
+    head.appendChild(link);
+    return link;
+  }
+};
 
 },{}],2:[function(require,module,exports){
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded, mode: \'c_cpp\'}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option.name for option in vm.languageOptions track by option.name\" ng-change=\"vm.setLanguage(option)\"></select></div></div>";
+
+},{}],3:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -52,7 +91,6 @@ function BufferController ($rootScope, buffers) {
    }.bind(this);
 
    this.aceLoaded = function (editor_) {
-      console.log('ACE Loaded');
       window.editor = editor_;
       editor = editor_;
       editor.setValue(buffer.text);
@@ -70,10 +108,10 @@ function BufferController ($rootScope, buffers) {
 }
 
 };
-},{"./buffer.jade":1}],3:[function(require,module,exports){
+},{"./buffer.jade":2}],4:[function(require,module,exports){
 module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.name\" ng-class=\"{\'active\':tab===vm.tab}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -101,10 +139,9 @@ The API includes function to:
 m.directive('fioiEditor2', editorDirective);
 function editorDirective () {
    return {
-      restrict: 'E',
+      restrict: 'A',
       scope: {
-         onInit: '&',
-         tabset: '@'
+         fioiEditor2: '&'
       },
       template: require('./editor.jade'),
       controllerAs: 'vm',
@@ -122,7 +159,8 @@ function editorDirective () {
 EditorController.$inject = ['$rootScope', 'FioiEditor2Tabsets']
 function EditorController ($rootScope, tabsets) {
 
-   var tabset = tabsets.get(this.tabset);
+   var config = this.fioiEditor2();
+   var tabset = tabsets.get(config.tabset);
    var controller = this;
 
    var api = {};
@@ -141,7 +179,6 @@ function EditorController ($rootScope, tabsets) {
    }.bind(this);
 
    this.closeTab = function (tab) {
-      console.log('closeTab', tab.name);
       tabset.removeTab(tab.name);
    };
 
@@ -152,7 +189,7 @@ function EditorController ($rootScope, tabsets) {
    // Initialize controller data and reload it on 'changed' event.
    onTabsetChanged();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_tabset-'+this.tabset+'_changed', onTabsetChanged)
+      $rootScope.$on('fioi-editor2_tabset-'+config.tabset+'_changed', onTabsetChanged)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
@@ -175,9 +212,9 @@ function EditorController ($rootScope, tabsets) {
 }
 
 };
-},{"./editor.jade":3}],5:[function(require,module,exports){
+},{"./editor.jade":4}],6:[function(require,module,exports){
 var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n}\n\n.fioi-editor2_buffers textarea {\n   width: 756px;\n   height: auto;\n   text-align: left;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   width: 760px;\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n/*\n#sourcesEditor {\n   width:762px;\n}\n\n#testsEditor {\n   width:762px;\n}\n\n.CodeMirror {\n  text-align: left;\n  border: 1px solid #CCCCCC;\n  border-top: none;\n}\n\n.CodeMirror.basic {\n  border-top: 1px solid #CCCCCC;\n}\n\n.tooltip {\n   display:none;\n}\n*/"; (require("./../node_modules/cssify"))(css); module.exports = css;
-},{"./../node_modules/cssify":10}],6:[function(require,module,exports){
+},{"./../node_modules/cssify":1}],7:[function(require,module,exports){
 'use strict';
 define(['angular', 'lodash', 'angular-ui-ace'], function (angular, _) {
 
@@ -191,7 +228,7 @@ require('./directives/editor')(m);
 require('./directives/buffer')(m);
 
 });
-},{"./directives/buffer":2,"./directives/editor":4,"./main.css":5,"./services/buffers":7,"./services/tabs":8,"./services/tabsets":9}],7:[function(require,module,exports){
+},{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/buffers":8,"./services/tabs":9,"./services/tabsets":10}],8:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -253,7 +290,7 @@ function BuffersFactory ($rootScope) {
 }
 
 };
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -316,7 +353,7 @@ function TabsServiceFactory ($rootScope, buffers) {
 }
 
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -417,46 +454,7 @@ function TabsetsServiceFactory ($rootScope, tabs) {
 }
 
 };
-},{}],10:[function(require,module,exports){
-module.exports = function (css, customDocument) {
-  var doc = customDocument || document;
-  if (doc.createStyleSheet) {
-    var sheet = doc.createStyleSheet()
-    sheet.cssText = css;
-    return sheet.ownerNode;
-  } else {
-    var head = doc.getElementsByTagName('head')[0],
-        style = doc.createElement('style');
-
-    style.type = 'text/css';
-
-    if (style.styleSheet) {
-      style.styleSheet.cssText = css;
-    } else {
-      style.appendChild(doc.createTextNode(css));
-    }
-
-    head.appendChild(style);
-    return style;
-  }
-};
-
-module.exports.byUrl = function(url) {
-  if (document.createStyleSheet) {
-    return document.createStyleSheet(url).ownerNode;
-  } else {
-    var head = document.getElementsByTagName('head')[0],
-        link = document.createElement('link');
-
-    link.rel = 'stylesheet';
-    link.href = url;
-
-    head.appendChild(link);
-    return link;
-  }
-};
-
-},{}]},{},[6])
+},{}]},{},[7])
 
 
 //# sourceMappingURL=fioi-editor2.js.map
