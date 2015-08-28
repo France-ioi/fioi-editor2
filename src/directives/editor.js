@@ -60,7 +60,7 @@ function EditorController ($rootScope, tabsets) {
 
    this.addTab = function () {
       var tab = tabset.addTab();
-      tab.addBuffer('');
+      tab.addBuffer('');  // XXX this should be done by the tab based on its mode
       this.selectTab(tab);
    }.bind(this);
 
