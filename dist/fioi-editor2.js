@@ -332,6 +332,11 @@ function TabsServiceFactory ($rootScope, buffers) {
    Tab.prototype._emit = function (name) {
       $rootScope.$emit('fioi-editor2_tab-'+this.name+'_'+name);
    };
+   Tab.prototype.getBuffer = function (i) {
+      var buffer = this.buffers[i || 0];
+      if (!buffer) return buffer;
+      return buffers.get(buffer);
+   };
 
    service.add = function (options) {
       var name = 'b' + nextId;
