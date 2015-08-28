@@ -77,7 +77,7 @@ function TabsetsServiceFactory ($rootScope, tabs) {
    Tabset.prototype.getLanguages = function () {
       if (this.options.languages)
          return this.options.languages;
-      return [{name: "Text", ext: 'txt'}];
+      return [{id: 'text', label: "Text", ext: 'txt'}];
    };
    Tabset.prototype._emit = function (name) {
       $rootScope.$emit('fioi-editor2_tabset-'+this.name+'_'+name);

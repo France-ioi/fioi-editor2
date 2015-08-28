@@ -42,7 +42,7 @@ function BufferController ($rootScope, buffers) {
       _.each(unhookers, function (func) { func(); });
       buffer.update({
          text: editor.getValue(),
-         language: this.language && this.language.name,
+         language: this.language && this.language.id,
          selection: editor.selection.getRange()
       });
    }.bind(this);
@@ -58,7 +58,7 @@ function BufferController ($rootScope, buffers) {
    function onBufferChanged () {
       controller.languageOptions = buffer.getLanguages();
       controller.language = _.find(controller.languageOptions,
-         function (language) { return language.name == buffer.language; });
+         function (language) { return language.id == buffer.language; });
       controller.text = buffer.text;
    }
 

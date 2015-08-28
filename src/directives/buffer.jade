@@ -2,4 +2,4 @@ div
    div(ui-ace="{onLoad: vm.aceLoaded, mode: 'c_cpp'}")
    div
       span Language du fichier :
-      select(ng-model="vm.language", ng-options="option.name for option in vm.languageOptions track by option.name", ng-change="vm.setLanguage(option)")
+      select(ng-model="vm.language", ng-options="option.id as option.label for option in vm.languageOptions track by option.id", ng-change="vm.setLanguage(option)")

@@ -26,17 +26,17 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
 
     var app = angular.module('main', ['fioi-editor2']);
     var sourceLanguages = [
-      {name: "C", ext: 'c'},
-      {name: "C++", ext: 'cpp'},
-      {name: "Pascal", ext: 'pas'},
-      {name: "OCaml", ext: 'ml'},
-      {name: "Java", ext: 'java'},
-      {name: "JavaScool", ext: 'java'},
-      {name: "Python", ext: 'py'}
+      {id: 'c', label: "C", ext: 'c', ace: {mode: 'c_cpp'}},
+      {id: 'cpp', label: "C++", ext: 'cpp', ace: {mode: 'c_cpp'}},
+      {id: 'pascal', label: "Pascal", ext: 'pas', ace: {mode: 'pascal'}},
+      {id: 'ocaml', label: "OCaml", ext: 'ml', ace: {mode: 'ocaml'}},
+      {id: 'java', label: "Java", ext: 'java', ace: {mode: 'java'}},
+      {id: 'javascool', label: "JavaScool", ext: 'jvs', ace: {mode: 'java'}},
+      {id: 'python2', label: "Python", ext: 'py', ace: {mode: 'python'}}
     ];
     app.run(['FioiEditor2Tabsets', function (tabsets) {
       var sources = tabsets.add('sources', {mode: 'sources', languages: sourceLanguages, titlePrefix: 'Code'});
-      var code1 = sources.addTab({title: 'Code1', language: 'C++'});
+      var code1 = sources.addTab({title: 'Code1', language: 'cpp'});
       var buffer = code1.addBuffer(sampleText);
     }]);
     app.controller('Main', ['$scope', function ($scope) {
