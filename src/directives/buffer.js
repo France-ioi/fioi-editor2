@@ -48,7 +48,6 @@ function BufferController ($rootScope, buffers) {
    }.bind(this);
 
    this.aceLoaded = function (editor_) {
-      console.log('ACE Loaded');
       window.editor = editor_;
       editor = editor_;
       editor.setValue(buffer.text);

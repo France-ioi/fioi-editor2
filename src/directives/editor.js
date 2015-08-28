@@ -65,7 +65,6 @@ function EditorController ($rootScope, tabsets) {
    }.bind(this);
 
    this.closeTab = function (tab) {
-      console.log('closeTab', tab.name);
       tabset.removeTab(tab.name);
    };
 
