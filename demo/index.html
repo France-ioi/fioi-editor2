@@ -40,8 +40,12 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
       var buffer = code1.addBuffer(sampleText);
     }]);
     app.controller('Main', ['$scope', function ($scope) {
-      $scope.onEditorInit = function (api) {
-        this.editorApi = api;
+      var controller = this;
+      $scope.sourcesEditor = {
+        tabset: 'sources',
+        onInit: function (api) {
+          controller.editorApi = api;
+        }
       };
       $scope.testEditorApi = function () {
         this.editorApi.placeholder();
@@ -59,6 +63,6 @@ body { background-color: #eee; }
 </style>
 
 <div ng-cloak ng-controller="Main">
-  <fioi-editor2 on-init="onEditorInit(api)" tabset="sources"></fioi-editor2>
+  <div fioi-editor2="sourcesEditor"></div>
   <button type="button" ng-click="testEditorApi()">test Editor API</button>
 </div>

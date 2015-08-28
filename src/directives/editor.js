@@ -25,10 +25,9 @@ The API includes function to:
 m.directive('fioiEditor2', editorDirective);
 function editorDirective () {
    return {
-      restrict: 'E',
+      restrict: 'A',
       scope: {
-         onInit: '&',
-         tabset: '@'
+         fioiEditor2: '&'
       },
       template: require('./editor.jade'),
       controllerAs: 'vm',
@@ -46,7 +45,8 @@ function editorDirective () {
 EditorController.$inject = ['$rootScope', 'FioiEditor2Tabsets']
 function EditorController ($rootScope, tabsets) {
 
-   var tabset = tabsets.get(this.tabset);
+   var config = this.fioiEditor2();
+   var tabset = tabsets.get(config.tabset);
    var controller = this;
 
    var api = {};
@@ -75,7 +75,7 @@ function EditorController ($rootScope, tabsets) {
    // Initialize controller data and reload it on 'changed' event.
    onTabsetChanged();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_tabset-'+this.tabset+'_changed', onTabsetChanged)
+      $rootScope.$on('fioi-editor2_tabset-'+config.tabset+'_changed', onTabsetChanged)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
