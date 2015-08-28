@@ -38,7 +38,7 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded, mode: \'c_cpp\'}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option.name for option in vm.languageOptions track by option.name\" ng-change=\"vm.setLanguage(option)\"></select></div></div>";
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded, mode: \'c_cpp\'}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option.id as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.setLanguage(option)\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -85,7 +85,7 @@ function BufferController ($rootScope, buffers) {
       _.each(unhookers, function (func) { func(); });
       buffer.update({
          text: editor.getValue(),
-         language: this.language && this.language.name,
+         language: this.language && this.language.id,
          selection: editor.selection.getRange()
       });
    }.bind(this);
@@ -101,7 +101,7 @@ function BufferController ($rootScope, buffers) {
    function onBufferChanged () {
       controller.languageOptions = buffer.getLanguages();
       controller.language = _.find(controller.languageOptions,
-         function (language) { return language.name == buffer.language; });
+         function (language) { return language.id == buffer.language; });
       controller.text = buffer.text;
    }
 
@@ -433,7 +433,7 @@ function TabsetsServiceFactory ($rootScope, tabs) {
    Tabset.prototype.getLanguages = function () {
       if (this.options.languages)
          return this.options.languages;
-      return [{name: "Text", ext: 'txt'}];
+      return [{id: 'text', label: "Text", ext: 'txt'}];
    };
    Tabset.prototype._emit = function (name) {
       $rootScope.$emit('fioi-editor2_tabset-'+this.name+'_'+name);
