@@ -283,11 +283,13 @@ function BuffersFactory ($rootScope) {
       return this;
    };
    Buffer.prototype.pushToControl = function () {
-      this.control.load(this);
+      if (this.control)
+         this.control.load(this);
       return this;
    };
    Buffer.prototype.pullFromControl = function () {
-      this.update(this.control.dump());
+      if (this.control)
+         this.update(this.control.dump());
       return this;
    };
 
