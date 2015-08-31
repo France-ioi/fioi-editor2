@@ -38,7 +38,7 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded, mode: \'c_cpp\'}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option.id as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.setLanguage(option)\"></select></div></div>";
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -70,39 +70,49 @@ BufferController.$inject = ['$rootScope', 'FioiEditor2Buffers'];
 function BufferController ($rootScope, buffers) {
 
    var controller = this;
-   var buffer = buffers.get(this.buffer);
    var editor = null; // the ACE object
+   var buffer = buffers.get(this.buffer);
 
-   // Load from service and hook up events.
-   onBufferChanged();
-   var eventMap = {
-      changed: onBufferChanged
-   };
-   var unhookers = _.map(eventMap, function (func, name) {
-      return $rootScope.$on('fioi-editor2_buffer-'+buffer.name+'_'+name, func);
+   // Exposer our API to the buffer service.
+   buffer.attachControl({
+      load: load,
+      dump: dump
    });
    this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-      buffer.update({
-         text: editor.getValue(),
-         language: this.language && this.language.id,
-         selection: editor.selection.getRange()
-      });
+      buffer.pullFromControl();
+      buffer.detachControl();
    }.bind(this);
 
+   // Let the buffer set up the state once Ace is loaded.
    this.aceLoaded = function (editor_) {
-      window.editor = editor_;
       editor = editor_;
-      editor.setValue(buffer.text);
-      editor.selection.setRange(buffer.selection);
+      buffer.pushToControl();
       editor.focus();
    };
 
-   function onBufferChanged () {
+   this.languageChanged = function () {
+      buffer.pullFromControl();
+      buffer.pushToControl();
+      editor.focus();
+   };
+
+   function load (buffer) {
       controller.languageOptions = buffer.getLanguages();
       controller.language = _.find(controller.languageOptions,
          function (language) { return language.id == buffer.language; });
-      controller.text = buffer.text;
+      if (controller.language && typeof controller.language === 'object') {
+         editor.session.setMode('ace/mode/' + controller.language.ace.mode);
+      }
+      editor.setValue(buffer.text);
+      editor.selection.setRange(buffer.selection);
+   }
+
+   function dump () {
+      return {
+         text: editor.getValue(),
+         language: controller.language && controller.language.id,
+         selection: editor.selection.getRange()
+      };
    }
 
 }
@@ -249,6 +259,7 @@ function BuffersFactory ($rootScope) {
       this.text = (text || "").toString();
       this.selection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
       this.language = this.options.language || 'text';
+      this.control = null;
    }
    Buffer.prototype.update = function (attrs) {
       if ('text' in attrs)
@@ -257,15 +268,27 @@ function BuffersFactory ($rootScope) {
          this.language = attrs.language;
       if ('selection' in attrs)
          this.selection = _.clone(attrs.selection);
-      this._emit('changed');
    };
    Buffer.prototype.getLanguages = function () {
       if (this.options.languages)
          return this.options.languages;
       return this.tab.getLanguages();
    };
-   Buffer.prototype._emit = function (name) {
-      $rootScope.$emit('fioi-editor2_buffer-'+this.name+'_'+name);
+   Buffer.prototype.attachControl = function (control) {
+      this.control = control;
+      return this;
+   };
+   Buffer.prototype.detachControl = function () {
+      this.control = null;
+      return this;
+   };
+   Buffer.prototype.pushToControl = function () {
+      this.control.load(this);
+      return this;
+   };
+   Buffer.prototype.pullFromControl = function () {
+      this.update(this.control.dump());
+      return this;
    };
 
    service.add = function (text, options) {
