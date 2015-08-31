@@ -50,6 +50,21 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
       $scope.testEditorApi = function () {
         this.editorApi.placeholder();
       };
+      $scope.save = function () {
+        var source_tabset = tabsets.get('sources');
+        var source_tabs   = source_tabset.getTabs();
+        var active_tab    = source_tabset.getActiveTab();
+        var aSources = _.map(source_tabs, function (tab) {
+           var buffer = tab.getBuffer().pullFromControl();
+           return {
+              sName: tab.title,
+              sSource: buffer.text,
+              sLangProg: buffer.language,
+              bActive: tab === active_tab
+           };
+        });
+        console.log(aSources);
+      };
       $scope.submitActiveBuffer = function () {
         var buffer = tabsets.get('sources').getActiveTab().getBuffer().pullFromControl();
         console.log(buffer.language, buffer.text);
@@ -69,5 +84,6 @@ body { background-color: #eee; }
 <div ng-cloak ng-controller="Main">
   <div fioi-editor2="sourcesEditor"></div>
   <button type="button" ng-click="submitActiveBuffer()">submit</button>
+  <button type="button" ng-click="save()">save</button>
   <button type="button" ng-click="testEditorApi()">test Editor API</button>
 </div>
