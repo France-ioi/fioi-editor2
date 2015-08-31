@@ -18,6 +18,7 @@ function BuffersFactory ($rootScope) {
       this.text = (text || "").toString();
       this.selection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
       this.language = this.options.language || 'text';
+      this.control = null;
    }
    Buffer.prototype.update = function (attrs) {
       if ('text' in attrs)
@@ -26,15 +27,27 @@ function BuffersFactory ($rootScope) {
          this.language = attrs.language;
       if ('selection' in attrs)
          this.selection = _.clone(attrs.selection);
-      this._emit('changed');
    };
    Buffer.prototype.getLanguages = function () {
       if (this.options.languages)
          return this.options.languages;
       return this.tab.getLanguages();
    };
-   Buffer.prototype._emit = function (name) {
-      $rootScope.$emit('fioi-editor2_buffer-'+this.name+'_'+name);
+   Buffer.prototype.attachControl = function (control) {
+      this.control = control;
+      return this;
+   };
+   Buffer.prototype.detachControl = function () {
+      this.control = null;
+      return this;
+   };
+   Buffer.prototype.pushToControl = function () {
+      this.control.load(this);
+      return this;
+   };
+   Buffer.prototype.pullFromControl = function () {
+      this.update(this.control.dump());
+      return this;
    };
 
    service.add = function (text, options) {
