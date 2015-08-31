@@ -27,39 +27,49 @@ BufferController.$inject = ['$rootScope', 'FioiEditor2Buffers'];
 function BufferController ($rootScope, buffers) {
 
    var controller = this;
-   var buffer = buffers.get(this.buffer);
    var editor = null; // the ACE object
+   var buffer = buffers.get(this.buffer);
 
-   // Load from service and hook up events.
-   onBufferChanged();
-   var eventMap = {
-      changed: onBufferChanged
-   };
-   var unhookers = _.map(eventMap, function (func, name) {
-      return $rootScope.$on('fioi-editor2_buffer-'+buffer.name+'_'+name, func);
+   // Exposer our API to the buffer service.
+   buffer.attachControl({
+      load: load,
+      dump: dump
    });
    this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-      buffer.update({
-         text: editor.getValue(),
-         language: this.language && this.language.id,
-         selection: editor.selection.getRange()
-      });
+      buffer.pullFromControl();
+      buffer.detachControl();
    }.bind(this);
 
+   // Let the buffer set up the state once Ace is loaded.
    this.aceLoaded = function (editor_) {
-      window.editor = editor_;
       editor = editor_;
-      editor.setValue(buffer.text);
-      editor.selection.setRange(buffer.selection);
+      buffer.pushToControl();
       editor.focus();
    };
 
-   function onBufferChanged () {
+   this.languageChanged = function () {
+      buffer.pullFromControl();
+      buffer.pushToControl();
+      editor.focus();
+   };
+
+   function load (buffer) {
       controller.languageOptions = buffer.getLanguages();
       controller.language = _.find(controller.languageOptions,
          function (language) { return language.id == buffer.language; });
-      controller.text = buffer.text;
+      if (controller.language && typeof controller.language === 'object') {
+         editor.session.setMode('ace/mode/' + controller.language.ace.mode);
+      }
+      editor.setValue(buffer.text);
+      editor.selection.setRange(buffer.selection);
+   }
+
+   function dump () {
+      return {
+         text: editor.getValue(),
+         language: controller.language && controller.language.id,
+         selection: editor.selection.getRange()
+      };
    }
 
 }
