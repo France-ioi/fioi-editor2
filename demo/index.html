@@ -51,7 +51,7 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
         this.editorApi.placeholder();
       };
       $scope.submitActiveBuffer = function () {
-        var buffer = tabsets.get('sources').getActiveTab().getBuffer();
+        var buffer = tabsets.get('sources').getActiveTab().getBuffer().pullFromControl();
         console.log(buffer.language, buffer.text);
       };
     }]);
