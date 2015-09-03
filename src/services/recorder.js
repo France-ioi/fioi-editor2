@@ -14,17 +14,16 @@ function RecorderFactory ($interval, $rootScope) {
       startTime: undefined,
       timeOffset: undefined,
       currentFrameTime: undefined,
-      lastEventTime: undefined,
-      playInterval: undefined,
-      playCursor: undefined,
-      options: null,
-      nextFreshId: 1,
-      renaming: {},  // play-time id --> record-time id
-      targets: {}  // record-time id --> object instance
+      playInterval: undefined, // angular $interval handler
+      playOffset: undefined, // offset in ms (rel. to startTime) of the last event played
+      playCursor: undefined, // index in recording of the next event to replay
+      options: null, // object with the dumpState() and loadState(state) functions.
+      nextFreshId: 1, // counter used to generate fresh ids
+      renaming: {}, // play-time id --> record-time id
+      targets: {} // record-time id --> object instance
    };
 
-   // Start a new recording.  The options argument should be an object with
-   // the dumpState() and loadState(state) functions.
+   // Start a new recording.
    service.record = function (options) {
       if (state.isPlaying || state.isRecording)
          return false;
@@ -33,11 +32,12 @@ function RecorderFactory ($interval, $rootScope) {
       state.isRecording = true;
       state.timeOffset = 0;
       state.startTime = Date.now();
-      state.lastEventTime = 0;
+      state.playOffset = 0;
       state.events = [[0, '', '0', state.options.dumpState()]];
       state.segments = [];
    };
 
+   // Play the given recording.
    service.play = function (recording, options) {
       if (state.isRecording || state.isPlaying)
          return false;
@@ -45,10 +45,12 @@ function RecorderFactory ($interval, $rootScope) {
       state.recording = recording;
       state.options = options;
       state.playCursor = 0;
-      state.lastEventTime = 0;
+      state.startTime = Date.now();
+      state.playOffset = 0;
       state.playInterval = $interval(playTick, 20);
    };
 
+   // Pause the current operation.
    service.pause = function () {
       if (state.isPaused)
          return false;
@@ -68,10 +70,12 @@ function RecorderFactory ($interval, $rootScope) {
          $interval.cancel(state.playInterval);
          state.playInterval = null;
          state.isPaused = true;
+         return true;
       }
       return false;
    };
 
+   // Resume (unpause) the current operation.
    service.resume = function () {
       if (!state.isPaused)
          return false;
@@ -80,6 +84,16 @@ function RecorderFactory ($interval, $rootScope) {
          state.startTime = Date.now();
          state.events = [[0, '', '0', state.options.dumpState()]];
          return true;
+      }
+      if (state.isPlaying) {
+         state.isPaused = false;
+         // XXX this is not quite right, ideally we should set startTime in
+         // the past to (now - playOffset) and leave playOffset unchanged,
+         // so that playOffset remains relative to the start of the audio
+         // recording.
+         state.startTime = Date.now();
+         state.playOffset = 0;
+         state.playInterval = $interval(playTick, 20);
       }
    };
 
@@ -135,8 +149,8 @@ function RecorderFactory ($interval, $rootScope) {
          });
       }
 
-      var delta = state.currentFrameTime - state.lastEventTime;
-      state.lastEventTime = state.currentFrameTime;
+      var delta = state.currentFrameTime - state.playOffset;
+      state.playOffset = state.currentFrameTime;
       event.unshift(delta);
       state.events.push(event);
    };
@@ -153,14 +167,12 @@ function RecorderFactory ($interval, $rootScope) {
 
    function playTick () {
       var cursor = state.playCursor;
-      if (cursor == 0)
-         state.startTime = Date.now();
-      var tickUntil = Math.floor(Date.now() - state.startTime - state.lastEventTime);
-      var relTime = 0;
+      var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
+      var timeElapsed = 0;
       var events = state.recording.events;
-      while (cursor < events.length && relTime <= tickUntil) {
+      while (cursor < events.length && timeElapsed <= playUntil) {
          var event = events[cursor];
-         relTime += event[0];
+         timeElapsed += event[0];
          var id = event[1];
          var op = event[2];
          try {
@@ -189,7 +201,7 @@ function RecorderFactory ($interval, $rootScope) {
             break;
          }
       }
-      state.lastEventTime += relTime;
+      state.playOffset += timeElapsed;
       state.playCursor = cursor;
       if (cursor == events.length) {
          $interval.cancel(state.playInterval);
