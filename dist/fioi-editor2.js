@@ -66,17 +66,17 @@ function bufferDirective () {
    };
 }
 
-BufferController.$inject = ['$rootScope', 'FioiEditor2Buffers'];
-function BufferController ($rootScope, buffers) {
+BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
+function BufferController (signals, buffers) {
 
    var controller = this;
    var editor = null; // the ACE object
    var buffer = buffers.get(this.buffer);
 
-   // Initialize controller data and reload it on 'loadState' event.
-   loadState();
+   // Initialize controller data and reload it on 'update' event.
+   update();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_loadState', loadState)
+      signals.on('update', update)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
@@ -138,7 +138,7 @@ function BufferController ($rootScope, buffers) {
       editor.focus();
    };
 
-   function loadState () {
+   function update () {
       load(buffer);
    }
 
@@ -241,8 +241,8 @@ function editorDirective () {
    };
 }
 
-EditorController.$inject = ['$rootScope', 'FioiEditor2Tabsets']
-function EditorController ($rootScope, tabsets) {
+EditorController.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabsets']
+function EditorController (signals, tabsets) {
 
    var config = this.fioiEditor2();
    var tabset = tabsets.find(config.tabset);
@@ -259,13 +259,13 @@ function EditorController ($rootScope, tabsets) {
    };
 
    this.selectTab = function (tab) {
-      tabset.setActiveTab(tab.id);
+      tabset.update({activeTabId: tab.id});
    };
 
    // Initialize controller data and reload it on 'changed' event.
-   loadState();
+   update();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_loadState', loadState)
+      signals.on('update', update)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
@@ -275,8 +275,8 @@ function EditorController ($rootScope, tabsets) {
    // Private function
    //
 
-   // Load state from the tabs service.
-   function loadState () {
+   // Update state from the tabs service.
+   function update () {
       tabset = tabsets.find(config.tabset);
       controller.tabs = tabset.getTabs();
       controller.tab = tabset.getActiveTab();
@@ -294,6 +294,7 @@ define(['angular', 'lodash', 'angular-ui-ace'], function (angular, _) {
 require('./main.css');
 
 var m = angular.module('fioi-editor2', ['ui.ace']);
+require('./services/signals')(m);
 require('./services/recorder')(m);
 require('./services/tabsets')(m);
 require('./services/tabs')(m);
@@ -302,7 +303,7 @@ require('./directives/editor')(m);
 require('./directives/buffer')(m);
 
 });
-},{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/buffers":8,"./services/recorder":9,"./services/tabs":10,"./services/tabsets":11}],8:[function(require,module,exports){
+},{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/buffers":8,"./services/recorder":9,"./services/signals":10,"./services/tabs":11,"./services/tabsets":12}],8:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -652,6 +653,58 @@ function RecorderFactory ($interval, $rootScope) {
 'use strict';
 module.exports = function (m) {
 
+m.factory('FioiEditor2Signals', SignalsFactory);
+SignalsFactory.$inject = ['$rootScope'];
+function SignalsFactory ($rootScope) {
+
+   var service = {};
+   var pending = {};
+   var mustEmit = false;
+   var willEmit = false;
+   var defer = false;
+
+   service.on = function (signal, handler) {
+      return $rootScope.$on('fioi-editor2_' + signal, handler);
+   };
+
+   service.defer = function (flag) {
+      defer = flag;
+      if (mustEmit && !willEmit)
+         doEmit();
+   };
+
+   service.emitUpdate = function () {
+      emit('update');
+   };
+
+   function emit (signal) {
+      if (pending[signal])
+         return;
+      pending[signal] = true;
+      mustEmit = true;
+      if (defer || willEmit)
+         return;
+      willEmit = true;
+      window.requestAnimationFrame(doEmit);
+   }
+
+   function doEmit () {
+      var signals = pending;
+      pending = {};
+      mustEmit = false;
+      willEmit = false;
+      if (signals.update)
+         $rootScope.$emit('fioi-editor2_update');
+   }
+
+   return service;
+}
+
+};
+},{}],11:[function(require,module,exports){
+'use strict';
+module.exports = function (m) {
+
 /**
 This service acts as storage for sets of tabs, where each
 tab holds a sequence of 1 or 2 text buffers.
@@ -660,8 +713,8 @@ The service can dump/load its state to/from a JSON object.
 
 */
 m.factory('FioiEditor2Tabs', TabsServiceFactory);
-TabsServiceFactory.$inject = ['$rootScope', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
-function TabsServiceFactory ($rootScope, buffers, recorder) {
+TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
+function TabsServiceFactory (signals, buffers, recorder) {
 
    var service = {};
    var tabs = {};
@@ -670,6 +723,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       var id = recorder.freshId('t', recording_id);
       var tab = tabs[id] = new Tab(id);
       recorder.register(id, tab);
+      signals.emitUpdate();
       return tab;
    };
 
@@ -677,6 +731,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       var tab = tabs[id];
       tab.clear();
       delete tabs[id];
+      signals.emitUpdate();
    };
 
    service.get = function (id) {
@@ -699,6 +754,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
+      signals.emitUpdate();
       return this;
    }
    Tab.prototype.addBuffer = function (id) {
@@ -707,6 +763,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          language: this.getDefaultLanguage()
       });
       this.buffers.push(buffer.id);
+      signals.emitUpdate();
       return buffer;
    };
    Tab.prototype.getLanguages = function () {
@@ -744,6 +801,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       _.each(dump.buffers, function (buffer_dump) {
          this.addBuffer(buffer_dump[0]).load(buffer_dump[1]);
       }.bind(this));
+      signals.emitUpdate();
       return this;
    };
 
@@ -753,6 +811,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          buffers.remove(id);
       });
       this.buffers = [];
+      signals.emitUpdate();
    };
    Tab.prototype.replayEvent = function (event) {
       console.log('unhandled Tab event', event);
@@ -762,7 +821,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
 }
 
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -770,8 +829,8 @@ module.exports = function (m) {
 This service stores tabsets.
 */
 m.factory('FioiEditor2Tabsets', TabsetsServiceFactory);
-TabsetsServiceFactory.$inject = ['$rootScope', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
-function TabsetsServiceFactory ($rootScope, tabs, recorder) {
+TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
+function TabsetsServiceFactory (signals, tabs, recorder) {
 
    var service = {};
    var tabsets = {};
@@ -826,12 +885,15 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
    Tabset.prototype.update = function (attrs) {
       if ('name' in attrs)
          this.name = attrs.name;
+      if ('titlePrefix' in attrs)
+         this.titlePrefix = attrs.titlePrefix;
       if ('languages' in attrs)
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
       if ('activeTabId' in attrs)
-         this.activeTabId = activeTabId;
+         this.activeTabId = attrs.activeTabId;
+      signals.emitUpdate();
       return this;
    }
    Tabset.prototype.addTab = function (id) {
@@ -844,11 +906,13 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
       this.tabIds.push(id);
       if (this.activeTabId == null)
          this.activeTabId = id;
+      signals.emitUpdate();
       return tab;
    };
    Tabset.prototype.removeTab = function (id) {
       _.pull(this.tabIds, id);
       delete this.tabs[id];
+      signals.emitUpdate();
    };
    Tabset.prototype.clear = function () {
       _.each(this.tabIds, function (id) {
@@ -857,6 +921,7 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
       this.tabs = {};
       this.tabIds = [];
       this.activeTabId = null;
+      signals.emitUpdate();
    };
    Tabset.prototype.dump = function () {
       var tabs = this.tabs;
@@ -875,6 +940,8 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
          this.addTab(tab_dump[0]).load(tab_dump[1]);
       }.bind(this));
       this.activeTab = dump.activeTabId;
+      signals.emitUpdate();
+      return this;
    };
    Tabset.prototype.getTabs = function () {
       var tabs = this.tabs;
