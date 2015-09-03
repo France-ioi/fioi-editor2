@@ -78,7 +78,7 @@ function EditorController (tabsets) {
          return {id: tab.id, title: tab.title};
       });
       var tab = tabset.getActiveTab();
-      controller.tab = {
+      controller.tab = tab && {
          id: tab.id,
          title: tab.title,
          buffers: tab.buffers
