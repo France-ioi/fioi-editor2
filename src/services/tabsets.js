@@ -15,6 +15,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       var id = recorder.freshId('ts', recording_id);
       var tabset = tabsets[id] = new Tabset(id);
       recorder.register(id, tabset);
+      signals.emitUpdate();
       return tabset;
    };
 
@@ -33,6 +34,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
          tabset.clear();
       });
       tabsets = {};
+      signals.emitUpdate();
       return this;
    };
 
@@ -45,6 +47,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       _.each(state, function (tabset_dump, tabset_id) {
          service.add(tabset_id).load(tabset_dump);
       });
+      signals.emitUpdate();
       return this;
    };
 

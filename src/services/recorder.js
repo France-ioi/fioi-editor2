@@ -2,8 +2,8 @@
 module.exports = function (m) {
 
 m.factory('FioiEditor2Recorder', RecorderFactory);
-RecorderFactory.$inject = ['$interval', '$rootScope'];
-function RecorderFactory ($interval, $rootScope) {
+RecorderFactory.$inject = ['$interval', 'FioiEditor2Signals'];
+function RecorderFactory ($interval, signals) {
    var service = {};
    var state = {
       isRecording: false,
@@ -187,7 +187,7 @@ function RecorderFactory ($interval, $rootScope) {
                   // Global state reset.  Clear the targets registry.
                   state.targets = {};
                   state.options.loadState(event[3]);
-                  $rootScope.$emit('fioi-editor2_loadState');
+                  signals.emitUpdate();
                }
             }
             // Pass all events to the handler in options, if given.

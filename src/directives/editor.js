@@ -20,7 +20,8 @@ The API includes function to:
 
 */
 m.directive('fioiEditor2', editorDirective);
-function editorDirective () {
+editorDirective.$inject = ['FioiEditor2Signals'];
+function editorDirective (signals) {
    return {
       restrict: 'A',
       scope: {
@@ -32,15 +33,23 @@ function editorDirective () {
       replace: true,
       controller: EditorController,
       link: function (scope, iElement, iAttrs, controller) {
+         // Bind update events to the controller's update() function.
+         var unhookUpdate = signals.on('update', update);
          scope.$on('$destroy', function () {
-            scope.vm.cleanup();
+            unhookUpdate();
          });
+         scope.vm.update();
+         function update() {
+            scope.$apply(function () {
+               scope.vm.update();
+            });
+         }
       }
    };
 }
 
-EditorController.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabsets']
-function EditorController (signals, tabsets) {
+EditorController.$inject = ['FioiEditor2Tabsets']
+function EditorController (tabsets) {
 
    var config = this.fioiEditor2();
    var tabset = tabsets.find(config.tabset);
@@ -60,24 +69,18 @@ function EditorController (signals, tabsets) {
       tabset.update({activeTabId: tab.id});
    };
 
-   // Initialize controller data and reload it on 'changed' event.
-   update();
-   var unhookers = [
-      signals.on('update', update)
-   ];
-   this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-   };
-
-   //
-   // Private function
-   //
-
    // Update state from the tabs service.
-   function update () {
+   this.update = function () {
       tabset = tabsets.find(config.tabset);
-      controller.tabs = tabset.getTabs();
-      controller.tab = tabset.getActiveTab();
+      controller.tabs = _.map(tabset.getTabs(), function (tab) {
+         return {id: tab.id, title: tab.title};
+      });
+      var tab = tabset.getActiveTab();
+      controller.tab = {
+         id: tab.id,
+         title: tab.title,
+         buffers: tab.buffers
+      };
    }
 
 }
