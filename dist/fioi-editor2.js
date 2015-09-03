@@ -38,7 +38,7 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -110,7 +110,6 @@ function BufferController (signals, buffers) {
 
       // Let the buffer set up the state once Ace is loaded.
       buffer.pushToControl();
-      editor.focus();
 
       // Hook up events for recording.
       editor.session.doc.on("change", function (e) {
@@ -144,6 +143,7 @@ function BufferController (signals, buffers) {
 
    function load (buffer) {
       controller.languageOptions = buffer.getLanguages();
+      controller.showLanguageSelector = controller.languageOptions.length > 1;
       controller.language = _.find(controller.languageOptions,
          function (language) { return language.id == buffer.language; });
       if (editor) {
@@ -197,7 +197,7 @@ function BufferController (signals, buffers) {
 
 };
 },{"./buffer.jade":2}],4:[function(require,module,exports){
-module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
+module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
 'use strict';
@@ -253,13 +253,11 @@ function editorDirective (signals) {
 EditorController.$inject = ['FioiEditor2Tabsets']
 function EditorController (tabsets) {
 
-   var config = this.fioiEditor2();
-   var tabset = tabsets.find(config.tabset);
    var controller = this;
+   var tabset = null;
 
    this.addTab = function () {
       var tab = tabset.addTab();
-      tab.addBuffer('');  // XXX this should be done by the tab based on its mode
       this.selectTab(tab);
    }.bind(this);
 
@@ -275,23 +273,44 @@ function EditorController (tabsets) {
 
    // Update state from the tabs service.
    this.update = function () {
+      var config = controller.fioiEditor2();
+      var classes = controller.buffersClasses = {};
+      controller.tabs = [];
+      controller.tab = null;
+      if (!config) {
+         classes['fioi-editor2_error'] = true;
+         return;
+      }
       tabset = tabsets.find(config.tabset);
+      if (!tabset) {
+         classes['fioi-editor2_error'] = true;
+         return;
+      }
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
+      if (controller.tabs.length == 0) {
+         classes['fioi-editor2_empty'] = true;
+         return;
+      }
       var tab = tabset.getActiveTab();
-      controller.tab = tab && {
+      if (!tab) {
+         classes['fioi-editor2_no-active-tab'] = true;
+         return;
+      }
+      controller.tab = {
          id: tab.id,
          title: tab.title,
          buffers: tab.buffers
       };
+      classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
    }
 
 }
 
 };
 },{"./editor.jade":4}],6:[function(require,module,exports){
-var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n}\n\n.fioi-editor2_buffers textarea {\n   width: 756px;\n   height: auto;\n   text-align: left;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   width: 760px;\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n/*\n#sourcesEditor {\n   width:762px;\n}\n\n#testsEditor {\n   width:762px;\n}\n\n.CodeMirror {\n  text-align: left;\n  border: 1px solid #CCCCCC;\n  border-top: none;\n}\n\n.CodeMirror.basic {\n  border-top: 1px solid #CCCCCC;\n}\n\n.tooltip {\n   display:none;\n}\n*/"; (require("./../node_modules/cssify"))(css); module.exports = css;
+var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_empty {\n\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 760px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 760px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
 },{"./../node_modules/cssify":1}],7:[function(require,module,exports){
 'use strict';
 define(['angular', 'lodash', 'angular-ui-ace'], function (angular, _) {
@@ -901,6 +920,8 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
          this.defaultLanguage = attrs.defaultLanguage;
       if ('activeTabId' in attrs)
          this.activeTabId = attrs.activeTabId;
+      if ('buffersPerTab' in attrs)
+         this.buffersPerTab = attrs.buffersPerTab;
       signals.emitUpdate();
       return this;
    }
@@ -912,8 +933,9 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       id = tab.id;
       this.tabs[id] = tab;
       this.tabIds.push(id);
-      if (this.activeTabId == null)
-         this.activeTabId = id;
+      for (var i = 0; i < this.buffersPerTab; i += 1)
+         tab.addBuffer('');
+      this.activeTabId = id;
       signals.emitUpdate();
       return tab;
    };
