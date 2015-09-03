@@ -197,7 +197,7 @@ function BufferController (signals, buffers) {
 
 };
 },{"./buffer.jade":2}],4:[function(require,module,exports){
-module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.name\" ng-class=\"{\'active\':tab===vm.tab}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
+module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
 'use strict';
@@ -222,7 +222,8 @@ The API includes function to:
 
 */
 m.directive('fioiEditor2', editorDirective);
-function editorDirective () {
+editorDirective.$inject = ['FioiEditor2Signals'];
+function editorDirective (signals) {
    return {
       restrict: 'A',
       scope: {
@@ -234,15 +235,23 @@ function editorDirective () {
       replace: true,
       controller: EditorController,
       link: function (scope, iElement, iAttrs, controller) {
+         // Bind update events to the controller's update() function.
+         var unhookUpdate = signals.on('update', update);
          scope.$on('$destroy', function () {
-            scope.vm.cleanup();
+            unhookUpdate();
          });
+         scope.vm.update();
+         function update() {
+            scope.$apply(function () {
+               scope.vm.update();
+            });
+         }
       }
    };
 }
 
-EditorController.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabsets']
-function EditorController (signals, tabsets) {
+EditorController.$inject = ['FioiEditor2Tabsets']
+function EditorController (tabsets) {
 
    var config = this.fioiEditor2();
    var tabset = tabsets.find(config.tabset);
@@ -262,24 +271,18 @@ function EditorController (signals, tabsets) {
       tabset.update({activeTabId: tab.id});
    };
 
-   // Initialize controller data and reload it on 'changed' event.
-   update();
-   var unhookers = [
-      signals.on('update', update)
-   ];
-   this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-   };
-
-   //
-   // Private function
-   //
-
    // Update state from the tabs service.
-   function update () {
+   this.update = function () {
       tabset = tabsets.find(config.tabset);
-      controller.tabs = tabset.getTabs();
-      controller.tab = tabset.getActiveTab();
+      controller.tabs = _.map(tabset.getTabs(), function (tab) {
+         return {id: tab.id, title: tab.title};
+      });
+      var tab = tabset.getActiveTab();
+      controller.tab = {
+         id: tab.id,
+         title: tab.title,
+         buffers: tab.buffers
+      };
    }
 
 }
@@ -436,8 +439,8 @@ function BuffersFactory (recorder) {
 module.exports = function (m) {
 
 m.factory('FioiEditor2Recorder', RecorderFactory);
-RecorderFactory.$inject = ['$interval', '$rootScope'];
-function RecorderFactory ($interval, $rootScope) {
+RecorderFactory.$inject = ['$interval', 'FioiEditor2Signals'];
+function RecorderFactory ($interval, signals) {
    var service = {};
    var state = {
       isRecording: false,
@@ -621,7 +624,7 @@ function RecorderFactory ($interval, $rootScope) {
                   // Global state reset.  Clear the targets registry.
                   state.targets = {};
                   state.options.loadState(event[3]);
-                  $rootScope.$emit('fioi-editor2_loadState');
+                  signals.emitUpdate();
                }
             }
             // Pass all events to the handler in options, if given.
@@ -839,6 +842,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       var id = recorder.freshId('ts', recording_id);
       var tabset = tabsets[id] = new Tabset(id);
       recorder.register(id, tabset);
+      signals.emitUpdate();
       return tabset;
    };
 
@@ -857,6 +861,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
          tabset.clear();
       });
       tabsets = {};
+      signals.emitUpdate();
       return this;
    };
 
@@ -869,6 +874,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       _.each(state, function (tabset_dump, tabset_id) {
          service.add(tabset_id).load(tabset_dump);
       });
+      signals.emitUpdate();
       return this;
    };
 
