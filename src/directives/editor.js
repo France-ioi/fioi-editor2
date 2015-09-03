@@ -13,9 +13,6 @@ add a new tab, remove a tab, and rename a tab.
 When a tab is selected, the editor uses a buffer directive to display the
 sequence of buffers held in the tab side-by-side.
 
-The directive supplies its API object to the parent controller in a variable
-named 'api' when evaluating the directive's on-init attribute.
-
 The API includes function to:
 - start and stop the recording mode
 - retrieve the last recorded sequence of timestamped events
@@ -49,15 +46,6 @@ function EditorController ($rootScope, tabsets) {
    var tabset = tabsets.find(config.tabset);
    var controller = this;
 
-   var api = {};
-   api.placeholder = function () {
-      alert('placeholder');
-   };
-   api.trigger = function (event) {
-      if (event === 'tabs-changed')
-         return load();
-   };
-
    this.addTab = function () {
       var tab = tabset.addTab();
       tab.addBuffer('');  // XXX this should be done by the tab based on its mode
@@ -80,10 +68,6 @@ function EditorController ($rootScope, tabsets) {
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
    };
-
-   // Pass the editor component's API to the enclosing controller.
-   if (typeof this.onInit === 'function')
-      this.onInit({api: api});
 
    //
    // Private function
