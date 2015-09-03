@@ -55,12 +55,21 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
     }
 
     app.run(['FioiEditor2Tabsets', function (tabsets) {
-      tabsets.add().update({name: 'sources'});
+      // Create the tabsets.  This code should execute in a run block rather
+      // than inside a controller, which could run multiple times resulting in
+      // multiple tabsets with the same name.
+      var sources = tabsets.add().update({name: 'sources'});
       tabsets.add().update({name: 'tests'});
-      configureTabsets(tabsets, true);
+      // The call to configureTabsets is safe to perform multiple times.
+      configureTabsets(tabsets);
+      // Create a tab and load code into it.
+      var code1 = sources.addTab().update({title: 'Code1'});
+      var buffer = code1.addBuffer().update({text: sampleText, language: 'cpp'});
     }]);
 
-    function configureTabsets (tabsets, init) {
+    function configureTabsets (tabsets) {
+      // Configure the tabsets, as some options are not saved as part of a
+      // state dump.
       var sources = tabsets.find('sources').update({
         languages: sourceLanguages,
         titlePrefix: 'Code'
@@ -69,30 +78,29 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
         languages: testLanguages,
         titlePrefix: 'Test'
       });
-      if (init) {
-        var code1 = sources.addTab().update({title: 'Code1'});
-        var buffer = code1.addBuffer().update({text: sampleText, language: 'cpp'});
-      }
     }
 
     app.controller('Main', ['$scope', '$rootScope', 'FioiEditor2Tabsets', 'FioiEditor2Recorder', function ($scope, $rootScope, tabsets, recorder) {
       var controller = this;
 
-      // The dumpState function is used by the recorder to save the global state.
+      // The dumpState function is used by the recorder to save the global
+      // state.  This implementation saves the tabsets, more elements could
+      // be included in the dump.
       function dumpState () {
         return {tabsets: tabsets.dump()};
       }
 
       // The loadState function is used by the recorder to load a global state.
+      // The state passed is a previous result from the dumpState function.
       function loadState (state) {
-        // Load tabsets from the saved state.
+        // Reload tabsets from the saved state.  This will clear all tabsets,
+        // tabs, and buffers.  The recording refers to tabsets, tabs and
+        // buffers using their record-time ids.  Fresh ids are used when a state
+        // is reloaded, and the recorder keeps track of the relationship between
+        // record-time and play-time ids.
         tabsets.load(state.tabsets);
         // The configuration of the tabsets is not stored in the saved state.
         configureTabsets(tabsets);
-        // The id of the tabsets have changed, we need to update them in the
-        // scope so that their directives refer to the new instance.
-        $scope.sources = tabsets.find('sources');
-        $scope.tests = tabsets.find('tests');
       }
 
       var recorderOptions = {
@@ -100,30 +108,35 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
         loadState: loadState
       };
 
+      // This object, inserted in the scope, binds the editor directive to
+      // the tabset named 'sources'.
       $scope.sourcesEditor = {
-        tabset: 'sources',
-        onInit: function (api) {
-          controller.editorApi = api;
-        }
+        tabset: 'sources'
       };
-      $scope.testEditorApi = function () {
-        this.editorApi.placeholder();
+
+      // Controller actions for the recorder controls.
+      $scope.playRecording = function () {
+        $scope.recording = sampleRecording;
+        recorder.play($scope.recording, recorderOptions);
       };
       $scope.startRecording = function () {
         recorder.record(recorderOptions);
         tabsets.find('sources').focus();
       };
-      $scope.pauseRecording = function () {
-        recorder.pause();
-      };
       $scope.stopRecording = function () {
         $scope.recording = recorder.stop();
       };
-      $scope.playRecording = function () {
-        $scope.recording = sampleRecording;
-        recorder.play($scope.recording, recorderOptions);
+      $scope.pauseRecording = function () {
+        // Pause/resume has not been tested.
+        if (recorder.isPaused)
+          recorder.resume();
+        else
+          recorder.pause();
       };
+
       $scope.save = function () {
+        // This example shows how to extract source code from a dump, as an
+        // alternative to using getTabs / getBuffers / pullFromControl.
         var source_dump = tabsets.find('sources').dump();
         var source_tabs = source_dump.tabs;
         var active_tab  = source_dump.activeTab;
@@ -138,10 +151,13 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
         });
         console.log(aSources);
       };
+
       $scope.submitActiveBuffer = function () {
+        // This example shows how to extract source code from a single buffer.
         var buffer = tabsets.find('sources').getActiveTab().getBuffer().pullFromControl();
         console.log(buffer.language, buffer.text);
       };
+
     }]);
     angular.bootstrap(document, ['main'], {strictDi: true});
   });
@@ -157,13 +173,12 @@ body { background-color: #eee; }
 
 <div ng-cloak ng-controller="Main">
   <div fioi-editor2="sourcesEditor"></div>
-  <button type="button" ng-click="submitActiveBuffer()">submit</button>
-  <button type="button" ng-click="save()">save</button>
   <button type="button" ng-click="playRecording()"><i class="fa fa-play"></i></button>
   <button type="button" ng-click="startRecording()"><i class="fa fa-circle" style="color: #a01;"></i></button>
-  <button type="button" ng-click="pauseRecording()"><i class="fa fa-pause"></i></button>
   <button type="button" ng-click="stopRecording()"><i class="fa fa-stop"></i></button>
-  <button type="button" ng-click="testEditorApi()">test Editor API</button>
+  <button type="button" ng-click="pauseRecording()"><i class="fa fa-pause"></i></button>
+  <button type="button" ng-click="save()">save</button>
+  <button type="button" ng-click="submitActiveBuffer()">submit</button>
   <div ng-if="recording">
     <pre>{{recording|json:0}}</pre>
   </div>
