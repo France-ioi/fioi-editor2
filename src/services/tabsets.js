@@ -89,8 +89,20 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       return tab;
    };
    Tabset.prototype.removeTab = function (id) {
-      _.pull(this.tabIds, id);
+      var i = _.indexOf(this.tabIds, id);
+      if (i === -1)
+         return;
+      this.tabIds.splice(i, 1);
       delete this.tabs[id];
+      if (this.activeTabId === id) {
+         if (i == this.tabIds.length)
+            i -= 1;
+         if (i !== -1) {
+            this.activeTabId = this.tabIds[i];
+         } else {
+            this.activeTabId = null;
+         }
+      }
       signals.emitUpdate();
    };
    Tabset.prototype.clear = function () {
