@@ -67,7 +67,6 @@ function BufferController (signals, buffers) {
 
       // Let the buffer set up the state once Ace is loaded.
       buffer.pushToControl();
-      editor.focus();
 
       // Hook up events for recording.
       editor.session.doc.on("change", function (e) {
