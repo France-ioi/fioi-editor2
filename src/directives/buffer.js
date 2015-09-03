@@ -100,6 +100,7 @@ function BufferController (signals, buffers) {
 
    function load (buffer) {
       controller.languageOptions = buffer.getLanguages();
+      controller.showLanguageSelector = controller.languageOptions.length > 1;
       controller.language = _.find(controller.languageOptions,
          function (language) { return language.id == buffer.language; });
       if (editor) {
