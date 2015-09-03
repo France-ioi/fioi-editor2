@@ -61,8 +61,10 @@ function EditorController (tabsets) {
       this.selectTab(tab);
    }.bind(this);
 
-   this.closeTab = function (tab) {
+   this.closeTab = function (tab, event) {
       tabset.removeTab(tab.id);
+      // Prevent the click event from triggering selectTab for the removed tab.
+      event.stopPropagation();
    };
 
    this.selectTab = function (tab) {
