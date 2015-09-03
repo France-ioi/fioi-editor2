@@ -130,7 +130,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       _.each(dump.tabs, function (tab_dump) {
          this.addTab(tab_dump[0]).load(tab_dump[1]);
       }.bind(this));
-      this.activeTab = dump.activeTabId;
+      this.activeTabId = dump.activeTabId;
       signals.emitUpdate();
       return this;
    };
