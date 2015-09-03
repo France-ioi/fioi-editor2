@@ -6,9 +6,9 @@ RecorderFactory.$inject = ['$interval', '$rootScope'];
 function RecorderFactory ($interval, $rootScope) {
    var service = {};
    var state = {
-      recording: false,
-      playing: false,
-      paused: false,
+      isRecording: false,
+      isPlaying: false,
+      isPaused: false,
       segments: undefined,
       events: undefined,
       startTime: undefined,
@@ -18,20 +18,19 @@ function RecorderFactory ($interval, $rootScope) {
       playInterval: undefined,
       playCursor: undefined,
       options: null,
-      record: null,
       nextFreshId: 1,
-      renaming: {},  // actual id --> recording id
-      targets: {}  // recording id --> object instance
+      renaming: {},  // play-time id --> record-time id
+      targets: {}  // record-time id --> object instance
    };
 
-   // Start a new recording.  Pass a dumper function which will be called
-   // by the recorder when it needs to store the global state.
+   // Start a new recording.  The options argument should be an object with
+   // the dumpState() and loadState(state) functions.
    service.record = function (options) {
-      if (state.playing || state.recording)
+      if (state.isPlaying || state.isRecording)
          return false;
-      state.paused = false;
+      state.isPaused = false;
       state.options = options;
-      state.recording = true;
+      state.isRecording = true;
       state.timeOffset = 0;
       state.startTime = Date.now();
       state.lastEventTime = 0;
@@ -39,11 +38,11 @@ function RecorderFactory ($interval, $rootScope) {
       state.segments = [];
    };
 
-   service.play = function (record, options) {
-      if (state.recording || state.playing)
+   service.play = function (recording, options) {
+      if (state.isRecording || state.isPlaying)
          return false;
-      state.playing = true;
-      state.record = record;
+      state.isPlaying = true;
+      state.recording = recording;
       state.options = options;
       state.playCursor = 0;
       state.lastEventTime = 0;
@@ -51,9 +50,9 @@ function RecorderFactory ($interval, $rootScope) {
    };
 
    service.pause = function () {
-      if (state.paused)
+      if (state.isPaused)
          return false;
-      if (state.recording) {
+      if (state.isRecording) {
          var duration = Date.now() - state.startTime;
          state.timeOffset += duration;
          state.segments.push({
@@ -62,22 +61,22 @@ function RecorderFactory ($interval, $rootScope) {
          });
          state.events = undefined;
          state.startTime = undefined;
-         state.paused = true;
+         state.isPaused = true;
          return true;
       }
-      if (state.playing) {
+      if (state.isPlaying) {
          $interval.cancel(state.playInterval);
          state.playInterval = null;
-         state.paused = true;
+         state.isPaused = true;
       }
       return false;
    };
 
    service.resume = function () {
-      if (!state.paused)
+      if (!state.isPaused)
          return false;
-      if (state.recording) {
-         state.paused = false;
+      if (state.isRecording) {
+         state.isPaused = false;
          state.startTime = Date.now();
          state.events = [[0, '', '0', state.options.dumpState()]];
          return true;
@@ -85,8 +84,8 @@ function RecorderFactory ($interval, $rootScope) {
    };
 
    service.stop = function () {
-      if (state.recording) {
-         if (!state.paused)
+      if (state.isRecording) {
+         if (!state.isPaused)
             service.pause();
          // Combine the segments.
          var duration = 0;
@@ -100,13 +99,13 @@ function RecorderFactory ($interval, $rootScope) {
             events: events
          };
          // Clear the recorder state.
-         state.recording = false;
+         state.isRecording = false;
          state.segments = undefined;
          state.options = null;
          return result;
       }
-      if (state.playing) {
-         if (!state.paused)
+      if (state.isPlaying) {
+         if (!state.isPaused)
             service.pause();
          state.events = undefined;
          state.options = null;
@@ -125,7 +124,7 @@ function RecorderFactory ($interval, $rootScope) {
    };
 
    service.addEvent = function (event) {
-      if (!state.recording)
+      if (!state.isRecording)
          return;
 
       // Use the same timestamp for all recorded events until the next repaint.
@@ -158,7 +157,7 @@ function RecorderFactory ($interval, $rootScope) {
          state.startTime = Date.now();
       var tickUntil = Math.floor(Date.now() - state.startTime - state.lastEventTime);
       var relTime = 0;
-      var events = state.record.events;
+      var events = state.recording.events;
       while (cursor < events.length && relTime <= tickUntil) {
          var event = events[cursor];
          relTime += event[0];
