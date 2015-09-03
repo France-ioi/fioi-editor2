@@ -72,6 +72,8 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
          this.defaultLanguage = attrs.defaultLanguage;
       if ('activeTabId' in attrs)
          this.activeTabId = attrs.activeTabId;
+      if ('buffersPerTab' in attrs)
+         this.buffersPerTab = attrs.buffersPerTab;
       signals.emitUpdate();
       return this;
    }
@@ -83,8 +85,9 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       id = tab.id;
       this.tabs[id] = tab;
       this.tabIds.push(id);
-      if (this.activeTabId == null)
-         this.activeTabId = id;
+      for (var i = 0; i < this.buffersPerTab; i += 1)
+         tab.addBuffer('');
+      this.activeTabId = id;
       signals.emitUpdate();
       return tab;
    };

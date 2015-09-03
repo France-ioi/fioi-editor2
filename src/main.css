@@ -40,45 +40,36 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
    background-color: #D8D8D8;
 }
 
-.fioi-editor2_buffers {
-   width: 100%;
+.fioi-editor2_empty {
+
 }
 
-.fioi-editor2_buffers textarea {
-   width: 756px;
-   height: auto;
-   text-align: left;
+.fioi-editor2_buffers {
+   width: 100%;
+   overflow: hidden;
+}
+
+.fioi-editor2_empty {
+   width: 760px;
    border: 1px solid #CCCCCC;
    border-top: none;
+   font-style: italic;
+   padding: 10px;
+   color: #888;
 }
 
 .fioi-editor2_buffers .ace_editor {
-   width: 760px;
    height: 350px; /* 14px * 25 lines */
    border: 1px solid #CCCCCC;
    border-top: none;
 }
 
-/*
-#sourcesEditor {
-   width:762px;
+.fioi-editor2_1-buffers .ace_editor {
+   width: 760px;
 }
-
-#testsEditor {
-   width:762px;
+.fioi-editor2_2-buffers .ace_editor {
+   width: 379px;
 }
-
-.CodeMirror {
-  text-align: left;
-  border: 1px solid #CCCCCC;
-  border-top: none;
+.fioi-editor2_2-buffers > div {
+  float: left;
 }
-
-.CodeMirror.basic {
-  border-top: 1px solid #CCCCCC;
-}
-
-.tooltip {
-   display:none;
-}
-*/

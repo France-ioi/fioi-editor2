@@ -51,13 +51,11 @@ function editorDirective (signals) {
 EditorController.$inject = ['FioiEditor2Tabsets']
 function EditorController (tabsets) {
 
-   var config = this.fioiEditor2();
-   var tabset = tabsets.find(config.tabset);
    var controller = this;
+   var tabset = null;
 
    this.addTab = function () {
       var tab = tabset.addTab();
-      tab.addBuffer('');  // XXX this should be done by the tab based on its mode
       this.selectTab(tab);
    }.bind(this);
 
@@ -73,16 +71,37 @@ function EditorController (tabsets) {
 
    // Update state from the tabs service.
    this.update = function () {
+      var config = controller.fioiEditor2();
+      var classes = controller.buffersClasses = {};
+      controller.tabs = [];
+      controller.tab = null;
+      if (!config) {
+         classes['fioi-editor2_error'] = true;
+         return;
+      }
       tabset = tabsets.find(config.tabset);
+      if (!tabset) {
+         classes['fioi-editor2_error'] = true;
+         return;
+      }
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
+      if (controller.tabs.length == 0) {
+         classes['fioi-editor2_empty'] = true;
+         return;
+      }
       var tab = tabset.getActiveTab();
-      controller.tab = tab && {
+      if (!tab) {
+         classes['fioi-editor2_no-active-tab'] = true;
+         return;
+      }
+      controller.tab = {
          id: tab.id,
          title: tab.title,
          buffers: tab.buffers
       };
+      classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
    }
 
 }
