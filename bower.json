@@ -1,6 +1,6 @@
 {
   "name": "fioi-editor2",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "description": "An editor component based on angular.js and Ace.",
   "main": "dist/fioi-editor2.min.js",
   "homepage": "https://github.com/France-ioi/fioi-editor2",
