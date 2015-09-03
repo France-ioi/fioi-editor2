@@ -22,8 +22,6 @@ requirejs.config({
 require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
   angular.element(document).ready(function () {
 
-    var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos >= 0; --iPos)\n  {\n    if(hauteur(iPos) < hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille < nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
-
     var app = angular.module('main', ['fioi-editor2']);
     var sourceLanguages = [
       {id: 'c', label: "C", ext: 'c', ace: {mode: 'c_cpp'}},
@@ -34,13 +32,74 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
       {id: 'javascool', label: "JavaScool", ext: 'jvs', ace: {mode: 'java'}},
       {id: 'python2', label: "Python", ext: 'py', ace: {mode: 'python'}}
     ];
+    var testLanguages = [
+      {name: 'Text', ext: 'txt'}
+    ];
+
+    var sampleText = "#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos >= 0; --iPos)\n  {\n    if(hauteur(iPos) < hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille < nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}";
+    var sampleRecording = {"duration":33802,"events":[[0,"","0",{"tabsets":{"ts1":{"tabs":[["t3",{"title":"Code1","buffers":[["b4",{"text":"#include \"lib.h\"\nconst int LARGEUR_MAX = 1000000;\nint destinationBille[LARGEUR_MAX+1];\nint main()\n{\n  for(int iPos = nbMarches() - 2; iPos >= 0; --iPos)\n  {\n    if(hauteur(iPos) < hauteur(iPos+1))\n      destinationBille[iPos] = iPos;\n    else\n      destinationBille[iPos] = destinationBille[iPos+1];\n  }\n  for(int iBille = 0; iBille < nbLancers(); ++iBille)\n  {\n    int posBille = marcheLancer(iBille);\n    positionFinale(destinationBille[posBille]);\n  }\n  return 0;\n}","language":"cpp","selection":{"start":{"row":0,"column":0},"end":{"row":0,"column":0}}}]]}]],"activeTab":"t3","name":"sources"},"ts2":{"tabs":[],"activeTab":null,"name":"tests"}}}],[1000,"b4","c",1,0],[160,"b4","c",2,0],[149,"b4","c",3,0],[149,"b4","c",4,0],[152,"b4","c",5,0],[202,"b4","c",5,2],[374,"b4","c",5,3],[300,"b4","c",5,4],[263,"b4","c",5,5],[325,"b4","i",5,5,5,6," "],[0,"b4","c",5,6],[294,"b4","c",5,7],[156,"b4","c",5,10],[187,"b4","c",5,11],[240,"b4","s",5,11,5,11],[0,"b4","s",5,11,5,15],[206,"b4","d",5,11,5,15],[0,"b4","c",5,11],[0,"b4","s",5,11,5,11],[0,"b4","s",5,11,5,11],[0,"b4","i",5,11,5,12,"p"],[0,"b4","c",5,12],[67,"b4","i",5,12,5,13,"o"],[0,"b4","c",5,13],[87,"b4","i",5,13,5,14,"s"],[0,"b4","c",5,14],[237,"b4","s",5,14,5,14],[0,"b4","s",5,11,5,14],[574,"b4","c",5,14],[0,"b4","s",5,14,5,14],[0,"b4","s",5,14,5,14],[154,"b4","c",5,15],[146,"b4","c",5,17],[146,"b4","c",5,26],[146,"b4","c",5,28],[148,"b4","c",5,29],[141,"b4","c",5,31],[173,"b4","c",5,32],[223,"b4","c",5,34],[352,"b4","s",5,34,5,34],[0,"b4","s",5,34,5,38],[195,"b4","d",5,34,5,38],[0,"b4","c",5,34],[0,"b4","s",5,34,5,34],[0,"b4","s",5,34,5,34],[0,"b4","i",5,34,5,37,"pos"],[0,"b4","c",5,37],[237,"b4","c",5,38],[168,"b4","c",5,40],[168,"b4","c",5,41],[225,"b4","c",5,42],[276,"b4","c",5,46],[390,"b4","c",5,45],[175,"b4","c",5,44],[259,"b4","s",5,44,5,44],[0,"b4","s",5,44,5,46],[319,"b4","s",5,44,5,50],[333,"b4","d",5,44,5,50],[0,"b4","c",5,44],[0,"b4","s",5,44,5,44],[0,"b4","s",5,44,5,44],[0,"b4","i",5,44,5,47,"pos"],[0,"b4","c",5,47],[276,"b4","i",5,47,5,48," "],[0,"b4","c",5,48],[372,"b4","i",5,48,5,49,"-"],[0,"b4","c",5,49],[282,"b4","i",5,49,5,50,"="],[0,"b4","c",5,50],[102,"b4","i",5,50,5,51," "],[0,"b4","c",5,51],[185,"b4","i",5,51,5,52,"1"],[0,"b4","c",5,52],[297,"b4","c",6,3],[208,"b4","c",7,39],[18,"b4","c",7,4],[335,"b4","c",7,6],[376,"b4","i",7,6,7,7," "],[0,"b4","c",7,7],[237,"b4","c",7,8],[173,"b4","c",7,15],[165,"b4","c",7,16],[335,"b4","s",7,16,7,16],[0,"b4","s",7,16,7,20],[199,"b4","d",7,16,7,20],[0,"b4","c",7,16],[0,"b4","s",7,16,7,16],[0,"b4","s",7,16,7,16],[0,"b4","i",7,16,7,19,"pos"],[0,"b4","c",7,19],[289,"b4","c",7,22],[171,"b4","c",7,23],[160,"b4","c",7,30],[173,"b4","c",7,31],[324,"b4","s",7,31,7,31],[0,"b4","s",7,31,7,35],[189,"b4","d",7,31,7,35],[0,"b4","c",7,31],[0,"b4","s",7,31,7,31],[0,"b4","s",7,31,7,31],[0,"b4","i",7,31,7,34,"pos"],[0,"b4","c",7,34],[336,"b4","i",7,34,7,35," "],[0,"b4","c",7,35],[147,"b4","c",7,36],[115,"b4","i",7,36,7,37," "],[0,"b4","c",7,37],[205,"b4","c",8,36],[76,"b4","c",8,6],[258,"b4","c",8,22],[163,"b4","c",8,23],[384,"b4","s",8,23,8,23],[0,"b4","s",8,23,8,27],[206,"b4","d",8,23,8,27],[0,"b4","c",8,23],[0,"b4","s",8,23,8,23],[0,"b4","s",8,23,8,23],[0,"b4","i",8,23,8,26,"pos"],[0,"b4","c",8,26],[286,"b4","c",8,29],[194,"b4","c",8,30],[252,"b4","s",8,30,8,30],[0,"b4","s",8,30,8,34],[178,"b4","d",8,30,8,34],[0,"b4","c",8,30],[0,"b4","s",8,30,8,30],[0,"b4","s",8,30,8,30],[0,"b4","i",8,30,8,33,"pos"],[0,"b4","c",8,33],[235,"b4","c",9,8],[181,"b4","c",10,33],[61,"b4","c",10,6],[208,"b4","c",10,22],[176,"b4","c",10,23],[372,"b4","s",10,23,10,23],[0,"b4","s",10,23,10,27],[185,"b4","d",10,23,10,27],[0,"b4","c",10,23],[0,"b4","s",10,23,10,23],[0,"b4","s",10,23,10,23],[0,"b4","i",10,23,10,26,"pos"],[0,"b4","c",10,26],[194,"b4","c",10,29],[163,"b4","c",10,30],[173,"b4","c",10,46],[182,"b4","c",10,47],[354,"b4","s",10,47,10,47],[0,"b4","s",10,47,10,51],[397,"b4","d",10,47,10,51],[0,"b4","c",10,47],[0,"b4","s",10,47,10,47],[0,"b4","s",10,47,10,47],[0,"b4","i",10,47,10,50,"pos"],[0,"b4","c",10,50],[383,"b4","i",10,50,10,51," "],[0,"b4","c",10,51],[75,"b4","c",10,52],[112,"b4","i",10,52,10,53," "],[0,"b4","c",10,53],[226,"b4","c",11,3],[184,"b4","c",12,53],[88,"b4","c",12,2],[251,"b4","c",12,5],[156,"b4","c",12,6],[160,"b4","c",12,9],[287,"b4","c",12,10],[265,"b4","s",12,10,12,10],[0,"b4","s",12,10,12,16],[266,"b4","d",12,10,12,16],[0,"b4","c",12,10],[0,"b4","s",12,10,12,10],[0,"b4","s",12,10,12,10],[0,"b4","i",12,10,12,11,"b"],[0,"b4","c",12,11],[113,"b4","i",12,11,12,12,"i"],[0,"b4","c",12,12],[75,"b4","i",12,12,12,13,"l"],[0,"b4","c",12,13],[176,"b4","i",12,13,12,14,"l"],[0,"b4","c",12,14],[32,"b4","i",12,14,12,15,"e"],[0,"b4","c",12,15],[224,"b4","s",12,15,12,15],[0,"b4","s",12,10,12,15],[569,"b4","c",12,15],[0,"b4","s",12,15,12,15],[0,"b4","s",12,15,12,15],[159,"b4","c",12,16],[190,"b4","c",12,18],[168,"b4","c",12,19],[180,"b4","c",12,21],[470,"b4","s",12,21,12,21],[0,"b4","s",12,21,12,27],[151,"b4","d",12,21,12,27],[0,"b4","c",12,21],[0,"b4","s",12,21,12,21],[0,"b4","s",12,21,12,21],[0,"b4","i",12,21,12,26,"bille"],[0,"b4","c",12,26],[224,"b4","c",12,27],[163,"b4","c",12,29],[158,"b4","c",12,38],[163,"b4","c",12,41],[163,"b4","c",12,42],[292,"b4","c",12,44],[410,"b4","s",12,44,12,44],[0,"b4","s",12,42,12,44],[259,"b4","d",12,42,12,44],[0,"b4","s",12,42,12,42],[0,"b4","s",12,42,12,42],[298,"b4","s",12,42,12,42],[0,"b4","s",12,42,12,48],[189,"b4","d",12,42,12,48],[0,"b4","c",12,42],[0,"b4","s",12,42,12,42],[0,"b4","s",12,42,12,42],[0,"b4","i",12,42,12,47,"bille"],[0,"b4","c",12,47],[256,"b4","i",12,47,12,48," "],[0,"b4","c",12,48],[263,"b4","i",12,48,12,49,"+"],[0,"b4","c",12,49],[195,"b4","i",12,49,12,50,"="],[0,"b4","c",12,50],[94,"b4","i",12,50,12,51," "],[0,"b4","c",12,51],[78,"b4","i",12,51,12,52,"1"],[0,"b4","c",12,52],[305,"b4","c",13,3],[201,"b4","c",14,40],[68,"b4","c",14,4],[277,"b4","c",14,7],[149,"b4","c",14,8],[275,"b4","s",14,8,14,8],[0,"b4","s",14,8,14,16],[320,"b4","s",14,8,14,17],[0,"b4","s",14,17,14,17],[203,"b4","c",14,19],[163,"b4","c",14,31],[160,"b4","c",14,32],[318,"b4","s",14,32,14,32],[0,"b4","s",14,32,14,38],[211,"b4","d",14,32,14,38],[0,"b4","c",14,32],[0,"b4","s",14,32,14,32],[0,"b4","s",14,32,14,32],[0,"b4","i",14,32,14,37,"bille"],[0,"b4","c",14,37],[392,"b4","c",15,37],[220,"b4","c",16,3],[182,"b4","c",17,11],[178,"b4","c",18,1],[348,"b4","c",0,0]]};
+
+    function setupTabsets (tabsets) {
+      return {
+        sources: tabsets.add().update({
+          name: 'sources',
+          languages: sourceLanguages,
+          titlePrefix: 'Code'
+        }),
+        tests: tabsets.add().update({
+          name: 'tests',
+          languages: testLanguages,
+          titlePrefix: 'Test'
+        })
+      };
+    }
+
     app.run(['FioiEditor2Tabsets', function (tabsets) {
-      var sources = tabsets.add('sources', {mode: 'sources', languages: sourceLanguages, titlePrefix: 'Code'});
-      var code1 = sources.addTab({title: 'Code1', language: 'cpp'});
-      var buffer = code1.addBuffer(sampleText);
+      tabsets.add().update({name: 'sources'});
+      tabsets.add().update({name: 'tests'});
+      configureTabsets(tabsets, true);
     }]);
-    app.controller('Main', ['$scope', 'FioiEditor2Tabsets', function ($scope, tabsets) {
+
+    function configureTabsets (tabsets, init) {
+      var sources = tabsets.find('sources').update({
+        languages: sourceLanguages,
+        titlePrefix: 'Code'
+      });
+      var tests = tabsets.find('tests').update({
+        languages: testLanguages,
+        titlePrefix: 'Test'
+      });
+      if (init) {
+        var code1 = sources.addTab().update({title: 'Code1'});
+        var buffer = code1.addBuffer().update({text: sampleText, language: 'cpp'});
+      }
+    }
+
+    app.controller('Main', ['$scope', '$rootScope', 'FioiEditor2Tabsets', 'FioiEditor2Recorder', function ($scope, $rootScope, tabsets, recorder) {
       var controller = this;
+
+      // The dumpState function is used by the recorder to save the global state.
+      function dumpState () {
+        return {tabsets: tabsets.dump()};
+      }
+
+      // The loadState function is used by the recorder to load a global state.
+      function loadState (state) {
+        // Load tabsets from the saved state.
+        tabsets.load(state.tabsets);
+        // The configuration of the tabsets is not stored in the saved state.
+        configureTabsets(tabsets);
+        // The id of the tabsets have changed, we need to update them in the
+        // scope so that their directives refer to the new instance.
+        $scope.sources = tabsets.find('sources');
+        $scope.tests = tabsets.find('tests');
+      }
+
+      var recorderOptions = {
+        dumpState: dumpState,
+        loadState: loadState
+      };
+
       $scope.sourcesEditor = {
         tabset: 'sources',
         onInit: function (api) {
@@ -50,23 +109,37 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
       $scope.testEditorApi = function () {
         this.editorApi.placeholder();
       };
+      $scope.startRecording = function () {
+        recorder.record(recorderOptions);
+        tabsets.find('sources').focus();
+      };
+      $scope.pauseRecording = function () {
+        recorder.pause();
+      };
+      $scope.stopRecording = function () {
+        $scope.recording = recorder.stop();
+      };
+      $scope.playRecording = function () {
+        $scope.recording = sampleRecording;
+        recorder.play($scope.recording, recorderOptions);
+      };
       $scope.save = function () {
-        var source_tabset = tabsets.get('sources');
-        var source_tabs   = source_tabset.getTabs();
-        var active_tab    = source_tabset.getActiveTab();
+        var source_dump = tabsets.find('sources').dump();
+        var source_tabs = source_dump.tabs;
+        var active_tab  = source_dump.activeTab;
         var aSources = _.map(source_tabs, function (tab) {
-           var buffer = tab.getBuffer().pullFromControl();
-           return {
-              sName: tab.title,
-              sSource: buffer.text,
-              sLangProg: buffer.language,
-              bActive: tab === active_tab
-           };
+          var buffer = tab[1].buffers[0][1];
+          return {
+            sName: tab[1].title,
+            sSource: buffer.text,
+            sLangProg: buffer.language,
+            bActive: tab[0] === active_tab
+          };
         });
         console.log(aSources);
       };
       $scope.submitActiveBuffer = function () {
-        var buffer = tabsets.get('sources').getActiveTab().getBuffer().pullFromControl();
+        var buffer = tabsets.find('sources').getActiveTab().getBuffer().pullFromControl();
         console.log(buffer.language, buffer.text);
       };
     }]);
@@ -75,6 +148,7 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
 });
 </script>
 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
 <style type="text/css">
 *[ng-cloak] { display: none !important; }
 body { background-color: #eee; }
@@ -85,5 +159,12 @@ body { background-color: #eee; }
   <div fioi-editor2="sourcesEditor"></div>
   <button type="button" ng-click="submitActiveBuffer()">submit</button>
   <button type="button" ng-click="save()">save</button>
+  <button type="button" ng-click="playRecording()"><i class="fa fa-play"></i></button>
+  <button type="button" ng-click="startRecording()"><i class="fa fa-circle" style="color: #a01;"></i></button>
+  <button type="button" ng-click="pauseRecording()"><i class="fa fa-pause"></i></button>
+  <button type="button" ng-click="stopRecording()"><i class="fa fa-stop"></i></button>
   <button type="button" ng-click="testEditorApi()">test Editor API</button>
+  <div ng-if="recording">
+    <pre>{{recording|json:0}}</pre>
+  </div>
 </div>

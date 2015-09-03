@@ -46,7 +46,7 @@ EditorController.$inject = ['$rootScope', 'FioiEditor2Tabsets']
 function EditorController ($rootScope, tabsets) {
 
    var config = this.fioiEditor2();
-   var tabset = tabsets.get(config.tabset);
+   var tabset = tabsets.find(config.tabset);
    var controller = this;
 
    var api = {};
@@ -65,17 +65,17 @@ function EditorController ($rootScope, tabsets) {
    }.bind(this);
 
    this.closeTab = function (tab) {
-      tabset.removeTab(tab.name);
+      tabset.removeTab(tab.id);
    };
 
    this.selectTab = function (tab) {
-      tabset.setActiveTab(tab.name);
+      tabset.setActiveTab(tab.id);
    };
 
    // Initialize controller data and reload it on 'changed' event.
-   onTabsetChanged();
+   loadState();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_tabset-'+config.tabset+'_changed', onTabsetChanged)
+      $rootScope.$on('fioi-editor2_loadState', loadState)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
@@ -90,7 +90,8 @@ function EditorController ($rootScope, tabsets) {
    //
 
    // Load state from the tabs service.
-   function onTabsetChanged () {
+   function loadState () {
+      tabset = tabsets.find(config.tabset);
       controller.tabs = tabset.getTabs();
       controller.tab = tabset.getActiveTab();
    }
