@@ -197,7 +197,7 @@ function BufferController (signals, buffers) {
 
 };
 },{"./buffer.jade":2}],4:[function(require,module,exports){
-module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
+module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div class=\"fioi-editor2_buffers\"><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
 'use strict';
@@ -263,8 +263,10 @@ function EditorController (tabsets) {
       this.selectTab(tab);
    }.bind(this);
 
-   this.closeTab = function (tab) {
+   this.closeTab = function (tab, event) {
       tabset.removeTab(tab.id);
+      // Prevent the click event from triggering selectTab for the removed tab.
+      event.stopPropagation();
    };
 
    this.selectTab = function (tab) {
@@ -278,7 +280,7 @@ function EditorController (tabsets) {
          return {id: tab.id, title: tab.title};
       });
       var tab = tabset.getActiveTab();
-      controller.tab = {
+      controller.tab = tab && {
          id: tab.id,
          title: tab.title,
          buffers: tab.buffers
@@ -916,8 +918,20 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       return tab;
    };
    Tabset.prototype.removeTab = function (id) {
-      _.pull(this.tabIds, id);
+      var i = _.indexOf(this.tabIds, id);
+      if (i === -1)
+         return;
+      this.tabIds.splice(i, 1);
       delete this.tabs[id];
+      if (this.activeTabId === id) {
+         if (i == this.tabIds.length)
+            i -= 1;
+         if (i !== -1) {
+            this.activeTabId = this.tabIds[i];
+         } else {
+            this.activeTabId = null;
+         }
+      }
       signals.emitUpdate();
    };
    Tabset.prototype.clear = function () {
@@ -945,7 +959,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       _.each(dump.tabs, function (tab_dump) {
          this.addTab(tab_dump[0]).load(tab_dump[1]);
       }.bind(this));
-      this.activeTab = dump.activeTabId;
+      this.activeTabId = dump.activeTabId;
       signals.emitUpdate();
       return this;
    };
