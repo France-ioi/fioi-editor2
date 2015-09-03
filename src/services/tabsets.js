@@ -5,8 +5,8 @@ module.exports = function (m) {
 This service stores tabsets.
 */
 m.factory('FioiEditor2Tabsets', TabsetsServiceFactory);
-TabsetsServiceFactory.$inject = ['$rootScope', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
-function TabsetsServiceFactory ($rootScope, tabs, recorder) {
+TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
+function TabsetsServiceFactory (signals, tabs, recorder) {
 
    var service = {};
    var tabsets = {};
@@ -61,12 +61,15 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
    Tabset.prototype.update = function (attrs) {
       if ('name' in attrs)
          this.name = attrs.name;
+      if ('titlePrefix' in attrs)
+         this.titlePrefix = attrs.titlePrefix;
       if ('languages' in attrs)
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
       if ('activeTabId' in attrs)
-         this.activeTabId = activeTabId;
+         this.activeTabId = attrs.activeTabId;
+      signals.emitUpdate();
       return this;
    }
    Tabset.prototype.addTab = function (id) {
@@ -79,11 +82,13 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
       this.tabIds.push(id);
       if (this.activeTabId == null)
          this.activeTabId = id;
+      signals.emitUpdate();
       return tab;
    };
    Tabset.prototype.removeTab = function (id) {
       _.pull(this.tabIds, id);
       delete this.tabs[id];
+      signals.emitUpdate();
    };
    Tabset.prototype.clear = function () {
       _.each(this.tabIds, function (id) {
@@ -92,6 +97,7 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
       this.tabs = {};
       this.tabIds = [];
       this.activeTabId = null;
+      signals.emitUpdate();
    };
    Tabset.prototype.dump = function () {
       var tabs = this.tabs;
@@ -110,6 +116,8 @@ function TabsetsServiceFactory ($rootScope, tabs, recorder) {
          this.addTab(tab_dump[0]).load(tab_dump[1]);
       }.bind(this));
       this.activeTab = dump.activeTabId;
+      signals.emitUpdate();
+      return this;
    };
    Tabset.prototype.getTabs = function () {
       var tabs = this.tabs;

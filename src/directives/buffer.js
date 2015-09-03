@@ -23,17 +23,17 @@ function bufferDirective () {
    };
 }
 
-BufferController.$inject = ['$rootScope', 'FioiEditor2Buffers'];
-function BufferController ($rootScope, buffers) {
+BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
+function BufferController (signals, buffers) {
 
    var controller = this;
    var editor = null; // the ACE object
    var buffer = buffers.get(this.buffer);
 
-   // Initialize controller data and reload it on 'loadState' event.
-   loadState();
+   // Initialize controller data and reload it on 'update' event.
+   update();
    var unhookers = [
-      $rootScope.$on('fioi-editor2_loadState', loadState)
+      signals.on('update', update)
    ];
    this.cleanup = function () {
       _.each(unhookers, function (func) { func(); });
@@ -95,7 +95,7 @@ function BufferController ($rootScope, buffers) {
       editor.focus();
    };
 
-   function loadState () {
+   function update () {
       load(buffer);
    }
 

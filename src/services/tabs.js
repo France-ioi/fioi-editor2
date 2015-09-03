@@ -9,8 +9,8 @@ The service can dump/load its state to/from a JSON object.
 
 */
 m.factory('FioiEditor2Tabs', TabsServiceFactory);
-TabsServiceFactory.$inject = ['$rootScope', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
-function TabsServiceFactory ($rootScope, buffers, recorder) {
+TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
+function TabsServiceFactory (signals, buffers, recorder) {
 
    var service = {};
    var tabs = {};
@@ -19,6 +19,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       var id = recorder.freshId('t', recording_id);
       var tab = tabs[id] = new Tab(id);
       recorder.register(id, tab);
+      signals.emitUpdate();
       return tab;
    };
 
@@ -26,6 +27,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       var tab = tabs[id];
       tab.clear();
       delete tabs[id];
+      signals.emitUpdate();
    };
 
    service.get = function (id) {
@@ -48,6 +50,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
+      signals.emitUpdate();
       return this;
    }
    Tab.prototype.addBuffer = function (id) {
@@ -56,6 +59,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          language: this.getDefaultLanguage()
       });
       this.buffers.push(buffer.id);
+      signals.emitUpdate();
       return buffer;
    };
    Tab.prototype.getLanguages = function () {
@@ -93,6 +97,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
       _.each(dump.buffers, function (buffer_dump) {
          this.addBuffer(buffer_dump[0]).load(buffer_dump[1]);
       }.bind(this));
+      signals.emitUpdate();
       return this;
    };
 
@@ -102,6 +107,7 @@ function TabsServiceFactory ($rootScope, buffers, recorder) {
          buffers.remove(id);
       });
       this.buffers = [];
+      signals.emitUpdate();
    };
    Tab.prototype.replayEvent = function (event) {
       console.log('unhandled Tab event', event);
