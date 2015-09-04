@@ -132,8 +132,10 @@ function RecorderFactory ($interval, signals) {
       // If the component is part of the recording we should have an entry
       // mapping its id to the corresponding id used in the recording.
       if (id in state.renaming) {
-         id = state.renaming[id];
-         state.targets[id] = target;
+         var rec_id = state.renaming[id];
+         if (rec_id) {
+            state.targets[rec_id] = target;
+         }
       }
    };
 
@@ -165,6 +167,11 @@ function RecorderFactory ($interval, signals) {
       return new_id;
    };
 
+   service.getPlayId = function (recording_id) {
+      var target = state.targets[recording_id];
+      return target && target.id;
+   };
+
    function playTick () {
       var cursor = state.playCursor;
       var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
@@ -176,12 +183,10 @@ function RecorderFactory ($interval, signals) {
          var id = event[1];
          var op = event[2];
          try {
-            // If we have an object registered as the event's target,
-            // automatically pass the event to that object.  Objects
-            // typically register when the a state dump is reloaded.
-            if (id in state.targets)
-               state.targets[id].replayEvent(event);
             // An empty target id ('') indicates a global event.
+            // Handle these events before passing them to targets and to the
+            // replayEvent options, so that the '0' event is able to reload
+            // the initial state (and set up the targets mapping) first.
             if (id === '') {
                if (op === '0') {
                   // Global state reset.  Clear the targets registry.
@@ -190,6 +195,11 @@ function RecorderFactory ($interval, signals) {
                   signals.emitUpdate();
                }
             }
+            // If we have an object registered as the event's target,
+            // automatically pass the event to that object.  Objects
+            // typically register when the a state dump is reloaded.
+            if (id in state.targets)
+               state.targets[id].replayEvent(event);
             // Pass all events to the handler in options, if given.
             if (typeof state.options.replayEvent === 'function')
                state.options.replayEvent(event);
