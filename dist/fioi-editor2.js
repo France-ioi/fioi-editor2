@@ -590,8 +590,10 @@ function RecorderFactory ($interval, signals) {
       // If the component is part of the recording we should have an entry
       // mapping its id to the corresponding id used in the recording.
       if (id in state.renaming) {
-         id = state.renaming[id];
-         state.targets[id] = target;
+         var rec_id = state.renaming[id];
+         if (rec_id) {
+            state.targets[rec_id] = target;
+         }
       }
    };
 
@@ -623,6 +625,11 @@ function RecorderFactory ($interval, signals) {
       return new_id;
    };
 
+   service.getPlayId = function (recording_id) {
+      var target = state.targets[recording_id];
+      return target && target.id;
+   };
+
    function playTick () {
       var cursor = state.playCursor;
       var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
@@ -634,12 +641,10 @@ function RecorderFactory ($interval, signals) {
          var id = event[1];
          var op = event[2];
          try {
-            // If we have an object registered as the event's target,
-            // automatically pass the event to that object.  Objects
-            // typically register when the a state dump is reloaded.
-            if (id in state.targets)
-               state.targets[id].replayEvent(event);
             // An empty target id ('') indicates a global event.
+            // Handle these events before passing them to targets and to the
+            // replayEvent options, so that the '0' event is able to reload
+            // the initial state (and set up the targets mapping) first.
             if (id === '') {
                if (op === '0') {
                   // Global state reset.  Clear the targets registry.
@@ -648,6 +653,11 @@ function RecorderFactory ($interval, signals) {
                   signals.emitUpdate();
                }
             }
+            // If we have an object registered as the event's target,
+            // automatically pass the event to that object.  Objects
+            // typically register when the a state dump is reloaded.
+            if (id in state.targets)
+               state.targets[id].replayEvent(event);
             // Pass all events to the handler in options, if given.
             if (typeof state.options.replayEvent === 'function')
                state.options.replayEvent(event);
@@ -930,12 +940,16 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
          tabset: this,
          title: this._unusedTabTitle()
       });
-      id = tab.id;
-      this.tabs[id] = tab;
-      this.tabIds.push(id);
-      for (var i = 0; i < this.buffersPerTab; i += 1)
-         tab.addBuffer('');
-      this.activeTabId = id;
+      var new_id = tab.id;
+      this.tabs[new_id] = tab;
+      this.tabIds.push(new_id);
+      // Skip default initialization if an id was provided, as we are
+      // then in playback mode.
+      if (!id) {
+         this.activeTabId = new_id;
+         for (var i = 0; i < this.buffersPerTab; i += 1)
+            tab.addBuffer('');
+      }
       signals.emitUpdate();
       return tab;
    };
@@ -969,7 +983,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       var tabs = this.tabs;
       var obj = {
          tabs: _.map(this.tabIds, function (id) { return [id, tabs[id].dump()]; }),
-         activeTab: this.activeTabId
+         activeTabId: this.activeTabId
       };
       if (this.name)
          obj.name = this.name;
@@ -981,7 +995,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
       _.each(dump.tabs, function (tab_dump) {
          this.addTab(tab_dump[0]).load(tab_dump[1]);
       }.bind(this));
-      this.activeTabId = dump.activeTabId;
+      this.activeTabId = recorder.getPlayId(dump.activeTabId);
       signals.emitUpdate();
       return this;
    };
