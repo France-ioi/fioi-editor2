@@ -64,12 +64,11 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
          state.isPaused = false;
          registry.clear();
          state.options.loadState(state.resumeState);
-         // XXX this is not quite right, ideally we should set startTime in
-         // the past to (now - playOffset) and leave playOffset unchanged,
-         // so that playOffset remains relative to the start of the audio
-         // recording.
-         state.startTime = Date.now();
-         state.playOffset = 0;
+         if (state.audio)
+            state.audio.play();
+         // Set a fake startTime such that state.playOffset keeps its meaning
+         // as the current position (in milliseconds) in the recording.
+         state.startTime = Date.now() - state.playOffset;
          state.playInterval = $interval(playTick, 20);
          return resolve();
       });
@@ -100,7 +99,12 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
       if (!state.playInterval)
          return;
       var cursor = state.playCursor;
-      var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
+      var playUntil;
+      if (state.audio) {
+         playUntil = Math.floor(state.audio.currentTime * 1000) - state.playOffset;
+      } else {
+         playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
+      }
       var timeElapsed = 0;
       var events = state.recording.events;
       while (cursor < events.length) {
