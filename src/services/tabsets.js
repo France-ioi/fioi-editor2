@@ -89,6 +89,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       // then in playback mode.
       if (!id) {
          this.activeTabId = new_id;
+         recorder.addEvent([this.id, 'n', new_id]);
          for (var i = 0; i < this.buffersPerTab; i += 1)
             tab.addBuffer('');
       }
@@ -159,7 +160,14 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       if (tab) tab.focus();
    };
    Tabset.prototype.replayEvent = function (event) {
-      console.log('unhandled Tabset event', event);
+      switch (event[2]) {
+      case 'n':
+         var tab = this.addTab(event[3]);
+         this.activeTabId = tab.id;
+         break;
+      default:
+         console.log('unhandled Tabset event', event);
+      }
    };
    Tabset.prototype._unusedTabTitle = function () {
       var num = 1;

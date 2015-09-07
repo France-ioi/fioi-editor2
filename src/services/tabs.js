@@ -59,6 +59,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          language: this.getDefaultLanguage()
       });
       this.buffers.push(buffer.id);
+      recorder.addEvent([this.id, 'n', buffer.id]);
       signals.emitUpdate();
       return buffer;
    };
@@ -110,7 +111,13 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       signals.emitUpdate();
    };
    Tab.prototype.replayEvent = function (event) {
-      console.log('unhandled Tab event', event);
+      switch (event[2]) {
+      case 'n':
+         this.addBuffer(event[3]);
+         break;
+      default:
+         console.log('unhandled Tabset event', event);
+      }
    };
 
    return service;
