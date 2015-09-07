@@ -295,14 +295,14 @@ body { background-color: #eee; }
 
     <div class="pull-left" ng-if="mode=='record'">
       <button type="button" class="btn btn-default" ng-click="startRecording()" ng-disabled="isRecording"><i class="fa fa-circle" style="color: #a01;"></i></button>
-      <button type="button" class="btn btn-default" ng-click="pauseRecording()"><i class="fa fa-pause"></i></button>
+      <button type="button" class="btn btn-default" ng-click="pauseRecording()" ng-disabled="!isRecording"><i class="fa fa-pause"></i></button>
       <button type="button" class="btn btn-default" ng-click="stopRecording()" ng-disabled="!isRecording"><i class="fa fa-stop"></i></button>
     </div>
 
     <div class="pull-left" ng-if="mode=='replay'">
-      <button type="button" class="btn btn-default" ng-click="startReplaying()" ng-disabled="isRecording||isPlaying"><i class="fa fa-play"></i></button>
-      <button type="button" class="btn btn-default" ng-click="pauseReplaying()"><i class="fa fa-pause"></i></button>
-      <button type="button" class="btn btn-default" ng-click="stopReplaying()" ng-disabled="!(isPlaying||isRecording)"><i class="fa fa-stop"></i></button>
+      <button type="button" class="btn btn-default" ng-click="startReplaying()" ng-disabled="isPlaying"><i class="fa fa-play"></i></button>
+      <button type="button" class="btn btn-default" ng-click="pauseReplaying()" ng-disabled="!isPlaying"><i class="fa fa-pause"></i></button>
+      <button type="button" class="btn btn-default" ng-click="stopReplaying()" ng-disabled="!(isPlaying)"><i class="fa fa-stop"></i></button>
     </div>
 
     <div class="pull-left">
