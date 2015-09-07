@@ -45,7 +45,8 @@ module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div ng-if=\
 module.exports = function (m) {
 
 m.directive('fioiEditor2Buffer', bufferDirective);
-function bufferDirective () {
+bufferDirective.$inject = ['FioiEditor2Signals'];
+function bufferDirective (signals) {
    return {
       restrict: 'E',
       scope: {
@@ -59,9 +60,18 @@ function bufferDirective () {
       replace: true,
       controller: BufferController,
       link: function (scope, iElement, iAttrs, editorController) {
+         // Bind update events to the controller's update() function.
+         var unhookUpdate = signals.on('update', update);
          scope.$on('$destroy', function () {
+            unhookUpdate();
             scope.vm.cleanup();
          });
+         scope.vm.update();
+         function update() {
+            scope.$apply(function () {
+               scope.vm.update();
+            });
+         }
       }
    };
 }
@@ -70,21 +80,35 @@ BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
 function BufferController (signals, buffers) {
 
    var controller = this;
+   var buffer = null;
    var editor = null; // the ACE object
-   var buffer = buffers.get(this.buffer);
 
-   // Initialize controller data and reload it on 'update' event.
-   update();
-   var unhookers = [
-      signals.on('update', update)
-   ];
+   this.update = function () {
+      this.cleanup();
+      buffer = buffers.get(this.buffer);
+      // Expose our API to the buffer service.
+      buffer.attachControl({
+         load: load,
+         dump: dump,
+         focus: focus,
+         insertLines: insertLines,
+         deleteLines: deleteLines,
+         moveCursor: moveCursor,
+         setSelection: setSelection
+      });
+      buffer.pushToControl();
+   };
+
    this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-      buffer.pullFromControl();
-      buffer.detachControl();
+      if (buffer) {
+         buffer.pullFromControl();
+         buffer.detachControl();
+         buffer = null;
+      }
    };
 
    this.aceLoaded = function (editor_) {
+      // We get this event before update() is called from the link function.
       editor = editor_;
 
       // Get rid of the following Ace warning:
@@ -96,20 +120,6 @@ function BufferController (signals, buffers) {
       // Stop overriding Cmd/Ctrl-L. It's used to by browser to go to the
       // location bar, but ace wants to use it for go-to-line.
       editor.commands.removeCommand("gotoline");
-
-      // Expose our API to the buffer service.
-      buffer.attachControl({
-         load: load,
-         dump: dump,
-         focus: focus,
-         insertLines: insertLines,
-         deleteLines: deleteLines,
-         moveCursor: moveCursor,
-         setSelection: setSelection
-      });
-
-      // Let the buffer set up the state once Ace is loaded.
-      buffer.pushToControl();
 
       // Hook up events for recording.
       editor.session.doc.on("change", function (e) {
@@ -137,11 +147,7 @@ function BufferController (signals, buffers) {
       editor.focus();
    };
 
-   function update () {
-      load(buffer);
-   }
-
-   function load (buffer) {
+   function load () {
       controller.languageOptions = buffer.getLanguages();
       controller.showLanguageSelector = controller.languageOptions.length > 1;
       controller.language = _.find(controller.languageOptions,
@@ -582,7 +588,7 @@ function BuffersFactory (recorder, registry) {
    };
    Buffer.prototype.pushToControl = function () {
       if (this.control)
-         this.control.load(this);
+         this.control.load();
       return this;
    };
    Buffer.prototype.pullFromControl = function () {
@@ -673,6 +679,7 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          if (state.isPaused)
             return resolve();
          $interval.cancel(state.playInterval);
+         state.resumeState = state.options.dumpState();
          state.playInterval = null;
          state.isPaused = true;
          resolve();
@@ -687,6 +694,7 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          if (!state.isPaused)
             resolve();
          state.isPaused = false;
+         state.options.loadState(state.resumeState);
          // XXX this is not quite right, ideally we should set startTime in
          // the past to (now - playOffset) and leave playOffset unchanged,
          // so that playOffset remains relative to the start of the audio
@@ -956,21 +964,25 @@ RegistryFactory.$inject = [];
 function RegistryFactory () {
    var service = {};
    var state = {
-      nextFreshId: 1, // counter used to generate fresh ids
-      renaming: {}, // play-time id --> record-time id
       targets: {} // record-time id --> object instance
    };
 
-   // Generate a fresh id for a component, optionally associating
-   // the new id with an id stored in a recording.
-   service.freshId = function (prefix, recording_id) {
-      var new_id = prefix.toString() + state.nextFreshId;
-      state.nextFreshId += 1;
-      if (typeof recording_id === 'string') {
-         // Map the new id to the recording id provided.
-         state.renaming[new_id] = recording_id;
+   // Generate a fresh id for a component.  If an old_id is passed,
+   // that id is returned (after verifying that there is no component
+   // already registered with the same id).
+   service.freshId = function (prefix, old_id) {
+      if (typeof old_id === 'string') {
+         if (old_id in state.targets)
+            throw ("conflict on id " + old_id);
+         return old_id;
       }
-      return new_id;
+      var nextFreshId = 1;
+      while (true) {
+         var new_id = prefix.toString() + nextFreshId;
+         if (!(new_id in state.targets))
+            return new_id;
+         nextFreshId += 1;
+      }
    };
 
    // Clear the targets registry.
@@ -978,27 +990,20 @@ function RegistryFactory () {
       state.targets = {};
    };
 
-   // Register a component to be used during playback.
+   // Register a component as a target to be used during playback.
    service.register = function (id, target) {
-      // If the component is part of the recording we should have an entry
-      // mapping its id to the corresponding id used in the recording.
-      if (id in state.renaming) {
-         var rec_id = state.renaming[id];
-         if (rec_id) {
-            state.targets[rec_id] = target;
-         }
-      }
+      console.log('register', id, target);
+      state.targets[id] = target;
    };
 
-   service.getTarget = function (recording_id) {
-      return state.targets[recording_id];
+   // Retrieve a playback target by id.
+   service.getTarget = function (id) {
+      return state.targets[id];
    };
 
    // Obtain the playback-time id associated with a given recording-time id.
    service.getPlayId = function (recording_id) {
-      // Retr
-      var target = state.targets[recording_id];
-      return target && target.id;
+      return recording_id;
    };
 
    return service;
@@ -1286,7 +1291,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = new_id;
          recorder.addEvent([this.id, 'n', new_id]);
          for (var i = 0; i < this.buffersPerTab; i += 1)
-            tab.addBuffer('');
+            tab.addBuffer();
       }
       signals.emitUpdate();
       return tab;
@@ -1333,7 +1338,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       _.each(dump.tabs, function (tab) {
          this.addTab(tab.id).load(tab.dump);
       }.bind(this));
-      this.activeTabId = registry.getPlayId(dump.activeTabId);
+      this.activeTabId = dump.activeTabId;
       signals.emitUpdate();
       return this;
    };
@@ -1357,9 +1362,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
    Tabset.prototype.replayEvent = function (event) {
       switch (event[2]) {
       case 'u':
-         var attrs = _.clone(event[3]);
-         attrs.activeTabId = registry.getPlayId(attrs.activeTabId);
-         this.update(attrs);
+         this.update(event[3]);
          break;
       case 'n':
          var tab = this.addTab(event[3]);
