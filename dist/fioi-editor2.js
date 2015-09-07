@@ -310,16 +310,28 @@ function EditorController (tabsets) {
 
 };
 },{"./editor.jade":4}],6:[function(require,module,exports){
-var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_empty {\n\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 760px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 760px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
+var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 740px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 760px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
 },{"./../node_modules/cssify":1}],7:[function(require,module,exports){
 'use strict';
-define(['angular', 'lodash', 'angular-ui-ace'], function (angular, _) {
+define(['module', 'angular', 'lodash', 'angular-ui-ace'], function (module, angular, _) {
 
 require('./main.css');
 
 var m = angular.module('fioi-editor2', ['ui.ace']);
+
+m.factory('FioiEditor2Config', function () {
+   var service = {};
+   // Set rootUri to the directory containing the compiled fioi-editor2.js,
+   // whose URI will be made available by require.js as module.uri.
+   service.rootUri = module.uri.replace(/\/[^/]*$/, '');
+   return service;
+});
+
 require('./services/signals')(m);
+require('./services/registry')(m);
+require('./services/audio')(m);
 require('./services/recorder')(m);
+require('./services/player')(m);
 require('./services/tabsets')(m);
 require('./services/tabs')(m);
 require('./services/buffers')(m);
@@ -327,7 +339,169 @@ require('./directives/editor')(m);
 require('./directives/buffer')(m);
 
 });
-},{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/buffers":8,"./services/recorder":9,"./services/signals":10,"./services/tabs":11,"./services/tabsets":12}],8:[function(require,module,exports){
+},{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/audio":8,"./services/buffers":9,"./services/player":10,"./services/recorder":11,"./services/registry":12,"./services/signals":13,"./services/tabs":14,"./services/tabsets":15}],8:[function(require,module,exports){
+'use strict';
+module.exports = function (m) {
+
+m.factory('FioiEditor2Audio', AudioFactory);
+AudioFactory.$inject = ['FioiEditor2Config', '$location', '$rootScope', '$q'];
+function AudioFactory (config, $location, $rootScope, $q) {
+
+   var service = {
+      error: null
+   };
+   var workerPath = config.rootUri + "/audio-worker.min.js";
+   var state = {
+      nextCallbackId: 1,
+      source: null,
+      recording: false
+   };
+
+   var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+   // Call prepareRecording to ensure that the page has obtained permission
+   // to record audio from the user.  The user can delay replying indefinitely.
+   service.prepareRecording = function (callback) {
+      if (service.error)
+         return callback(error);
+      getUserMedia.call(navigator, {audio: true}, function (stream) {
+         return callback(null, stream);
+      }, function (err) {
+         return callback("getUserMedia error: " + err);
+      });
+   };
+
+   service.isRecording = function () {
+      return state.recording;
+   };
+
+   // Start recording.  The stream argument must be obtained by calling
+   // prepareRecording.
+   service.startRecording = function (stream) {
+
+      var audioContext = new AudioContext();
+      var source = state.source = audioContext.createMediaStreamSource(stream);
+
+      // Create a worker to hold and process the audio buffers.
+      // The worker is reused across calls to startRecording.
+      var worker = state.worker;
+      if (!worker) {
+         worker = state.worker = new Worker(workerPath);
+         worker.onmessage = function (e) {
+            var callbackId = e.data.callbackId;
+            $rootScope.$emit(callbackId, e.data.result);
+         };
+         worker.postMessage({
+            command: "init",
+            config: {
+               sampleRate: source.context.sampleRate
+            }
+         });
+      }
+
+      // Process the audio samples using a script function.
+      var node = state.node = source.context.createScriptProcessor(4096, 2, 2);
+      node.onaudioprocess = function (event) {
+         // Discard samples unless recording.
+         if (!state.recording)
+            return;
+         // Pass the buffer on to the worker.
+         state.worker.postMessage({
+            command: "record",
+            buffer: [
+               event.inputBuffer.getChannelData(0),
+               event.inputBuffer.getChannelData(1)
+            ]
+         });
+      };
+
+      source.connect(node);
+      node.connect(audioContext.destination);
+
+      state.recording = true;
+   };
+
+   // Stop recording.  Returns a promise which will resolve to the
+   // recording result.
+   service.stopRecording = function () {
+      return $q(function (resolve, reject) {
+         state.recording = false;
+         state.node.disconnect();
+         state.node = null;
+         state.source.disconnect();
+         state.source = null;
+         state.worker.postMessage({
+            command: "finishRecording",
+            callbackId: eventizeCallback(resolve)
+         });
+      });
+   };
+
+   service.combineRecordings = function (urls) {
+      return $q(function (resolve, reject) {
+         if (urls.length == 1)
+            return resolve(urls[0]);
+         state.worker.postMessage({
+            command: "combineRecordings",
+            recordings: urls,
+            callbackId: eventizeCallback(resolve)
+         });
+      });
+   };
+
+   service.getPlayer = function () {
+      var soundManager = SoundManager.getInstance();
+      soundManager.setup({
+         url: "bower_components/SoundManager2/swf/",
+         debugMode: false,
+         useFlashBlock: true,
+         onready: function () {
+            console.log('sound manager is ready');
+         }
+      });
+   };
+
+   function eventizeCallback (callback) {
+      var name = 'fioi-editor2_audio-callback_' + state.nextCallbackId;
+      state.nextCallbackId += 1;
+      var deregister = $rootScope.$on(name, function (event, arg) {
+         deregister();
+         callback(arg);
+      });
+      return name;
+   }
+
+   function brokenService (err) {
+      service.error = err;
+      return service;
+   }
+
+   // Feature checking
+
+   if (!getUserMedia || !window.AudioContext){
+      return brokenService('Audio recording is not supported by this browser');
+   }
+
+   if (!window.Worker) {
+      return brokenService('Audio recording requires Web Worker support');
+   }
+
+   var proto = $location.protocol();
+   if (proto === 'file') {
+      // getUserMedia calls neither of its callbacks on Chrome when the code
+      // is loaded from a file:// URL.
+      return brokenService('Audio recording is not available on local URLs');
+   }
+   if (proto === 'http') {
+      // getUserMedia is deprecated on non-secure transports.
+      return brokenService('Audio recording requires the use of https transport');
+   }
+
+   return service;
+}
+
+};
+},{}],9:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -335,16 +509,16 @@ module.exports = function (m) {
 This service maintains a set of buffers.
 */
 m.factory('FioiEditor2Buffers', BuffersFactory);
-BuffersFactory.$inject = ['FioiEditor2Recorder'];
-function BuffersFactory (recorder) {
+BuffersFactory.$inject = ['FioiEditor2Recorder', 'FioiEditor2Registry'];
+function BuffersFactory (recorder, registry) {
 
    var service = {};
    var buffers = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('b', recording_id);
+      var id = registry.freshId('b', recording_id);
       var buffer = buffers[id] = new Buffer(id);
-      recorder.register(id, buffer);
+      registry.register(id, buffer);
       return buffer;
    };
 
@@ -384,7 +558,7 @@ function BuffersFactory (recorder) {
       if ('languages' in attrs)
          this.languages = attrs.languages;
       if ('text' in attrs)
-         this.text = attrs.text;
+         this.text = attrs.text.toString();
       if ('language' in attrs)
          this.language = attrs.language;
       if ('selection' in attrs)
@@ -455,95 +629,63 @@ function BuffersFactory (recorder) {
 }
 
 };
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
-m.factory('FioiEditor2Recorder', RecorderFactory);
-RecorderFactory.$inject = ['$interval', 'FioiEditor2Signals'];
-function RecorderFactory ($interval, signals) {
+m.factory('FioiEditor2Player', PlayerFactory);
+PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Registry', 'FioiEditor2Signals'];
+function PlayerFactory ($q, $interval, $sce, registry, signals) {
    var service = {};
    var state = {
-      isRecording: false,
+      options: null, // object with the dumpState() and loadState(state) functions.
+      recording: null,
+      startTime: null,
       isPlaying: false,
       isPaused: false,
-      segments: undefined,
-      events: undefined,
-      startTime: undefined,
-      timeOffset: undefined,
-      currentFrameTime: undefined,
       playInterval: undefined, // angular $interval handler
       playOffset: undefined, // offset in ms (rel. to startTime) of the last event played
-      playCursor: undefined, // index in recording of the next event to replay
-      options: null, // object with the dumpState() and loadState(state) functions.
-      nextFreshId: 1, // counter used to generate fresh ids
-      renaming: {}, // play-time id --> record-time id
-      targets: {} // record-time id --> object instance
+      playCursor: undefined // index in recording of the next event to replay
    };
 
-   // Start a new recording.
-   service.record = function (options) {
-      if (state.isPlaying || state.isRecording)
-         return false;
-      state.isPaused = false;
-      state.options = options;
-      state.isRecording = true;
-      state.timeOffset = 0;
-      state.startTime = Date.now();
-      state.playOffset = 0;
-      state.events = [[0, '', '0', state.options.dumpState()]];
-      state.segments = [];
+   // Start playing back the given recording.
+   service.start = function (recording, options) {
+      return $q(function (resolve, reject) {
+         if (state.isPlaying)
+            return reject('playback is already in progress');
+         state.options = options;
+         state.recording = recording;
+         state.startTime = Date.now();
+         state.isPlaying = true;
+         state.isPaused = false;
+         state.playInterval = $interval(playTick, 20);
+         state.playOffset = 0;
+         state.playCursor = 0;
+         resolve();
+      });
    };
 
-   // Play the given recording.
-   service.play = function (recording, options) {
-      if (state.isRecording || state.isPlaying)
-         return false;
-      state.isPlaying = true;
-      state.recording = recording;
-      state.options = options;
-      state.playCursor = 0;
-      state.startTime = Date.now();
-      state.playOffset = 0;
-      state.playInterval = $interval(playTick, 20);
-   };
-
-   // Pause the current operation.
+   // Pause playback.
    service.pause = function () {
-      if (state.isPaused)
-         return false;
-      if (state.isRecording) {
-         var duration = Date.now() - state.startTime;
-         state.timeOffset += duration;
-         state.segments.push({
-            duration: duration,
-            events: state.events
-         });
-         state.events = undefined;
-         state.startTime = undefined;
-         state.isPaused = true;
-         return true;
-      }
-      if (state.isPlaying) {
+      return $q(function (resolve, reject) {
+         if (!state.isPlaying)
+            return reject('playback is not in progress');
+         if (state.isPaused)
+            return resolve();
          $interval.cancel(state.playInterval);
          state.playInterval = null;
          state.isPaused = true;
-         return true;
-      }
-      return false;
+         resolve();
+      });
    };
 
-   // Resume (unpause) the current operation.
+   // Resume playback.
    service.resume = function () {
-      if (!state.isPaused)
-         return false;
-      if (state.isRecording) {
-         state.isPaused = false;
-         state.startTime = Date.now();
-         state.events = [[0, '', '0', state.options.dumpState()]];
-         return true;
-      }
-      if (state.isPlaying) {
+      return $q(function (resolve, reject) {
+         if (!state.isPlaying)
+            return reject('playback is not in progress');
+         if (!state.isPaused)
+            resolve();
          state.isPaused = false;
          // XXX this is not quite right, ideally we should set startTime in
          // the past to (now - playOffset) and leave playOffset unchanged,
@@ -552,85 +694,33 @@ function RecorderFactory ($interval, signals) {
          state.startTime = Date.now();
          state.playOffset = 0;
          state.playInterval = $interval(playTick, 20);
-      }
+         return resolve();
+      });
    };
 
+   // Stop playback.
    service.stop = function () {
-      if (state.isRecording) {
-         if (!state.isPaused)
-            service.pause();
-         // Combine the segments.
-         var duration = 0;
-         var events = [];
-         _.each(state.segments, function (segment) {
-            duration += segment.duration;
-            Array.prototype.push.apply(events, segment.events);
-         });
-         var result = {
-            duration:  duration,
-            events: events
-         };
-         // Clear the recorder state.
-         state.isRecording = false;
-         state.segments = undefined;
-         state.options = null;
-         return result;
-      }
-      if (state.isPlaying) {
-         if (!state.isPaused)
-            service.pause();
-         state.events = undefined;
-         state.options = null;
-         return;
-      }
-      return false;
-   };
-
-   service.register = function (id, target) {
-      // If the component is part of the recording we should have an entry
-      // mapping its id to the corresponding id used in the recording.
-      if (id in state.renaming) {
-         var rec_id = state.renaming[id];
-         if (rec_id) {
-            state.targets[rec_id] = target;
+      return $q(function (resolve, reject) {
+         // Pause before stopping.
+         if (!state.isPaused) {
+            return service.pause().then(afterPaused, reject);
+         } else {
+            return afterPaused();
          }
-      }
-   };
-
-   service.addEvent = function (event) {
-      if (!state.isRecording)
-         return;
-
-      // Use the same timestamp for all recorded events until the next repaint.
-      if (typeof state.currentFrameTime !== 'number') {
-         state.currentFrameTime = Math.floor(Date.now() - state.startTime);
-         window.requestAnimationFrame(function () {
-            state.currentFrameTime = undefined;
-         });
-      }
-
-      var delta = state.currentFrameTime - state.playOffset;
-      state.playOffset = state.currentFrameTime;
-      event.unshift(delta);
-      state.events.push(event);
-   };
-
-   service.freshId = function (prefix, recording_id) {
-      var new_id = prefix.toString() + state.nextFreshId;
-      state.nextFreshId += 1;
-      if (typeof recording_id === 'string') {
-         // Map the new id to the recording id provided.
-         state.renaming[new_id] = recording_id;
-      }
-      return new_id;
-   };
-
-   service.getPlayId = function (recording_id) {
-      var target = state.targets[recording_id];
-      return target && target.id;
+         function afterPaused () {
+            state.isPlaying = false;
+            state.isPaused = false;
+            state.events = undefined;
+            state.options = null;
+            resolve();
+         }
+      });
    };
 
    function playTick () {
+      // Discard a tick event that was queued before playing was paused or stopped.
+      if (!state.playInterval)
+         return;
       var cursor = state.playCursor;
       var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
       var timeElapsed = 0;
@@ -648,7 +738,7 @@ function RecorderFactory ($interval, signals) {
             if (id === '') {
                if (op === '0') {
                   // Global state reset.  Clear the targets registry.
-                  state.targets = {};
+                  registry.clear();
                   state.options.loadState(event[3]);
                   signals.emitUpdate();
                }
@@ -656,8 +746,9 @@ function RecorderFactory ($interval, signals) {
             // If we have an object registered as the event's target,
             // automatically pass the event to that object.  Objects
             // typically register when the a state dump is reloaded.
-            if (id in state.targets)
-               state.targets[id].replayEvent(event);
+            var target = registry.getTarget(id);
+            if (target)
+               target.replayEvent(event);
             // Pass all events to the handler in options, if given.
             if (typeof state.options.replayEvent === 'function')
                state.options.replayEvent(event);
@@ -675,6 +766,7 @@ function RecorderFactory ($interval, signals) {
          $interval.cancel(state.playInterval);
          state.playInterval = null;
          service.stop();
+         signals.emit('done');
       }
    }
 
@@ -682,8 +774,236 @@ function RecorderFactory ($interval, signals) {
 }
 
 };
+},{}],11:[function(require,module,exports){
+'use strict';
+module.exports = function (m) {
 
-},{}],10:[function(require,module,exports){
+m.factory('FioiEditor2Recorder', RecorderFactory);
+RecorderFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio'];
+function RecorderFactory ($q, $interval, $sce, audio) {
+   var service = {};
+   var state = {
+      options: null, // object with the dumpState() and loadState(state) functions.
+      isRecording: false, // Is recording in progress?
+      isPaused: false,  // Is recording paused?
+      segments: undefined, // Array of previously recorded segments.
+      events: undefined, // Array of events recorded as part of the current segment.
+      startTime: undefined, // Clock time of the start of recording (adjusted to pretend all segments were recorded with no pauses).
+      timeOffset: undefined, // Timestamp (relative time in ms) of the start of the segment currently being recorded.
+      currentFrameTime: undefined, // Timestamp (relative time in ms) of the current frame.
+      lastEventTime: undefined // Timestamp (relative time in ms) of the last recorded event.
+   };
+
+   // Start a new recording.
+   service.record = function (options) {
+      return $q(function (resolve, reject) {
+         if (state.isRecording)
+            return reject('an operation is already in progress');
+         audio.prepareRecording(function (err, stream) {
+            if (err)
+               return reject(err);
+            state.audioStream = stream;
+            afterAudio();
+         });
+         function afterAudio () {
+            state.isPaused = false;
+            state.options = options;
+            state.isRecording = true;
+            state.timeOffset = 0;
+            state.startTime = Date.now();
+            state.lastEventTime = 0;
+            state.events = [[0, '', '0', state.options.dumpState()]];
+            state.segments = [];
+            if (state.audioStream)
+               audio.startRecording(state.audioStream);
+            resolve();
+         }
+      });
+   };
+
+   // Pause recording, completing a segment.
+   service.pause = function () {
+      return $q(function (resolve, reject) {
+         if (!state.isRecording)
+            reject('no operation to pause');
+         if (state.isPaused)
+            return reject('not paused');
+         var duration = Date.now() - state.startTime;
+         var segment = {
+            duration: duration,
+            events: state.events
+         };
+         state.events = undefined;
+         state.timeOffset += duration;
+         state.startTime = undefined;
+         state.isPaused = true;
+         if (!state.audioStream)
+            return afterAudio();
+         audio.stopRecording().then(function (result) {
+            segment.audioUrl = result.url;
+            segment.safeAudioUrl = $sce.trustAsResourceUrl(result.url);
+            afterAudio();
+         }, function (err) {
+            // TODO: reload the initial state of the dropped segment.
+            reject(err);
+         });
+         function afterAudio () {
+            state.segments.push(segment);
+            resolve(segment);
+         }
+      })
+   };
+
+   // Resume recording, starting a new segment.
+   service.resume = function () {
+      return $q(function (resolve, reject) {
+         if (!state.isRecording)
+            reject('not recording');
+         if (!state.isPaused)
+            reject('not paused');
+         state.isPaused = false;
+         state.startTime = Date.now();
+         state.events = [[0, '', '0', state.options.dumpState()]];
+         if (state.audioStream)
+            audio.startRecording(state.audioStream);
+         return resolve();
+      });
+   };
+
+   // Stop recording.  Segments are joined and the returned promise is resolved
+   // with the completed recording.
+   service.stop = function () {
+      return $q(function (resolve, reject) {
+         if (!state.isRecording)
+            reject('not recording');
+         // TODO: set a 'isStopping' flag so that recording cannot be resumed
+         // while we are asynchronously waiting on audio operations.
+         if (!state.isPaused) {
+            return service.pause().then(function () {
+               afterPaused();
+            }, function (err) {
+               reject(err);
+            });
+         } else {
+            return afterPaused();
+         }
+         function afterPaused () {
+            // Combine the segments.
+            var duration = 0;
+            var events = [];
+            var audioUrls = [];
+            _.each(state.segments, function (segment) {
+               duration += segment.duration;
+               Array.prototype.push.apply(events, segment.events);
+               audioUrls.push(segment.audioUrl);
+            });
+            var result = {
+               duration:  duration,
+               events: events
+            };
+            if (state.audioStream) {
+               audio.combineRecordings(audioUrls).then(afterCombineRecordings, reject);
+               // TODO: audio.clearAll();
+            } else {
+               afterCombineRecordings();
+            }
+            function afterCombineRecordings (audioUrl) {
+               if (audioUrl) {
+                  result.audioUrl = audioUrl;
+                  result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
+               }
+               // Clear the recorder state.
+               state.isRecording = false;
+               state.isPaused = false;
+               state.segments = undefined;
+               state.options = null;
+               resolve(result);
+            }
+         }
+      });
+   };
+
+   service.addEvent = function (event) {
+      if (!state.isRecording)
+         return;
+
+      // Use the same timestamp for all recorded events until the next repaint.
+      if (typeof state.currentFrameTime !== 'number') {
+         state.currentFrameTime = Math.floor(Date.now() - state.startTime);
+         window.requestAnimationFrame(function () {
+            state.currentFrameTime = undefined;
+         });
+      }
+
+      var delta = state.currentFrameTime - state.lastEventTime;
+      state.lastEventTime = state.currentFrameTime;
+      event.unshift(delta);
+      state.events.push(event);
+   };
+
+   return service;
+}
+
+};
+},{}],12:[function(require,module,exports){
+'use strict';
+module.exports = function (m) {
+
+m.factory('FioiEditor2Registry', RegistryFactory);
+RegistryFactory.$inject = [];
+function RegistryFactory () {
+   var service = {};
+   var state = {
+      nextFreshId: 1, // counter used to generate fresh ids
+      renaming: {}, // play-time id --> record-time id
+      targets: {} // record-time id --> object instance
+   };
+
+   // Generate a fresh id for a component, optionally associating
+   // the new id with an id stored in a recording.
+   service.freshId = function (prefix, recording_id) {
+      var new_id = prefix.toString() + state.nextFreshId;
+      state.nextFreshId += 1;
+      if (typeof recording_id === 'string') {
+         // Map the new id to the recording id provided.
+         state.renaming[new_id] = recording_id;
+      }
+      return new_id;
+   };
+
+   // Clear the targets registry.
+   service.clear = function () {
+      state.targets = {};
+   };
+
+   // Register a component to be used during playback.
+   service.register = function (id, target) {
+      // If the component is part of the recording we should have an entry
+      // mapping its id to the corresponding id used in the recording.
+      if (id in state.renaming) {
+         var rec_id = state.renaming[id];
+         if (rec_id) {
+            state.targets[rec_id] = target;
+         }
+      }
+   };
+
+   service.getTarget = function (recording_id) {
+      return state.targets[recording_id];
+   };
+
+   // Obtain the playback-time id associated with a given recording-time id.
+   service.getPlayId = function (recording_id) {
+      // Retr
+      var target = state.targets[recording_id];
+      return target && target.id;
+   };
+
+   return service;
+}
+
+};
+},{}],13:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -691,6 +1011,7 @@ m.factory('FioiEditor2Signals', SignalsFactory);
 SignalsFactory.$inject = ['$rootScope'];
 function SignalsFactory ($rootScope) {
 
+   var prefix = 'fioi-editor2_';
    var service = {};
    var pending = {};
    var mustEmit = false;
@@ -698,7 +1019,7 @@ function SignalsFactory ($rootScope) {
    var defer = false;
 
    service.on = function (signal, handler) {
-      return $rootScope.$on('fioi-editor2_' + signal, handler);
+      return $rootScope.$on(prefix + signal, handler);
    };
 
    service.defer = function (flag) {
@@ -708,10 +1029,10 @@ function SignalsFactory ($rootScope) {
    };
 
    service.emitUpdate = function () {
-      emit('update');
+      this.emit('update');
    };
 
-   function emit (signal) {
+   service.emit = function (signal) {
       if (pending[signal])
          return;
       pending[signal] = true;
@@ -720,22 +1041,23 @@ function SignalsFactory ($rootScope) {
          return;
       willEmit = true;
       window.requestAnimationFrame(doEmit);
-   }
+   };
 
    function doEmit () {
       var signals = pending;
       pending = {};
       mustEmit = false;
       willEmit = false;
-      if (signals.update)
-         $rootScope.$emit('fioi-editor2_update');
+      _.each(signals, function (flag, signal) {
+         $rootScope.$emit(prefix + signal);
+      });
    }
 
    return service;
 }
 
 };
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -747,16 +1069,16 @@ The service can dump/load its state to/from a JSON object.
 
 */
 m.factory('FioiEditor2Tabs', TabsServiceFactory);
-TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
-function TabsServiceFactory (signals, buffers, recorder) {
+TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
+function TabsServiceFactory (signals, buffers, recorder, registry) {
 
    var service = {};
    var tabs = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('t', recording_id);
+      var id = registry.freshId('t', recording_id);
       var tab = tabs[id] = new Tab(id);
-      recorder.register(id, tab);
+      registry.register(id, tab);
       signals.emitUpdate();
       return tab;
    };
@@ -826,14 +1148,14 @@ function TabsServiceFactory (signals, buffers, recorder) {
          buffers: _.map(this.buffers, function (id) {
             var buffer = buffers.get(id);
             buffer.pullFromControl();
-            return [id, buffer.dump()];
+            return {id: id, dump: buffer.dump()};
          })
       };
    };
    Tab.prototype.load = function (dump) {
       this.title = dump.title;
-      _.each(dump.buffers, function (buffer_dump) {
-         this.addBuffer(buffer_dump[0]).load(buffer_dump[1]);
+      _.each(dump.buffers, function (buffer) {
+         this.addBuffer(buffer.id).load(buffer.dump);
       }.bind(this));
       signals.emitUpdate();
       return this;
@@ -855,7 +1177,7 @@ function TabsServiceFactory (signals, buffers, recorder) {
 }
 
 };
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 module.exports = function (m) {
 
@@ -863,16 +1185,16 @@ module.exports = function (m) {
 This service stores tabsets.
 */
 m.factory('FioiEditor2Tabsets', TabsetsServiceFactory);
-TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
-function TabsetsServiceFactory (signals, tabs, recorder) {
+TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
+function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 
    var service = {};
    var tabsets = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('ts', recording_id);
+      var id = registry.freshId('ts', recording_id);
       var tabset = tabsets[id] = new Tabset(id);
-      recorder.register(id, tabset);
+      registry.register(id, tabset);
       signals.emitUpdate();
       return tabset;
    };
@@ -982,7 +1304,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
    Tabset.prototype.dump = function () {
       var tabs = this.tabs;
       var obj = {
-         tabs: _.map(this.tabIds, function (id) { return [id, tabs[id].dump()]; }),
+         tabs: _.map(this.tabIds, function (id) { return {id: id, dump: tabs[id].dump()}; }),
          activeTabId: this.activeTabId
       };
       if (this.name)
@@ -992,10 +1314,10 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
    Tabset.prototype.load = function (dump) {
       if (dump.name)
          this.name = dump.name;
-      _.each(dump.tabs, function (tab_dump) {
-         this.addTab(tab_dump[0]).load(tab_dump[1]);
+      _.each(dump.tabs, function (tab) {
+         this.addTab(tab.id).load(tab.dump);
       }.bind(this));
-      this.activeTabId = recorder.getPlayId(dump.activeTabId);
+      this.activeTabId = registry.getPlayId(dump.activeTabId);
       signals.emitUpdate();
       return this;
    };
