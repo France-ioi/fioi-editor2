@@ -41,6 +41,7 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          if (state.isPaused)
             return resolve();
          $interval.cancel(state.playInterval);
+         state.resumeState = state.options.dumpState();
          state.playInterval = null;
          state.isPaused = true;
          resolve();
@@ -55,6 +56,7 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          if (!state.isPaused)
             resolve();
          state.isPaused = false;
+         state.options.loadState(state.resumeState);
          // XXX this is not quite right, ideally we should set startTime in
          // the past to (now - playOffset) and leave playOffset unchanged,
          // so that playOffset remains relative to the start of the audio
