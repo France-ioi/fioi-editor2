@@ -34,7 +34,6 @@ function RegistryFactory () {
 
    // Register a component as a target to be used during playback.
    service.register = function (id, target) {
-      console.log('register', id, target);
       state.targets[id] = target;
    };
 
