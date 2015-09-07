@@ -107,16 +107,10 @@ function AudioFactory (config, $location, $rootScope, $q) {
       });
    };
 
-   service.getPlayer = function () {
-      var soundManager = SoundManager.getInstance();
-      soundManager.setup({
-         url: "bower_components/SoundManager2/swf/",
-         debugMode: false,
-         useFlashBlock: true,
-         onready: function () {
-            console.log('sound manager is ready');
-         }
-      });
+   service.getPlayer = function (url) {
+      var element = new Audio();
+      element.src = url;
+      return element;
    };
 
    function eventizeCallback (callback) {
