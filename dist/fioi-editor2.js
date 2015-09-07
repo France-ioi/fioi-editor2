@@ -310,7 +310,7 @@ function EditorController (tabsets) {
 
 };
 },{"./editor.jade":4}],6:[function(require,module,exports){
-var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 740px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 760px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
+var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 762px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 762px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
 },{"./../node_modules/cssify":1}],7:[function(require,module,exports){
 'use strict';
 define(['module', 'angular', 'lodash', 'angular-ui-ace'], function (module, angular, _) {
@@ -363,7 +363,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    // to record audio from the user.  The user can delay replying indefinitely.
    service.prepareRecording = function (callback) {
       if (service.error)
-         return callback(error);
+         return callback(service.error);
       getUserMedia.call(navigator, {audio: true}, function (stream) {
          return callback(null, stream);
       }, function (err) {
@@ -1119,6 +1119,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          language: this.getDefaultLanguage()
       });
       this.buffers.push(buffer.id);
+      recorder.addEvent([this.id, 'n', buffer.id]);
       signals.emitUpdate();
       return buffer;
    };
@@ -1170,7 +1171,13 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       signals.emitUpdate();
    };
    Tab.prototype.replayEvent = function (event) {
-      console.log('unhandled Tab event', event);
+      switch (event[2]) {
+      case 'n':
+         this.addBuffer(event[3]);
+         break;
+      default:
+         console.log('unhandled Tabset event', event);
+      }
    };
 
    return service;
@@ -1269,6 +1276,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       // then in playback mode.
       if (!id) {
          this.activeTabId = new_id;
+         recorder.addEvent([this.id, 'n', new_id]);
          for (var i = 0; i < this.buffersPerTab; i += 1)
             tab.addBuffer('');
       }
@@ -1339,7 +1347,14 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       if (tab) tab.focus();
    };
    Tabset.prototype.replayEvent = function (event) {
-      console.log('unhandled Tabset event', event);
+      switch (event[2]) {
+      case 'n':
+         var tab = this.addTab(event[3]);
+         this.activeTabId = tab.id;
+         break;
+      default:
+         console.log('unhandled Tabset event', event);
+      }
    };
    Tabset.prototype._unusedTabTitle = function () {
       var num = 1;
