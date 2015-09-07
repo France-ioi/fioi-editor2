@@ -227,6 +227,7 @@ require(['angular', 'es5-shim', 'fioi-editor2'], function (angular) {
         $scope.isPaused = false;
         window.recording = result;
         $scope.recording = result;
+        $scope.mode = 'replay';
       }, function (err) {
         console.log('recording failed to stop:', err);
       });
