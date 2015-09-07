@@ -61,7 +61,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       this.tabIds = [];
       this.activeTabId = null;
    }
-   Tabset.prototype.update = function (attrs) {
+   Tabset.prototype.update = function (attrs, quiet) {
       if ('name' in attrs)
          this.name = attrs.name;
       if ('titlePrefix' in attrs)
@@ -74,7 +74,10 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
          this.buffersPerTab = attrs.buffersPerTab;
-      signals.emitUpdate();
+      if (!quiet) {
+         recorder.addEvent([this.id, 'u', attrs]);
+         signals.emitUpdate();
+      }
       return this;
    }
    Tabset.prototype.addTab = function (id) {
@@ -161,6 +164,11 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
    };
    Tabset.prototype.replayEvent = function (event) {
       switch (event[2]) {
+      case 'u':
+         var attrs = _.clone(event[3]);
+         attrs.activeTabId = registry.getPlayId(attrs.activeTabId);
+         this.update(attrs);
+         break;
       case 'n':
          var tab = this.addTab(event[3]);
          this.activeTabId = tab.id;

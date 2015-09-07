@@ -41,7 +41,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       this.languages = null; // inherit from tabset
       this.defaultLanguage = null;
    }
-   Tab.prototype.update = function (attrs) {
+   Tab.prototype.update = function (attrs, quiet) {
       if ('tabset' in attrs)
          this.tabset = attrs.tabset;
       if ('title' in attrs)
@@ -50,7 +50,10 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
-      signals.emitUpdate();
+      if (!quiet) {
+         recorder.addEvent([this.id, 'u', attrs]);
+         signals.emitUpdate();
+      }
       return this;
    }
    Tab.prototype.addBuffer = function (id) {
@@ -116,7 +119,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          this.addBuffer(event[3]);
          break;
       default:
-         console.log('unhandled Tabset event', event);
+         console.log('unhandled Tab event', event);
       }
    };
 
