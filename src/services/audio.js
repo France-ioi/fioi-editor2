@@ -21,7 +21,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    // to record audio from the user.  The user can delay replying indefinitely.
    service.prepareRecording = function (callback) {
       if (service.error)
-         return callback(error);
+         return callback(service.error);
       getUserMedia.call(navigator, {audio: true}, function (stream) {
          return callback(null, stream);
       }, function (err) {
