@@ -89,6 +89,7 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
             state.isPaused = false;
             state.events = undefined;
             state.options = null;
+            state.audio = null;
             resolve();
          }
       });
