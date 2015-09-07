@@ -60,6 +60,7 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
          if (!state.isPaused)
             resolve();
          state.isPaused = false;
+         registry.clear();
          state.options.loadState(state.resumeState);
          // XXX this is not quite right, ideally we should set startTime in
          // the past to (now - playOffset) and leave playOffset unchanged,
