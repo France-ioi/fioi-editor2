@@ -455,16 +455,10 @@ function AudioFactory (config, $location, $rootScope, $q) {
       });
    };
 
-   service.getPlayer = function () {
-      var soundManager = SoundManager.getInstance();
-      soundManager.setup({
-         url: "bower_components/SoundManager2/swf/",
-         debugMode: false,
-         useFlashBlock: true,
-         onready: function () {
-            console.log('sound manager is ready');
-         }
-      });
+   service.getPlayer = function (url) {
+      var element = new Audio();
+      element.src = url;
+      return element;
    };
 
    function eventizeCallback (callback) {
@@ -640,8 +634,8 @@ function BuffersFactory (recorder, registry) {
 module.exports = function (m) {
 
 m.factory('FioiEditor2Player', PlayerFactory);
-PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Registry', 'FioiEditor2Signals'];
-function PlayerFactory ($q, $interval, $sce, registry, signals) {
+PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio', 'FioiEditor2Registry', 'FioiEditor2Signals'];
+function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
    var service = {};
    var state = {
       options: null, // object with the dumpState() and loadState(state) functions.
@@ -667,6 +661,10 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          state.playInterval = $interval(playTick, 20);
          state.playOffset = 0;
          state.playCursor = 0;
+         if (recording.audioUrl) {
+            state.audio = audio.getPlayer(recording.audioUrl);
+            state.audio.play();
+         }
          resolve();
       });
    };
@@ -678,6 +676,8 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
             return reject('playback is not in progress');
          if (state.isPaused)
             return resolve();
+         if (state.audio)
+            state.audio.pause();
          $interval.cancel(state.playInterval);
          state.resumeState = state.options.dumpState();
          state.playInterval = null;
@@ -694,13 +694,13 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          if (!state.isPaused)
             resolve();
          state.isPaused = false;
+         registry.clear();
          state.options.loadState(state.resumeState);
-         // XXX this is not quite right, ideally we should set startTime in
-         // the past to (now - playOffset) and leave playOffset unchanged,
-         // so that playOffset remains relative to the start of the audio
-         // recording.
-         state.startTime = Date.now();
-         state.playOffset = 0;
+         if (state.audio)
+            state.audio.play();
+         // Set a fake startTime such that state.playOffset keeps its meaning
+         // as the current position (in milliseconds) in the recording.
+         state.startTime = Date.now() - state.playOffset;
          state.playInterval = $interval(playTick, 20);
          return resolve();
       });
@@ -720,17 +720,27 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
             state.isPaused = false;
             state.events = undefined;
             state.options = null;
+            state.audio = null;
             resolve();
          }
       });
    };
+
+   service.rewind = function () {
+      // audio.currentTime = 0;
+   }
 
    function playTick () {
       // Discard a tick event that was queued before playing was paused or stopped.
       if (!state.playInterval)
          return;
       var cursor = state.playCursor;
-      var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
+      var playUntil;
+      if (state.audio) {
+         playUntil = Math.floor(state.audio.currentTime * 1000) - state.playOffset;
+      } else {
+         playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
+      }
       var timeElapsed = 0;
       var events = state.recording.events;
       while (cursor < events.length) {
@@ -992,7 +1002,6 @@ function RegistryFactory () {
 
    // Register a component as a target to be used during playback.
    service.register = function (id, target) {
-      console.log('register', id, target);
       state.targets[id] = target;
    };
 
