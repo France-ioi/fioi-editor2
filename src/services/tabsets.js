@@ -141,7 +141,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       _.each(dump.tabs, function (tab) {
          this.addTab(tab.id).load(tab.dump);
       }.bind(this));
-      this.activeTabId = registry.getPlayId(dump.activeTabId);
+      this.activeTabId = dump.activeTabId;
       signals.emitUpdate();
       return this;
    };
@@ -165,9 +165,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
    Tabset.prototype.replayEvent = function (event) {
       switch (event[2]) {
       case 'u':
-         var attrs = _.clone(event[3]);
-         attrs.activeTabId = registry.getPlayId(attrs.activeTabId);
-         this.update(attrs);
+         this.update(event[3]);
          break;
       case 'n':
          var tab = this.addTab(event[3]);
