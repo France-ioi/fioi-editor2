@@ -2,8 +2,8 @@
 module.exports = function (m) {
 
 m.factory('FioiEditor2Player', PlayerFactory);
-PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Registry', 'FioiEditor2Signals'];
-function PlayerFactory ($q, $interval, $sce, registry, signals) {
+PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio', 'FioiEditor2Registry', 'FioiEditor2Signals'];
+function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
    var service = {};
    var state = {
       options: null, // object with the dumpState() and loadState(state) functions.
@@ -29,6 +29,10 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
          state.playInterval = $interval(playTick, 20);
          state.playOffset = 0;
          state.playCursor = 0;
+         if (recording.audioUrl) {
+            state.audio = audio.getPlayer(recording.audioUrl);
+            state.audio.play();
+         }
          resolve();
       });
    };
