@@ -2,7 +2,8 @@
 module.exports = function (m) {
 
 m.directive('fioiEditor2Buffer', bufferDirective);
-function bufferDirective () {
+bufferDirective.$inject = ['FioiEditor2Signals'];
+function bufferDirective (signals) {
    return {
       restrict: 'E',
       scope: {
@@ -16,9 +17,18 @@ function bufferDirective () {
       replace: true,
       controller: BufferController,
       link: function (scope, iElement, iAttrs, editorController) {
+         // Bind update events to the controller's update() function.
+         var unhookUpdate = signals.on('update', update);
          scope.$on('$destroy', function () {
+            unhookUpdate();
             scope.vm.cleanup();
          });
+         scope.vm.update();
+         function update() {
+            scope.$apply(function () {
+               scope.vm.update();
+            });
+         }
       }
    };
 }
@@ -27,21 +37,35 @@ BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
 function BufferController (signals, buffers) {
 
    var controller = this;
+   var buffer = null;
    var editor = null; // the ACE object
-   var buffer = buffers.get(this.buffer);
 
-   // Initialize controller data and reload it on 'update' event.
-   update();
-   var unhookers = [
-      signals.on('update', update)
-   ];
+   this.update = function () {
+      this.cleanup();
+      buffer = buffers.get(this.buffer);
+      // Expose our API to the buffer service.
+      buffer.attachControl({
+         load: load,
+         dump: dump,
+         focus: focus,
+         insertLines: insertLines,
+         deleteLines: deleteLines,
+         moveCursor: moveCursor,
+         setSelection: setSelection
+      });
+      buffer.pushToControl();
+   };
+
    this.cleanup = function () {
-      _.each(unhookers, function (func) { func(); });
-      buffer.pullFromControl();
-      buffer.detachControl();
+      if (buffer) {
+         buffer.pullFromControl();
+         buffer.detachControl();
+         buffer = null;
+      }
    };
 
    this.aceLoaded = function (editor_) {
+      // We get this event before update() is called from the link function.
       editor = editor_;
 
       // Get rid of the following Ace warning:
@@ -53,20 +77,6 @@ function BufferController (signals, buffers) {
       // Stop overriding Cmd/Ctrl-L. It's used to by browser to go to the
       // location bar, but ace wants to use it for go-to-line.
       editor.commands.removeCommand("gotoline");
-
-      // Expose our API to the buffer service.
-      buffer.attachControl({
-         load: load,
-         dump: dump,
-         focus: focus,
-         insertLines: insertLines,
-         deleteLines: deleteLines,
-         moveCursor: moveCursor,
-         setSelection: setSelection
-      });
-
-      // Let the buffer set up the state once Ace is loaded.
-      buffer.pushToControl();
 
       // Hook up events for recording.
       editor.session.doc.on("change", function (e) {
@@ -94,11 +104,7 @@ function BufferController (signals, buffers) {
       editor.focus();
    };
 
-   function update () {
-      load(buffer);
-   }
-
-   function load (buffer) {
+   function load () {
       controller.languageOptions = buffer.getLanguages();
       controller.showLanguageSelector = controller.languageOptions.length > 1;
       controller.language = _.find(controller.languageOptions,
