@@ -93,8 +93,10 @@ function PlayerFactory ($q, $interval, $sce, registry, signals) {
       var playUntil = Math.floor(Date.now() - state.startTime - state.playOffset);
       var timeElapsed = 0;
       var events = state.recording.events;
-      while (cursor < events.length && timeElapsed <= playUntil) {
+      while (cursor < events.length) {
          var event = events[cursor];
+         if (timeElapsed + event[0] > playUntil)
+            break;
          timeElapsed += event[0];
          var id = event[1];
          var op = event[2];
