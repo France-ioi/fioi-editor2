@@ -5,16 +5,16 @@ module.exports = function (m) {
 This service maintains a set of buffers.
 */
 m.factory('FioiEditor2Buffers', BuffersFactory);
-BuffersFactory.$inject = ['FioiEditor2Recorder'];
-function BuffersFactory (recorder) {
+BuffersFactory.$inject = ['FioiEditor2Recorder', 'FioiEditor2Registry'];
+function BuffersFactory (recorder, registry) {
 
    var service = {};
    var buffers = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('b', recording_id);
+      var id = registry.freshId('b', recording_id);
       var buffer = buffers[id] = new Buffer(id);
-      recorder.register(id, buffer);
+      registry.register(id, buffer);
       return buffer;
    };
 
@@ -54,7 +54,7 @@ function BuffersFactory (recorder) {
       if ('languages' in attrs)
          this.languages = attrs.languages;
       if ('text' in attrs)
-         this.text = attrs.text;
+         this.text = attrs.text.toString();
       if ('language' in attrs)
          this.language = attrs.language;
       if ('selection' in attrs)

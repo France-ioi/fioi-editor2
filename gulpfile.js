@@ -78,7 +78,7 @@ var scriptOpts = {
     uglify: false
 };
 
-gulp.task('build', [], function () {
+gulp.task('build', ['audio-worker'], function () {
     return buildScript(scriptOpts);
 });
 
@@ -87,6 +87,14 @@ gulp.task('build_min', [], function () {
         output: 'fioi-editor2.min.js', uglify: true
     }));
 });
+
+gulp.task('audio-worker', [], function() {
+    return gulp.src(['src/audio-worker.js'])
+        .pipe(concat('audio-worker.min.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('dist'));
+});
+
 
 gulp.task('watch', [], function () {
     return buildScript(assign({}, scriptOpts, {watch: true}));

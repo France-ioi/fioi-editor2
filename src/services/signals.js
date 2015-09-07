@@ -5,6 +5,7 @@ m.factory('FioiEditor2Signals', SignalsFactory);
 SignalsFactory.$inject = ['$rootScope'];
 function SignalsFactory ($rootScope) {
 
+   var prefix = 'fioi-editor2_';
    var service = {};
    var pending = {};
    var mustEmit = false;
@@ -12,7 +13,7 @@ function SignalsFactory ($rootScope) {
    var defer = false;
 
    service.on = function (signal, handler) {
-      return $rootScope.$on('fioi-editor2_' + signal, handler);
+      return $rootScope.$on(prefix + signal, handler);
    };
 
    service.defer = function (flag) {
@@ -22,10 +23,10 @@ function SignalsFactory ($rootScope) {
    };
 
    service.emitUpdate = function () {
-      emit('update');
+      this.emit('update');
    };
 
-   function emit (signal) {
+   service.emit = function (signal) {
       if (pending[signal])
          return;
       pending[signal] = true;
@@ -34,15 +35,16 @@ function SignalsFactory ($rootScope) {
          return;
       willEmit = true;
       window.requestAnimationFrame(doEmit);
-   }
+   };
 
    function doEmit () {
       var signals = pending;
       pending = {};
       mustEmit = false;
       willEmit = false;
-      if (signals.update)
-         $rootScope.$emit('fioi-editor2_update');
+      _.each(signals, function (flag, signal) {
+         $rootScope.$emit(prefix + signal);
+      });
    }
 
    return service;

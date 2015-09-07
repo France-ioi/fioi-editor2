@@ -5,16 +5,16 @@ module.exports = function (m) {
 This service stores tabsets.
 */
 m.factory('FioiEditor2Tabsets', TabsetsServiceFactory);
-TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder'];
-function TabsetsServiceFactory (signals, tabs, recorder) {
+TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
+function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 
    var service = {};
    var tabsets = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('ts', recording_id);
+      var id = registry.freshId('ts', recording_id);
       var tabset = tabsets[id] = new Tabset(id);
-      recorder.register(id, tabset);
+      registry.register(id, tabset);
       signals.emitUpdate();
       return tabset;
    };
@@ -124,7 +124,7 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
    Tabset.prototype.dump = function () {
       var tabs = this.tabs;
       var obj = {
-         tabs: _.map(this.tabIds, function (id) { return [id, tabs[id].dump()]; }),
+         tabs: _.map(this.tabIds, function (id) { return {id: id, dump: tabs[id].dump()}; }),
          activeTabId: this.activeTabId
       };
       if (this.name)
@@ -134,10 +134,10 @@ function TabsetsServiceFactory (signals, tabs, recorder) {
    Tabset.prototype.load = function (dump) {
       if (dump.name)
          this.name = dump.name;
-      _.each(dump.tabs, function (tab_dump) {
-         this.addTab(tab_dump[0]).load(tab_dump[1]);
+      _.each(dump.tabs, function (tab) {
+         this.addTab(tab.id).load(tab.dump);
       }.bind(this));
-      this.activeTabId = recorder.getPlayId(dump.activeTabId);
+      this.activeTabId = registry.getPlayId(dump.activeTabId);
       signals.emitUpdate();
       return this;
    };

@@ -20,9 +20,12 @@
     "angular": "~1.4.4",
     "angular-ui-ace": "~0.2.3",
     "es5-shim": "~4.1.10",
+    "jquery": "~2.1.4",
     "lodash": "~3.10.1"
   },
   "devDependencies": {
+    "angular-bootstrap": "~0.13.4",
+    "bootstrap": "~3.3.5",
     "requirejs": "~2.1.20"
   }
 }

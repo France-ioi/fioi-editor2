@@ -40,17 +40,13 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
    background-color: #D8D8D8;
 }
 
-.fioi-editor2_empty {
-
-}
-
 .fioi-editor2_buffers {
    width: 100%;
    overflow: hidden;
 }
 
 .fioi-editor2_empty {
-   width: 760px;
+   width: 740px;
    border: 1px solid #CCCCCC;
    border-top: none;
    font-style: italic;

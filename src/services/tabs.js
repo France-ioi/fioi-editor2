@@ -9,16 +9,16 @@ The service can dump/load its state to/from a JSON object.
 
 */
 m.factory('FioiEditor2Tabs', TabsServiceFactory);
-TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder'];
-function TabsServiceFactory (signals, buffers, recorder) {
+TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
+function TabsServiceFactory (signals, buffers, recorder, registry) {
 
    var service = {};
    var tabs = {};
 
    service.add = function (recording_id) {
-      var id = recorder.freshId('t', recording_id);
+      var id = registry.freshId('t', recording_id);
       var tab = tabs[id] = new Tab(id);
-      recorder.register(id, tab);
+      registry.register(id, tab);
       signals.emitUpdate();
       return tab;
    };
@@ -88,14 +88,14 @@ function TabsServiceFactory (signals, buffers, recorder) {
          buffers: _.map(this.buffers, function (id) {
             var buffer = buffers.get(id);
             buffer.pullFromControl();
-            return [id, buffer.dump()];
+            return {id: id, dump: buffer.dump()};
          })
       };
    };
    Tab.prototype.load = function (dump) {
       this.title = dump.title;
-      _.each(dump.buffers, function (buffer_dump) {
-         this.addBuffer(buffer_dump[0]).load(buffer_dump[1]);
+      _.each(dump.buffers, function (buffer) {
+         this.addBuffer(buffer.id).load(buffer.dump);
       }.bind(this));
       signals.emitUpdate();
       return this;
