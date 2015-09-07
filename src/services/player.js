@@ -44,6 +44,8 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
             return reject('playback is not in progress');
          if (state.isPaused)
             return resolve();
+         if (state.audio)
+            state.audio.pause();
          $interval.cancel(state.playInterval);
          state.resumeState = state.options.dumpState();
          state.playInterval = null;
