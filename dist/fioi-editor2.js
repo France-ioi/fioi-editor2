@@ -493,8 +493,8 @@ function AudioFactory (config, $location, $rootScope, $q) {
       return brokenService('Audio recording is not available on local URLs');
    }
    if (proto === 'http') {
-      // getUserMedia is deprecated on non-secure transports.
-      return brokenService('Audio recording requires the use of https transport');
+      // getUserMedia is deprecated on insecure transports.
+      console.log('Audio recording is deprecated on insecure transports');
    }
 
    return service;
@@ -1101,7 +1101,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       this.languages = null; // inherit from tabset
       this.defaultLanguage = null;
    }
-   Tab.prototype.update = function (attrs) {
+   Tab.prototype.update = function (attrs, quiet) {
       if ('tabset' in attrs)
          this.tabset = attrs.tabset;
       if ('title' in attrs)
@@ -1110,7 +1110,10 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
-      signals.emitUpdate();
+      if (!quiet) {
+         recorder.addEvent([this.id, 'u', attrs]);
+         signals.emitUpdate();
+      }
       return this;
    }
    Tab.prototype.addBuffer = function (id) {
@@ -1176,7 +1179,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          this.addBuffer(event[3]);
          break;
       default:
-         console.log('unhandled Tabset event', event);
+         console.log('unhandled Tab event', event);
       }
    };
 
@@ -1248,7 +1251,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       this.tabIds = [];
       this.activeTabId = null;
    }
-   Tabset.prototype.update = function (attrs) {
+   Tabset.prototype.update = function (attrs, quiet) {
       if ('name' in attrs)
          this.name = attrs.name;
       if ('titlePrefix' in attrs)
@@ -1261,7 +1264,10 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
          this.buffersPerTab = attrs.buffersPerTab;
-      signals.emitUpdate();
+      if (!quiet) {
+         recorder.addEvent([this.id, 'u', attrs]);
+         signals.emitUpdate();
+      }
       return this;
    }
    Tabset.prototype.addTab = function (id) {
@@ -1348,6 +1354,11 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
    };
    Tabset.prototype.replayEvent = function (event) {
       switch (event[2]) {
+      case 'u':
+         var attrs = _.clone(event[3]);
+         attrs.activeTabId = registry.getPlayId(attrs.activeTabId);
+         this.update(attrs);
+         break;
       case 'n':
          var tab = this.addTab(event[3]);
          this.activeTabId = tab.id;
