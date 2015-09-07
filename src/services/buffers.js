@@ -78,7 +78,7 @@ function BuffersFactory (recorder, registry) {
    };
    Buffer.prototype.pushToControl = function () {
       if (this.control)
-         this.control.load(this);
+         this.control.load();
       return this;
    };
    Buffer.prototype.pullFromControl = function () {
