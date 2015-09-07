@@ -46,7 +46,7 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
 }
 
 .fioi-editor2_empty {
-   width: 740px;
+   width: 762px;
    border: 1px solid #CCCCCC;
    border-top: none;
    font-style: italic;
@@ -61,7 +61,7 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
 }
 
 .fioi-editor2_1-buffers .ace_editor {
-   width: 760px;
+   width: 762px;
 }
 .fioi-editor2_2-buffers .ace_editor {
    width: 379px;
