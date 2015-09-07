@@ -6,21 +6,25 @@ RegistryFactory.$inject = [];
 function RegistryFactory () {
    var service = {};
    var state = {
-      nextFreshId: 1, // counter used to generate fresh ids
-      renaming: {}, // play-time id --> record-time id
       targets: {} // record-time id --> object instance
    };
 
-   // Generate a fresh id for a component, optionally associating
-   // the new id with an id stored in a recording.
-   service.freshId = function (prefix, recording_id) {
-      var new_id = prefix.toString() + state.nextFreshId;
-      state.nextFreshId += 1;
-      if (typeof recording_id === 'string') {
-         // Map the new id to the recording id provided.
-         state.renaming[new_id] = recording_id;
+   // Generate a fresh id for a component.  If an old_id is passed,
+   // that id is returned (after verifying that there is no component
+   // already registered with the same id).
+   service.freshId = function (prefix, old_id) {
+      if (typeof old_id === 'string') {
+         if (old_id in state.targets)
+            throw ("conflict on id " + old_id);
+         return old_id;
       }
-      return new_id;
+      var nextFreshId = 1;
+      while (true) {
+         var new_id = prefix.toString() + nextFreshId;
+         if (!(new_id in state.targets))
+            return new_id;
+         nextFreshId += 1;
+      }
    };
 
    // Clear the targets registry.
@@ -28,27 +32,20 @@ function RegistryFactory () {
       state.targets = {};
    };
 
-   // Register a component to be used during playback.
+   // Register a component as a target to be used during playback.
    service.register = function (id, target) {
-      // If the component is part of the recording we should have an entry
-      // mapping its id to the corresponding id used in the recording.
-      if (id in state.renaming) {
-         var rec_id = state.renaming[id];
-         if (rec_id) {
-            state.targets[rec_id] = target;
-         }
-      }
+      console.log('register', id, target);
+      state.targets[id] = target;
    };
 
-   service.getTarget = function (recording_id) {
-      return state.targets[recording_id];
+   // Retrieve a playback target by id.
+   service.getTarget = function (id) {
+      return state.targets[id];
    };
 
    // Obtain the playback-time id associated with a given recording-time id.
    service.getPlayId = function (recording_id) {
-      // Retr
-      var target = state.targets[recording_id];
-      return target && target.id;
+      return recording_id;
    };
 
    return service;
