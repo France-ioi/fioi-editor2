@@ -151,8 +151,8 @@ function AudioFactory (config, $location, $rootScope, $q) {
       return brokenService('Audio recording is not available on local URLs');
    }
    if (proto === 'http') {
-      // getUserMedia is deprecated on non-secure transports.
-      return brokenService('Audio recording requires the use of https transport');
+      // getUserMedia is deprecated on insecure transports.
+      console.log('Audio recording is deprecated on insecure transports');
    }
 
    return service;
