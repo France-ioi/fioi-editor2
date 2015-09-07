@@ -94,7 +94,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = new_id;
          recorder.addEvent([this.id, 'n', new_id]);
          for (var i = 0; i < this.buffersPerTab; i += 1)
-            tab.addBuffer('');
+            tab.addBuffer();
       }
       signals.emitUpdate();
       return tab;
