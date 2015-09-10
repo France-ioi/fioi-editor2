@@ -39,8 +39,12 @@ this.onmessage = function(e) {
       var url = combineRecordings(e.data.recordings);
       sendMessage(e, {url: url});
       break;
+    case "getRecording":
+      var recording = recordings[e.data.recording];
+      sendMessage(e, recording && recording.wav);
+      break;
     case "clearRecordings":
-      clearAll();
+      clearRecordings();
       break;
   }
 };

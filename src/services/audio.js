@@ -113,6 +113,25 @@ function AudioFactory (config, $location, $rootScope, $q) {
       return element;
    };
 
+   service.clearRecordings = function () {
+      return $q(function (resolve, reject) {
+         state.worker.postMessage({
+            command: "clearRecordings",
+            callbackId: eventizeCallback(resolve)
+         });
+      });
+   };
+
+   service.getRecording = function (url) {
+      return $q(function (resolve, reject) {
+         state.worker.postMessage({
+            command: "getRecording",
+            recording: url,
+            callbackId: eventizeCallback(resolve)
+         });
+      });
+   };
+
    function eventizeCallback (callback) {
       var name = 'fioi-editor2_audio-callback_' + state.nextCallbackId;
       state.nextCallbackId += 1;
