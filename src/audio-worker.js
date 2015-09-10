@@ -45,6 +45,7 @@ this.onmessage = function(e) {
       break;
     case "clearRecordings":
       clearRecordings();
+      sendMessage(e, {});
       break;
   }
 };
