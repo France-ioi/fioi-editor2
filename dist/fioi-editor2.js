@@ -432,6 +432,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    service.stopRecording = function () {
       return $q(function (resolve, reject) {
          state.recording = false;
+         window.audio = {node: state.node, source: state.source};
          state.node.disconnect();
          state.node = null;
          state.source.disconnect();
@@ -459,6 +460,25 @@ function AudioFactory (config, $location, $rootScope, $q) {
       var element = new Audio();
       element.src = url;
       return element;
+   };
+
+   service.clearRecordings = function () {
+      return $q(function (resolve, reject) {
+         state.worker.postMessage({
+            command: "clearRecordings",
+            callbackId: eventizeCallback(resolve)
+         });
+      });
+   };
+
+   service.getRecording = function (url) {
+      return $q(function (resolve, reject) {
+         state.worker.postMessage({
+            command: "getRecording",
+            recording: url,
+            callbackId: eventizeCallback(resolve)
+         });
+      });
    };
 
    function eventizeCallback (callback) {
