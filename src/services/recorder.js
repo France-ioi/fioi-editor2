@@ -129,16 +129,17 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             };
             if (state.audioStream) {
                audio.combineRecordings(audioUrls).then(afterCombineRecordings, reject);
-               // TODO: audio.clearAll();
             } else {
                afterCombineRecordings();
             }
-            function afterCombineRecordings (audioUrl) {
-               if (audioUrl) {
+            function afterCombineRecordings (result) {
+               if (result) {
+                  var audioUrl = URL.createObjectURL(result.wav);
                   result.audioUrl = audioUrl;
                   result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
                }
                // Clear the recorder state.
+               audio.clearRecordings();
                state.isRecording = false;
                state.isPaused = false;
                state.segments = undefined;
