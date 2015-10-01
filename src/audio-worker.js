@@ -63,8 +63,8 @@ function record (input) {
 function clearRecordings () {
   for (var url in recordings) {
     var recording = recordings[url];
-    if ('wav' in recording)
-      URL.revokeObjectURL(recording.wav);
+    if ('url' in recording)
+      URL.revokeObjectURL(recording.url);
   }
   recordings = {};
 }
