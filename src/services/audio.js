@@ -97,8 +97,6 @@ function AudioFactory (config, $location, $rootScope, $q) {
 
    service.combineRecordings = function (urls) {
       return $q(function (resolve, reject) {
-         if (urls.length == 1)
-            return resolve(urls[0]);
          state.worker.postMessage({
             command: "combineRecordings",
             recordings: urls,
