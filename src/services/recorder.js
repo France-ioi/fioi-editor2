@@ -51,6 +51,9 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             reject('no operation to pause');
          if (state.isPaused)
             return reject('not paused');
+         // Add a null event at the end of the stream to avoid stopping the
+         // sound track prematurely.
+         service.addEvent(['', '']);
          var duration = Date.now() - state.startTime;
          var segment = {
             duration: duration,
