@@ -432,7 +432,6 @@ function AudioFactory (config, $location, $rootScope, $q) {
    service.stopRecording = function () {
       return $q(function (resolve, reject) {
          state.recording = false;
-         window.audio = {node: state.node, source: state.source};
          state.node.disconnect();
          state.node = null;
          state.source.disconnect();
@@ -446,8 +445,6 @@ function AudioFactory (config, $location, $rootScope, $q) {
 
    service.combineRecordings = function (urls) {
       return $q(function (resolve, reject) {
-         if (urls.length == 1)
-            return resolve(urls[0]);
          state.worker.postMessage({
             command: "combineRecordings",
             recordings: urls,
@@ -946,16 +943,18 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             };
             if (state.audioStream) {
                audio.combineRecordings(audioUrls).then(afterCombineRecordings, reject);
-               // TODO: audio.clearAll();
             } else {
                afterCombineRecordings();
             }
-            function afterCombineRecordings (audioUrl) {
-               if (audioUrl) {
+            function afterCombineRecordings (result) {
+               console.log('afterCombineRecordings', result);
+               if (result) {
+                  var audioUrl = URL.createObjectURL(result.wav);
                   result.audioUrl = audioUrl;
                   result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
                }
                // Clear the recorder state.
+               audio.clearRecordings();
                state.isRecording = false;
                state.isPaused = false;
                state.segments = undefined;
