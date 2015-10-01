@@ -381,6 +381,7 @@ body { background-color: #eee; }
   </ul>
   <div ng-if="recording.safeAudioUrl">
     <audio controls=true ng-src="{{recording.safeAudioUrl}}"></audio>
+    <pre>{{recording.audioEncoding|json}}</pre>
   </div>
   <p ng-if="isPlaying">playing</p>
 </div>
