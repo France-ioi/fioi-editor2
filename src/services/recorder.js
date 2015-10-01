@@ -135,9 +135,10 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             function afterCombineRecordings (combinedAudio) {
                if (combinedAudio) {
                   var audioUrl = URL.createObjectURL(combinedAudio.wav);
+                  result.audioBlob = combinedAudio.wav;
+                  result.audioEncoding = combinedAudio.encoding;
                   result.audioUrl = audioUrl;
                   result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
-                  result.audioEncoding = combinedAudio.encoding;
                }
                // Clear the recorder state.
                audio.clearRecordings();
