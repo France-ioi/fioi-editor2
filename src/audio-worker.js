@@ -98,7 +98,6 @@ function combineRecordings (urls) {
   var channels = [samplesL, samplesR];
   var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
   var wav = encodeWav(channels, encodingOptions);
-  console.log('combineRecordings ended');
   return {wav: wav, encoding: encodingOptions};
 }
 
