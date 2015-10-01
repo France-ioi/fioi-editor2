@@ -232,26 +232,21 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
         $scope.mode = 'replay';
         if (result.audioUrl) {
           $scope.audioUploadStatus = 'getting audio...';
-          audio.getRecording(result.audioUrl).then(function (recording) {
-            if (!recording) {
-              $scope.audioUploadStatus = 'failed to get audio recording';
-              return;
-            }
-            $scope.audioUploadStatus = 'uploading audio...';
-            var transloadit = new TransloaditXhr({
-              params: {
-                auth: {key: "TRANSLOADIT_AUTH_KEY"},
-                template_id: "TRANSLOADIT_TEMPLATE_ID",
-                steps: {}
-              },
-              signature: "",
-              errorCb: audioUploadFailure,
-              progressCb: audioUploadProgress,
-              processCb: audioUploadProcess,
-              successCb: audioUploadSuccess
-            });
-            transloadit.uploadFile(recording);
+          $scope.audioUploadStatus = 'uploading audio...';
+          var transloadit = new TransloaditXhr({
+            params: {
+              auth: {key: "TRANSLOADIT_AUTH_KEY"},
+              template_id: "TRANSLOADIT_TEMPLATE_ID",
+              steps: {}
+            },
+            signature: "",
+            errorCb: audioUploadFailure,
+            progressCb: audioUploadProgress,
+            processCb: audioUploadProcess,
+            successCb: audioUploadSuccess
           });
+          transloadit.uploadFile(result.audioBlob);
+
           function audioUploadFailure (message) {
             $scope.$apply(function () {
               $scope.audioUploadStatus = "uploading audio failed: " + message;
