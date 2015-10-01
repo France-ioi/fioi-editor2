@@ -36,8 +36,8 @@ this.onmessage = function(e) {
       sendMessage(e, {url: url});
       break;
     case "combineRecordings":
-      var url = combineRecordings(e.data.recordings);
-      sendMessage(e, {url: url});
+      var result = combineRecordings(e.data.recordings);
+      sendMessage(e, result);
       break;
     case "getRecording":
       var recording = recordings[e.data.recording];
@@ -70,48 +70,41 @@ function clearRecordings () {
 }
 
 function finishRecording () {
-    var options = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
     var samplesL = combineChunks(chunksL);
     chunksL = [];
     var samplesR = combineChunks(chunksR);
     chunksR = [];
-    var samples = options.numChannels == 2 ?
-      interleaveSamples(samplesL, samplesR) : averageSamples(samplesL, samplesR);
-    if (recordingSampleRate == 48000) {
-      // 48ksps => downsample to 8ksps and output 16-bit samples
-      samples = downsample6x(samples);
-      options.sampleRate = 8000;
-      options.sampleSize = 2;
-    }
-    var wav = encode_wav(samples, options);
+    var channels = [samplesL, samplesR];
+    var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
+    var wav = encodeWav(channels, encodingOptions);
     var url = URL.createObjectURL(wav);
-    recordings[url] = {wav: wav, samples: samples};
+    recordings[url] = {wav: wav, url: url, channels: channels};
     return url;
 }
 
 function combineRecordings (urls) {
   // Combine the interleaved samples from the listed recordings.
-  var chunks = [];
+  var chunksL = [], chunksR = [];
   for (var i = 0; i < urls.length; i += 1) {
     var url = urls[i];
-    console.log('fragment', url);
     if (url in recordings) {
       var recording = recordings[url];
-      console.log('found', recording.samples.length, 'samples');
-      chunks.push(recording.samples);
-    } else {
-      console.log('not found');
+      chunksL.push(recording.channels[0]);
+      chunksR.push(recording.channels[1]);
     }
   }
-  var samples = combineChunks(chunks);
-  var wav = buildStereoWavBlob(samples);
-  var url = URL.createObjectURL(wav);
-  // Add the wav to recordings, so that it can be cleaned up by clearAll.
-  recordings[url] = {wav: wav};
-  return url;
+  var samplesL = combineChunks(chunksL);
+  var samplesR = combineChunks(chunksR);
+  var channels = [samplesL, samplesR];
+  var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
+  var wav = encodeWav(channels, encodingOptions);
+  console.log('combineRecordings ended');
+  return {wav: wav, encoding: encodingOptions};
 }
 
-function averageSamples (samplesL, samplesR) {
+function averageSamples (channels) {
+  var samplesL = channels[0];
+  var samplesR = channels[1];
   if (samplesL.length != samplesR.length)
     throw "cannot average samples of different length";
   var inputLength = samplesL.length;
@@ -125,7 +118,9 @@ function averageSamples (samplesL, samplesR) {
   return result;
 }
 
-function interleaveSamples (samplesL, samplesR) {
+function interleaveSamples (channels) {
+  var samplesL = channels[0];
+  var samplesR = channels[1];
   if (samplesL.length != samplesR.length)
     throw "cannot interleave samples of different length";
   var inputLength = samplesL.length;
@@ -232,7 +227,16 @@ function downsample (samples, fir, stride) {
   return samplesOut;
 }
 
-function encode_wav (samples, options) {
+function encodeWav (channels, options) {
+  var samples = options.numChannels == 2 ? interleaveSamples(channels) : averageSamples(channels);
+
+  // 48ksps => downsample to 8ksps and output 16-bit samples
+  if (recordingSampleRate == 48000) {
+    samples = downsample6x(samples);
+    options.sampleRate = 8000;
+    options.sampleSize = 2;
+  }
+
   var blockAlignment = options.numChannels * options.sampleSize;
   var dataByteCount = samples.length * blockAlignment;
   var buffer = new ArrayBuffer(44 + dataByteCount);
