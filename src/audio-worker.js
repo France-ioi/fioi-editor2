@@ -17,7 +17,7 @@ var chunksL = [];
 var chunksR = [];
 
 // Configured sample rate, stored in the WAV files produced.
-var sampleRate;
+var recordingSampleRate;
 
 // Map each WAV file URL to its samples, in order to assemble a new file
 // from multiple recordings.
@@ -51,7 +51,7 @@ this.onmessage = function(e) {
 };
 
 function init (config) {
-  sampleRate = config.sampleRate;
+  recordingSampleRate = config.sampleRate;
 }
 
 // Add a chunk to the current recording.
@@ -70,12 +70,20 @@ function clearRecordings () {
 }
 
 function finishRecording () {
+    var options = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
     var samplesL = combineChunks(chunksL);
     chunksL = [];
     var samplesR = combineChunks(chunksR);
     chunksR = [];
-    var samples = interleaveSamples(samplesL, samplesR);
-    var wav = buildStereoWavBlob(samples);
+    var samples = options.numChannels == 2 ?
+      interleaveSamples(samplesL, samplesR) : averageSamples(samplesL, samplesR);
+    if (recordingSampleRate == 48000) {
+      // 48ksps => downsample to 8ksps and output 16-bit samples
+      samples = downsample6x(samples);
+      options.sampleRate = 8000;
+      options.sampleSize = 2;
+    }
+    var wav = encode_wav(samples, options);
     var url = URL.createObjectURL(wav);
     recordings[url] = {wav: wav, samples: samples};
     return url;
@@ -101,6 +109,20 @@ function combineRecordings (urls) {
   // Add the wav to recordings, so that it can be cleaned up by clearAll.
   recordings[url] = {wav: wav};
   return url;
+}
+
+function averageSamples (samplesL, samplesR) {
+  if (samplesL.length != samplesR.length)
+    throw "cannot average samples of different length";
+  var inputLength = samplesL.length;
+  var result = new Float32Array(inputLength);
+  var index = 0;
+  var inputIndex = 0;
+  while (inputIndex < inputLength) {
+    result[index++] = (samplesL[inputIndex] + samplesR[inputIndex]) / 2;
+    inputIndex++;
+  }
+  return result;
 }
 
 function interleaveSamples (samplesL, samplesR) {
@@ -142,20 +164,84 @@ function floatTo16BitPCM (output, offset, input) {
   }
 }
 
+function floatTo8BitPCM (output, offset, input) {
+  for (var i = 0; i < input.length; i++, offset += 1) {
+    var s = (Math.max(-1, Math.min(1, input[i])) + 1.0) / 2;
+    output.setInt8(offset, s * 0xFF, true);
+  }
+}
+
 function writeString (view, offset, string) {
   for (var i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));
   }
 }
 
-function buildStereoWavBlob (samples) {
-  var buffer = new ArrayBuffer(44 + samples.length * 2);
+function FIR (coeffs) {
+  this.coeffs = coeffs;
+  this.nCoeffs = coeffs.length;
+  this.registers = new Float32Array(this.nCoeffs);
+  this.iTopReg = this.nCoeffs - 1;
+}
+FIR.prototype.sampleIn = function (sample) {
+  var i = this.iTopReg;
+  i += 1;
+  if (i >= this.nCoeffs)
+    i = 0;
+  this.registers[i] = sample;
+  this.iTopReg = i;
+}
+FIR.prototype.sampleOut = function () {
+  var sample = 0.0, iCoeff = 0;
+  for (var iReg = this.iTopReg; iReg >= 0; iReg--)
+    sample += this.coeffs[iCoeff++] * this.registers[iReg];
+  for (var iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
+    sample += this.coeffs[iCoeff++] * this.registers[iReg];
+  return sample;
+}
+
+var FIR_48k_8k = [0.028593547515597933, 0.03670747252586807, -0.003425102001388845, -0.05953402135953233, -0.060917024563134026, 0.03697894250548, 0.19858060022396978, 0.32301558515313944, 0.32301558515313944, 0.19858060022396978, 0.03697894250548, -0.060917024563134026, -0.05953402135953233, -0.003425102001388845, 0.03670747252586807, 0.028593547515597933];
+var FIR_48k_16k = [0.025988926951079665, -0.013257585857849584, -0.01828825082150171, 0.04308749505022258, -0.03213590725580088, -0.02054974978239911, 0.08284966957828693, -0.09349946285437129, -0.02176391714488415, 0.5475687821372176, 0.5475687821372176, -0.02176391714488415, -0.09349946285437129, 0.08284966957828693, -0.02054974978239911, -0.03213590725580088, 0.04308749505022258, -0.01828825082150171, -0.013257585857849584, 0.025988926951079665];
+
+function downsample6x (samples) {
+  return downsample(samples, new FIR(FIR_48k_8k), 6);
+}
+
+function downsample3x (samples) {
+  return downsample(samples, new FIR(FIR_48k_16k), 3);
+}
+
+function downsample (samples, fir, stride) {
+  var nTaps = FIR_48k_8k.length;
+  var iSampleIn = 0;
+  for (var i = 0; i < nTaps * 2; i++)
+    fir.sampleIn(samples[iSampleIn++]);
+  var iSampleOut = 0;
+  var samplesOut = new Float32Array(samples.length / stride);
+  var nth = 0;
+  while (iSampleIn < samples.length) {
+    if (nth == 0)
+      samplesOut[iSampleOut++] = fir.sampleOut();
+    if (++nth == stride) nth = 0;
+    fir.sampleIn(samples[iSampleIn++]);
+  }
+  while (iSampleOut < samplesOut.length) {
+    samplesOut[iSampleOut++] = fir.sampleOut();
+    fir.sampleIn(0);
+  }
+  return samplesOut;
+}
+
+function encode_wav (samples, options) {
+  var blockAlignment = options.numChannels * options.sampleSize;
+  var dataByteCount = samples.length * blockAlignment;
+  var buffer = new ArrayBuffer(44 + dataByteCount);
   var view = new DataView(buffer);
 
   /* RIFF identifier */
   writeString(view, 0, "RIFF");
   /* file length */
-  view.setUint32(4, 32 + samples.length * 2, true);
+  view.setUint32(4, buffer.byteLength - 8, true);
 
   /* RIFF type */
   writeString(view, 8, "WAVE");
@@ -165,23 +251,25 @@ function buildStereoWavBlob (samples) {
   view.setUint32(16, 16, true);
   /* sample format (raw) */
   view.setUint16(20, 1, true);
-  /* channel count */
-  view.setUint16(22, 2, true);
+  /* channel count (mono) */
+  view.setUint16(22, options.numChannels, true);
   /* sample rate */
-  view.setUint32(24, sampleRate, true);
+  view.setUint32(24, options.sampleRate, true);
   /* byte rate (sample rate * block align) */
-  view.setUint32(28, sampleRate * 4, true);
-  /* block align (channel count * bytes per sample) */
-  view.setUint16(32, 4, true);
+  view.setUint32(28, options.sampleRate * blockAlignment, true);
+  /* block alignment */
+  view.setUint16(32, blockAlignment, true);
   /* bits per sample */
-  view.setUint16(34, 16, true);
+  view.setUint16(34, options.sampleSize * 8, true);
   /* data chunk identifier */
   writeString(view, 36, "data");
-
   /* data chunk length */
-  view.setUint32(40, samples.length * 2, true);
+  view.setUint32(40, dataByteCount, true);
 
-  floatTo16BitPCM(view, 44, samples);
+  switch (options.sampleSize) {
+    case 1: floatTo8BitPCM(view, 44, samples); break;
+    case 2: floatTo16BitPCM(view, 44, samples); break;
+  }
 
   return new Blob([buffer], {type: "audio/wav"});
 }
