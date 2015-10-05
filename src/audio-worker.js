@@ -184,15 +184,15 @@ FIR.prototype.sampleIn = function (sample) {
     i = 0;
   this.registers[i] = sample;
   this.iTopReg = i;
-}
+};
 FIR.prototype.sampleOut = function () {
   var sample = 0.0, iCoeff = 0;
   for (var iReg = this.iTopReg; iReg >= 0; iReg--)
     sample += this.coeffs[iCoeff++] * this.registers[iReg];
-  for (var iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
+  for (iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
     sample += this.coeffs[iCoeff++] * this.registers[iReg];
   return sample;
-}
+};
 
 var FIR_48k_8k = [0.028593547515597933, 0.03670747252586807, -0.003425102001388845, -0.05953402135953233, -0.060917024563134026, 0.03697894250548, 0.19858060022396978, 0.32301558515313944, 0.32301558515313944, 0.19858060022396978, 0.03697894250548, -0.060917024563134026, -0.05953402135953233, -0.003425102001388845, 0.03670747252586807, 0.028593547515597933];
 var FIR_48k_16k = [0.025988926951079665, -0.013257585857849584, -0.01828825082150171, 0.04308749505022258, -0.03213590725580088, -0.02054974978239911, 0.08284966957828693, -0.09349946285437129, -0.02176391714488415, 0.5475687821372176, 0.5475687821372176, -0.02176391714488415, -0.09349946285437129, 0.08284966957828693, -0.02054974978239911, -0.03213590725580088, 0.04308749505022258, -0.01828825082150171, -0.013257585857849584, 0.025988926951079665];
@@ -214,7 +214,7 @@ function downsample (samples, fir, stride) {
   var samplesOut = new Float32Array(samples.length / stride);
   var nth = 0;
   while (iSampleIn < samples.length) {
-    if (nth == 0)
+    if (nth === 0)
       samplesOut[iSampleOut++] = fir.sampleOut();
     if (++nth == stride) nth = 0;
     fir.sampleIn(samples[iSampleIn++]);

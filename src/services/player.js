@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Player', PlayerFactory);
 PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio', 'FioiEditor2Registry', 'FioiEditor2Signals'];

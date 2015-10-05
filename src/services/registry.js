@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Registry', RegistryFactory);
 RegistryFactory.$inject = [];
