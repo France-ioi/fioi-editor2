@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service maintains a set of buffers.

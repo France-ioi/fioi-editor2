@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Recorder', RecorderFactory);
 RecorderFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio'];
@@ -77,7 +77,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             state.segments.push(segment);
             resolve(segment);
          }
-      })
+      });
    };
 
    // Resume recording, starting a new segment.

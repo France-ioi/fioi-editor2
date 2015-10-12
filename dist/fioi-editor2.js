@@ -41,8 +41,8 @@ module.exports.byUrl = function(url) {
 module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.directive('fioiEditor2Buffer', bufferDirective);
 bufferDirective.$inject = ['FioiEditor2Signals'];
@@ -132,7 +132,7 @@ function BufferController (signals, buffers) {
       editor.selection.addEventListener("changeCursor", function () {
          if (editor.selection.isEmpty()) {
             var r = editor.selection.getRange();
-            buffer.logCursor(r.start.row, r.start.column)
+            buffer.logCursor(r.start.row, r.start.column);
          }
       }, true);
       editor.selection.addEventListener("changeSelection", function () {
@@ -202,12 +202,13 @@ function BufferController (signals, buffers) {
 }
 
 };
+
 },{"./buffer.jade":2}],4:[function(require,module,exports){
 module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This directive inserts the editor component.
@@ -256,7 +257,7 @@ function editorDirective (signals) {
    };
 }
 
-EditorController.$inject = ['FioiEditor2Tabsets']
+EditorController.$inject = ['FioiEditor2Tabsets'];
 function EditorController (tabsets) {
 
    var controller = this;
@@ -295,7 +296,7 @@ function EditorController (tabsets) {
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
-      if (controller.tabs.length == 0) {
+      if (controller.tabs.length === 0) {
          classes['fioi-editor2_empty'] = true;
          return;
       }
@@ -310,16 +311,17 @@ function EditorController (tabsets) {
          buffers: tab.buffers
       };
       classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
-   }
+   };
 
 }
 
 };
+
 },{"./editor.jade":4}],6:[function(require,module,exports){
 var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 762px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 762px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
 },{"./../node_modules/cssify":1}],7:[function(require,module,exports){
-'use strict';
 define(['module', 'angular', 'lodash', 'angular-ui-ace'], function (module, angular, _) {
+'use strict';
 
 require('./main.css');
 
@@ -345,9 +347,10 @@ require('./directives/editor')(m);
 require('./directives/buffer')(m);
 
 });
+
 },{"./directives/buffer":3,"./directives/editor":5,"./main.css":6,"./services/audio":8,"./services/buffers":9,"./services/player":10,"./services/recorder":11,"./services/registry":12,"./services/signals":13,"./services/tabs":14,"./services/tabsets":15}],8:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Audio', AudioFactory);
 AudioFactory.$inject = ['FioiEditor2Config', '$location', '$rootScope', '$q'];
@@ -518,9 +521,10 @@ function AudioFactory (config, $location, $rootScope, $q) {
 }
 
 };
+
 },{}],9:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service maintains a set of buffers.
@@ -646,9 +650,10 @@ function BuffersFactory (recorder, registry) {
 }
 
 };
+
 },{}],10:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Player', PlayerFactory);
 PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio', 'FioiEditor2Registry', 'FioiEditor2Signals'];
@@ -743,10 +748,6 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
       });
    };
 
-   service.rewind = function () {
-      // audio.currentTime = 0;
-   }
-
    function playTick () {
       // Discard a tick event that was queued before playing was paused or stopped.
       if (!state.playInterval)
@@ -811,9 +812,10 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
 }
 
 };
+
 },{}],11:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Recorder', RecorderFactory);
 RecorderFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio'];
@@ -891,7 +893,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             state.segments.push(segment);
             resolve(segment);
          }
-      })
+      });
    };
 
    // Resume recording, starting a new segment.
@@ -988,9 +990,10 @@ function RecorderFactory ($q, $interval, $sce, audio) {
 }
 
 };
+
 },{}],12:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Registry', RegistryFactory);
 RegistryFactory.$inject = [];
@@ -1042,9 +1045,10 @@ function RegistryFactory () {
 }
 
 };
+
 },{}],13:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.factory('FioiEditor2Signals', SignalsFactory);
 SignalsFactory.$inject = ['$rootScope'];
@@ -1096,9 +1100,10 @@ function SignalsFactory ($rootScope) {
 }
 
 };
+
 },{}],14:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service acts as storage for sets of tabs, where each
@@ -1154,7 +1159,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          signals.emitUpdate();
       }
       return this;
-   }
+   };
    Tab.prototype.addBuffer = function (id) {
       var buffer = buffers.add(id).update({
          tab: this,
@@ -1174,7 +1179,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       if (this.defaultLanguage)
          return this.defaultLanguage;
       return this.tabset.getDefaultLanguage();
-   }
+   };
    Tab.prototype.getBuffer = function (i) {
       var buffer = this.buffers[i || 0];
       if (!buffer) return buffer;
@@ -1226,9 +1231,10 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
 }
 
 };
+
 },{}],15:[function(require,module,exports){
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service stores tabsets.
@@ -1308,7 +1314,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          signals.emitUpdate();
       }
       return this;
-   }
+   };
    Tabset.prototype.addTab = function (id) {
       var tab = tabs.add(id).update({
          tabset: this,
@@ -1420,6 +1426,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 }
 
 };
+
 },{}]},{},[7])
 
 

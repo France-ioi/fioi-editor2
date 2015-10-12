@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 m.directive('fioiEditor2Buffer', bufferDirective);
 bufferDirective.$inject = ['FioiEditor2Signals'];
@@ -89,7 +89,7 @@ function BufferController (signals, buffers) {
       editor.selection.addEventListener("changeCursor", function () {
          if (editor.selection.isEmpty()) {
             var r = editor.selection.getRange();
-            buffer.logCursor(r.start.row, r.start.column)
+            buffer.logCursor(r.start.row, r.start.column);
          }
       }, true);
       editor.selection.addEventListener("changeSelection", function () {

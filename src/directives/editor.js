@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This directive inserts the editor component.
@@ -48,7 +48,7 @@ function editorDirective (signals) {
    };
 }
 
-EditorController.$inject = ['FioiEditor2Tabsets']
+EditorController.$inject = ['FioiEditor2Tabsets'];
 function EditorController (tabsets) {
 
    var controller = this;
@@ -87,7 +87,7 @@ function EditorController (tabsets) {
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
-      if (controller.tabs.length == 0) {
+      if (controller.tabs.length === 0) {
          classes['fioi-editor2_empty'] = true;
          return;
       }
@@ -102,7 +102,7 @@ function EditorController (tabsets) {
          buffers: tab.buffers
       };
       classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
-   }
+   };
 
 }
 

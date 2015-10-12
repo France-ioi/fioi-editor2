@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service acts as storage for sets of tabs, where each
@@ -55,7 +55,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
          signals.emitUpdate();
       }
       return this;
-   }
+   };
    Tab.prototype.addBuffer = function (id) {
       var buffer = buffers.add(id).update({
          tab: this,
@@ -75,7 +75,7 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
       if (this.defaultLanguage)
          return this.defaultLanguage;
       return this.tabset.getDefaultLanguage();
-   }
+   };
    Tab.prototype.getBuffer = function (i) {
       var buffer = this.buffers[i || 0];
       if (!buffer) return buffer;

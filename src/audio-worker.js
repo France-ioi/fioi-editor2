@@ -183,15 +183,15 @@ FIR.prototype.sampleIn = function (sample) {
     i = 0;
   this.registers[i] = sample;
   this.iTopReg = i;
-}
+};
 FIR.prototype.sampleOut = function () {
   var sample = 0.0, iCoeff = 0;
   for (var iReg = this.iTopReg; iReg >= 0; iReg--)
     sample += this.coeffs[iCoeff++] * this.registers[iReg];
-  for (var iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
+  for (iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
     sample += this.coeffs[iCoeff++] * this.registers[iReg];
   return sample;
-}
+};
 
 function downsample (samples, fir, stride) {
   var nCoeffs = fir.nCoeffs;
@@ -202,7 +202,7 @@ function downsample (samples, fir, stride) {
   var samplesOut = new Float32Array(samples.length / stride);
   var nth = 0;
   while (iSampleIn < samples.length) {
-    if (nth == 0)
+    if (nth === 0)
       samplesOut[iSampleOut++] = fir.sampleOut();
     if (++nth == stride) nth = 0;
     fir.sampleIn(samples[iSampleIn++]);

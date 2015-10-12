@@ -1,5 +1,5 @@
-'use strict';
 define(['module', 'angular', 'lodash', 'angular-ui-ace'], function (module, angular, _) {
+'use strict';
 
 require('./main.css');
 

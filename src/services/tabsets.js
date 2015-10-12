@@ -1,5 +1,5 @@
-'use strict';
 module.exports = function (m) {
+'use strict';
 
 /**
 This service stores tabsets.
@@ -79,7 +79,7 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          signals.emitUpdate();
       }
       return this;
-   }
+   };
    Tabset.prototype.addTab = function (id) {
       var tab = tabs.add(id).update({
          tabset: this,
