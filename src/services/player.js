@@ -94,6 +94,10 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
       });
    };
 
+   service.rewind = function () {
+      // audio.currentTime = 0;
+   }
+
    function playTick () {
       // Discard a tick event that was queued before playing was paused or stopped.
       if (!state.playInterval)

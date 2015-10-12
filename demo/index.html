@@ -215,7 +215,8 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     $scope.startRecording = function () {
       if ($scope.isRecording)
         return; // already recording
-      recorder.record(recorderOptions).then(function () {
+      recorder.record(recorderOptions).then(function (result) {
+        $scope.sampleRate = result.sampleRate;
         $scope.isRecording = true;
         tabsets.find('sources').focus();
       }, function (err) {
@@ -224,14 +225,19 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     };
 
     $scope.stopRecording = function () {
-      recorder.stop().then(function (result) {
+      var encodingOptions = {
+        numChannels: 1,
+        sampleSize: 1,
+        sampleRate: 8000
+      };
+      recorder.stop(encodingOptions).then(function (result) {
         $scope.isRecording = false;
         $scope.isPaused = false;
-        window.recording = result;
+        // window.recording = result;
         $scope.recording = result;
         $scope.mode = 'replay';
+        return;
         if (result.audioUrl) {
-          $scope.audioUploadStatus = 'getting audio...';
           $scope.audioUploadStatus = 'uploading audio...';
           var transloadit = new TransloaditXhr({
             params: {
@@ -362,6 +368,7 @@ body { background-color: #eee; }
       <span ng-if="isPlaying">lecture</span>
       <span ng-if="isPaused">en pause</span>
       <span ng-if="audioUploadStatus">{{audioUploadStatus}}</span>
+      <span ng-if="sampleRate">{{sampleRate}}</span>
     </div>
 
   </div>

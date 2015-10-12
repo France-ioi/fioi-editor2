@@ -36,7 +36,7 @@ this.onmessage = function(e) {
       sendMessage(e, {url: url});
       break;
     case "combineRecordings":
-      var result = combineRecordings(e.data.recordings);
+      var result = combineRecordings(e.data.recordings, e.data.options);
       sendMessage(e, result);
       break;
     case "getRecording":
@@ -82,7 +82,7 @@ function finishRecording () {
     return url;
 }
 
-function combineRecordings (urls) {
+function combineRecordings (urls, options) {
   // Combine the interleaved samples from the listed recordings.
   var chunksL = [], chunksR = [];
   for (var i = 0; i < urls.length; i += 1) {
@@ -96,9 +96,8 @@ function combineRecordings (urls) {
   var samplesL = combineChunks(chunksL);
   var samplesR = combineChunks(chunksR);
   var channels = [samplesL, samplesR];
-  var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
-  var wav = encodeWav(channels, encodingOptions);
-  return {wav: wav, encoding: encodingOptions};
+  var wav = encodeWav(channels, options);
+  return {wav: wav};
 }
 
 function averageSamples (channels) {
@@ -194,21 +193,10 @@ FIR.prototype.sampleOut = function () {
   return sample;
 }
 
-var FIR_48k_8k = [0.028593547515597933, 0.03670747252586807, -0.003425102001388845, -0.05953402135953233, -0.060917024563134026, 0.03697894250548, 0.19858060022396978, 0.32301558515313944, 0.32301558515313944, 0.19858060022396978, 0.03697894250548, -0.060917024563134026, -0.05953402135953233, -0.003425102001388845, 0.03670747252586807, 0.028593547515597933];
-var FIR_48k_16k = [0.025988926951079665, -0.013257585857849584, -0.01828825082150171, 0.04308749505022258, -0.03213590725580088, -0.02054974978239911, 0.08284966957828693, -0.09349946285437129, -0.02176391714488415, 0.5475687821372176, 0.5475687821372176, -0.02176391714488415, -0.09349946285437129, 0.08284966957828693, -0.02054974978239911, -0.03213590725580088, 0.04308749505022258, -0.01828825082150171, -0.013257585857849584, 0.025988926951079665];
-
-function downsample6x (samples) {
-  return downsample(samples, new FIR(FIR_48k_8k), 6);
-}
-
-function downsample3x (samples) {
-  return downsample(samples, new FIR(FIR_48k_16k), 3);
-}
-
 function downsample (samples, fir, stride) {
-  var nTaps = FIR_48k_8k.length;
+  var nCoeffs = fir.nCoeffs;
   var iSampleIn = 0;
-  for (var i = 0; i < nTaps * 2; i++)
+  for (var i = 0; i < nCoeffs; i++)
     fir.sampleIn(samples[iSampleIn++]);
   var iSampleOut = 0;
   var samplesOut = new Float32Array(samples.length / stride);
@@ -226,15 +214,58 @@ function downsample (samples, fir, stride) {
   return samplesOut;
 }
 
-function encodeWav (channels, options) {
-  var samples = options.numChannels == 2 ? interleaveSamples(channels) : averageSamples(channels);
+// Source http://www.arc.id.au/FilterDesign.html
+var FIR_48k_8k = [-0.000000, -0.000684, -0.001238, 0.000000, 0.003098, 0.004522, -0.000000, -0.008736, -0.011729, 0.000000, 0.020268, 0.026356, -0.000000, -0.045082, -0.060638, 0.000000, 0.133528, 0.273491, 0.333333, 0.273491, 0.133528, 0.000000, -0.060638, -0.045082, -0.000000, 0.026356, 0.020268, 0.000000, -0.011729, -0.008736, -0.000000, 0.004522, 0.003098, 0.000000, -0.001238, -0.000684, -0.000000];
+var FIR_48k_12k = [0.000000, 0.000790, -0.000000, -0.002338, 0.000000, 0.005222, -0.000000, -0.010087, 0.000000, 0.017899, -0.000000, -0.030433, 0.000000, 0.052057, -0.000000, -0.098769, 0.000000, 0.315800, 0.500000, 0.315800, 0.000000, -0.098769, -0.000000, 0.052057, 0.000000, -0.030433, -0.000000, 0.017899, 0.000000, -0.010087, -0.000000, 0.005222, 0.000000, -0.002338, -0.000000, 0.000790, 0.000000];
+var FIR_48k_16k = [-0.000000, -0.000684, 0.001238, -0.000000, -0.003098, 0.004522, -0.000000, -0.008736, 0.011729, -0.000000, -0.020268, 0.026356, -0.000000, -0.045082, 0.060638, -0.000000, -0.133528, 0.273491, 0.666667, 0.273491, -0.133528, -0.000000, 0.060638, -0.045082, -0.000000, 0.026356, -0.020268, -0.000000, 0.011729, -0.008736, -0.000000, 0.004522, -0.003098, -0.000000, 0.001238, -0.000684, -0.000000];
+var FIR_48k_24k = [0.5, 0.5]; // also try [0,1,0]
 
-  // 48ksps => downsample to 8ksps and output 16-bit samples
-  if (recordingSampleRate == 48000) {
-    samples = downsample6x(samples);
-    options.sampleRate = 8000;
-    options.sampleSize = 2;
+function encodeWav (channels, options) {
+  console.log('encodeWav', options);
+  // options.numChannels: 1 (mono), 2 (stereo)
+  // options.sampleSize: 1 (8-bit), 2 (16-bit)
+  // sampleRate: recordingSampleRate / {2,3,4,6}
+
+  // Select sensible options if not provided.
+  if (!options) {
+    if (recordingSampleRate == 48000)
+      options = {numChannels: 1, sampleSize: 2, sampleRate: 8000};
+    else
+      options = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
   }
+
+  // Downsample.
+  var div = recordingSampleRate / options.sampleRate;
+  var int_div = Math.round(div);
+  var err = Math.abs(div - int_div);
+  if (err > 1e-6) return "cannot downsample by " + div;
+  switch (int_div) {
+    case 2:
+      channels = channels.map(function (samples) {
+        return downsample(samples, new FIR(FIR_48k_24k), 2);
+      });
+      break;
+    case 3:
+      channels = channels.map(function (samples) {
+        return downsample(samples, new FIR(FIR_48k_16k), 3);
+      });
+      break;
+    case 4:
+      channels = channels.map(function (samples) {
+        return downsample(samples, new FIR(FIR_48k_12k), 4);
+      });
+      break;
+    case 6:
+      channels = channels.map(function (samples) {
+        return downsample(samples, new FIR(FIR_48k_8k), 6);
+      });
+      break;
+    default:
+      return "cannot downsample by " + int_div;
+  }
+
+  // Interleave or average samples depending on the number of output channels.
+  var samples = options.numChannels == 2 ? interleaveSamples(channels) : averageSamples(channels);
 
   var blockAlignment = options.numChannels * options.sampleSize;
   var dataByteCount = samples.length * blockAlignment;

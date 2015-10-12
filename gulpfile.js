@@ -71,33 +71,41 @@ function staticJadeify () {
     });
 }
 
-var scriptOpts = {
+function watched(opts) {
+    return assign({}, opts, {watch: true});
+}
+
+function uglified(opts) {
+    var output = opts.output.replace(/.js$/, '.min.js');
+    return assign({}, opts, {uglify: true, output: output});
+}
+
+var mainScriptOpts = {
     entry: 'src/main.js',
     output: 'fioi-editor2.js',
     watch: false,
     uglify: false
 };
+var workerScriptOpts = {
+    entry: 'src/audio-worker.js',
+    output: 'audio-worker.js',
+    watch: false,
+    uglify: false
+};
 
-gulp.task('build', ['audio-worker'], function () {
-    return buildScript(scriptOpts);
+gulp.task('build', [], function () {
+    buildScript(mainScriptOpts);
+    buildScript(workerScriptOpts);
 });
 
 gulp.task('build_min', [], function () {
-    return buildScript(assign({}, scriptOpts, {
-        output: 'fioi-editor2.min.js', uglify: true
-    }));
+    buildScript(uglified(mainScriptOpts))
+    buildScript(uglified(workerScriptOpts))
 });
-
-gulp.task('audio-worker', [], function() {
-    return gulp.src(['src/audio-worker.js'])
-        .pipe(concat('audio-worker.min.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest('dist'));
-});
-
 
 gulp.task('watch', [], function () {
-    return buildScript(assign({}, scriptOpts, {watch: true}));
+    buildScript(watched(mainScriptOpts));
+    buildScript(watched(workerScriptOpts));
 });
 
 gulp.task('default', ['build', 'build_min']);

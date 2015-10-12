@@ -40,6 +40,9 @@ function AudioFactory (config, $location, $rootScope, $q) {
       var audioContext = new AudioContext();
       var source = state.source = audioContext.createMediaStreamSource(stream);
 
+      // Make the native sample rate available on the service.
+      service.sampleRate = source.context.sampleRate;
+
       // Create a worker to hold and process the audio buffers.
       // The worker is reused across calls to startRecording.
       var worker = state.worker;
@@ -52,7 +55,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
          worker.postMessage({
             command: "init",
             config: {
-               sampleRate: source.context.sampleRate
+               sampleRate: service.sampleRate
             }
          });
       }
@@ -95,11 +98,12 @@ function AudioFactory (config, $location, $rootScope, $q) {
       });
    };
 
-   service.combineRecordings = function (urls) {
+   service.combineRecordings = function (urls, encodingOptions) {
       return $q(function (resolve, reject) {
          state.worker.postMessage({
             command: "combineRecordings",
             recordings: urls,
+            options: encodingOptions,
             callbackId: eventizeCallback(resolve)
          });
       });

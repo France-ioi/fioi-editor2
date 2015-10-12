@@ -39,7 +39,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             state.segments = [];
             if (state.audioStream)
                audio.startRecording(state.audioStream);
-            resolve();
+            resolve({sampleRate: audio.sampleRate});
          }
       });
    };
@@ -98,7 +98,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
 
    // Stop recording.  Segments are joined and the returned promise is resolved
    // with the completed recording.
-   service.stop = function () {
+   service.stop = function (encodingOptions) {
       return $q(function (resolve, reject) {
          if (!state.isRecording)
             reject('not recording');
@@ -114,6 +114,9 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             return afterPaused();
          }
          function afterPaused () {
+            // TODO: build an object that contains all the recorded
+            // state and audio samples, with a method to complete the
+            // recording while adjusting the audio encoding options.
             // Combine the segments.
             var duration = 0;
             var events = [];
@@ -128,7 +131,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
                events: events
             };
             if (state.audioStream) {
-               audio.combineRecordings(audioUrls).then(afterCombineRecordings, reject);
+               audio.combineRecordings(audioUrls, encodingOptions).then(afterCombineRecordings, reject);
             } else {
                afterCombineRecordings();
             }
