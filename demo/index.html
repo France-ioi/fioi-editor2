@@ -80,6 +80,9 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
   app.controller('Main', ['$scope', '$timeout', '$sce', 'FioiEditor2Tabsets', 'FioiEditor2Signals', 'FioiEditor2Recorder', 'FioiEditor2Audio', 'FioiEditor2Player', function ($scope, $timeout, $sce, tabsets, signals, recorder, audio, player) {
     var controller = this;
 
+    $scope.sampleSize = 2;
+    $scope.sampleRateDiv = 1;
+
     $scope.mode = 'record';
     $scope.modes = [
       {id: 'normal', label: "normal"},
@@ -227,8 +230,8 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     $scope.stopRecording = function () {
       var encodingOptions = {
         numChannels: 1,
-        sampleSize: 1,
-        sampleRate: 8000
+        sampleSize: $scope.sampleSize,
+        sampleRate: $scope.sampleRate / $scope.sampleRateDiv
       };
       recorder.stop(encodingOptions).then(function (result) {
         $scope.isRecording = false;
@@ -370,6 +373,15 @@ body { background-color: #eee; }
       <span ng-if="audioUploadStatus">{{audioUploadStatus}}</span>
       <span ng-if="sampleRate">{{sampleRate}}</span>
     </div>
+
+    <label><input type="radio" ng-model="sampleSize" ng-value="1"> 8-bit</label>
+    <label><input type="radio" ng-model="sampleSize" ng-value="2"> 16-bit</label>
+
+    <label><input type="radio" ng-model="sampleRateDiv" ng-value="1"> 1</label>
+    <label><input type="radio" ng-model="sampleRateDiv" ng-value="2"> 2</label>
+    <label><input type="radio" ng-model="sampleRateDiv" ng-value="3"> 3</label>
+    <label><input type="radio" ng-model="sampleRateDiv" ng-value="4"> 4</label>
+    <label><input type="radio" ng-model="sampleRateDiv" ng-value="6"> 6</label>
 
   </div>
 
