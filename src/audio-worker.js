@@ -1,3 +1,4 @@
+'use strict';
 /*
   This file is based on https://github.com/Khan/MultiRecorderJS,
   itself based on https://github.com/mattdiamond/Recorderjs
@@ -23,7 +24,7 @@ var recordingSampleRate;
 // from multiple recordings.
 var recordings = {};
 
-this.onmessage = function(e) {
+self.onmessage = function(e) {
   switch (e.data.command) {
     case "init":
       init(e.data.config);
@@ -70,16 +71,16 @@ function clearRecordings () {
 }
 
 function finishRecording () {
-    var samplesL = combineChunks(chunksL);
-    chunksL = [];
-    var samplesR = combineChunks(chunksR);
-    chunksR = [];
-    var channels = [samplesL, samplesR];
-    var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
-    var wav = encodeWav(channels, encodingOptions);
-    var url = URL.createObjectURL(wav);
-    recordings[url] = {wav: wav, url: url, channels: channels};
-    return url;
+  var samplesL = combineChunks(chunksL);
+  chunksL = [];
+  var samplesR = combineChunks(chunksR);
+  chunksR = [];
+  var channels = [samplesL, samplesR];
+  var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
+  var wav = encodeWav(channels, encodingOptions);
+  var url = URL.createObjectURL(wav);
+  recordings[url] = {wav: wav, url: url, channels: channels};
+  return url;
 }
 
 function combineRecordings (urls, options) {
@@ -147,7 +148,7 @@ function combineChunks (chunks) {
 }
 
 function sendMessage (e, result) {
-  this.postMessage({callbackId: e.data.callbackId, result: result});
+  self.postMessage({callbackId: e.data.callbackId, result: result});
 }
 
 function floatTo16BitPCM (output, offset, input) {
@@ -240,6 +241,8 @@ function encodeWav (channels, options) {
   var err = Math.abs(div - int_div);
   if (err > 1e-6) return "cannot downsample by " + div;
   switch (int_div) {
+    case 1:
+      break;
     case 2:
       channels = channels.map(function (samples) {
         return downsample(samples, new FIR(FIR_48k_24k), 2);
@@ -307,3 +310,5 @@ function encodeWav (channels, options) {
 
   return new Blob([buffer], {type: "audio/wav"});
 }
+
+self.postMessage('loaded');
