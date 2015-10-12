@@ -37,9 +37,11 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             state.lastEventTime = 0;
             state.events = [[0, '', '0', state.options.dumpState()]];
             state.segments = [];
-            if (state.audioStream)
-               audio.startRecording(state.audioStream);
-            resolve({sampleRate: audio.sampleRate});
+            if (state.audioStream) {
+               audio.startRecording(state.audioStream).then(resolve, reject);
+            } else {
+               resolve({});
+            }
          }
       });
    };
@@ -90,9 +92,11 @@ function RecorderFactory ($q, $interval, $sce, audio) {
          state.isPaused = false;
          state.startTime = Date.now();
          state.events = [[0, '', '0', state.options.dumpState()]];
-         if (state.audioStream)
-            audio.startRecording(state.audioStream);
-         return resolve();
+         if (state.audioStream) {
+            audio.startRecording(state.audioStream).then(resolve, reject);
+         } else {
+            resolve();
+         }
       });
    };
 

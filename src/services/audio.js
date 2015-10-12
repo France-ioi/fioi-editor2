@@ -8,7 +8,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    var service = {
       error: null
    };
-   var workerPath = config.rootUri + "/audio-worker.min.js";
+   var workerPath = config.rootUri + "/audio-worker.js";
    var state = {
       nextCallbackId: 1,
       source: null,
@@ -36,51 +36,62 @@ function AudioFactory (config, $location, $rootScope, $q) {
    // Start recording.  The stream argument must be obtained by calling
    // prepareRecording.
    service.startRecording = function (stream) {
+      return $q(function (resolve, reject) {
 
-      var audioContext = new AudioContext();
-      var source = state.source = audioContext.createMediaStreamSource(stream);
+         var audioContext = new AudioContext();
+         var source = state.source = audioContext.createMediaStreamSource(stream);
 
-      // Make the native sample rate available on the service.
-      service.sampleRate = source.context.sampleRate;
+         // XXX Make the native sample rate available on the service.
+         var sampleRate = source.context.sampleRate;
 
-      // Create a worker to hold and process the audio buffers.
-      // The worker is reused across calls to startRecording.
-      var worker = state.worker;
-      if (!worker) {
-         worker = state.worker = new Worker(workerPath);
-         worker.onmessage = function (e) {
-            var callbackId = e.data.callbackId;
-            $rootScope.$emit(callbackId, e.data.result);
-         };
-         worker.postMessage({
-            command: "init",
-            config: {
-               sampleRate: service.sampleRate
-            }
-         });
-      }
+         // Create a worker to hold and process the audio buffers.
+         // The worker is reused across calls to startRecording.
+         state.worker ? afterWorkerLoaded() : spawnWorker(afterWorkerLoaded);
 
-      // Process the audio samples using a script function.
-      var node = state.node = source.context.createScriptProcessor(4096, 2, 2);
-      node.onaudioprocess = function (event) {
-         // Discard samples unless recording.
-         if (!state.recording)
-            return;
-         // Pass the buffer on to the worker.
-         state.worker.postMessage({
-            command: "record",
-            buffer: [
-               event.inputBuffer.getChannelData(0),
-               event.inputBuffer.getChannelData(1)
-            ]
-         });
-      };
+         function afterWorkerLoaded () {
+            state.worker.onmessage = function (e) {
+               var callbackId = e.data.callbackId;
+               $rootScope.$emit(callbackId, e.data.result);
+            };
+            state.worker.postMessage({
+               command: "init",
+               config: {
+                  sampleRate: sampleRate
+               }
+            });
 
-      source.connect(node);
-      node.connect(audioContext.destination);
+            // Process the audio samples using a script function.
+            var node = state.node = source.context.createScriptProcessor(4096, 2, 2);
+            node.onaudioprocess = function (event) {
+               // Discard samples unless recording.
+               if (!state.recording)
+                  return;
+               // Pass the buffer on to the worker.
+               state.worker.postMessage({
+                  command: "record",
+                  buffer: [
+                     event.inputBuffer.getChannelData(0),
+                     event.inputBuffer.getChannelData(1)
+                  ]
+               });
+            };
 
-      state.recording = true;
+            source.connect(node);
+            node.connect(audioContext.destination);
+
+            state.recording = true;
+            resolve({sampleRate: sampleRate});
+         }
+      });
    };
+
+   function spawnWorker (callback) {
+      state.worker = new Worker(workerPath);
+      state.worker.onmessage = function () {
+         state.worker.onmessage = null;
+         callback();
+      };
+   }
 
    // Stop recording.  Returns a promise which will resolve to the
    // recording result.
