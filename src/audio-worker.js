@@ -222,10 +222,9 @@ var FIR_48k_16k = [-0.000000, -0.000684, 0.001238, -0.000000, -0.003098, 0.00452
 var FIR_48k_24k = [0.5, 0.5]; // also try [0,1,0]
 
 function encodeWav (channels, options) {
-  console.log('encodeWav', options);
   // options.numChannels: 1 (mono), 2 (stereo)
   // options.sampleSize: 1 (8-bit), 2 (16-bit)
-  // sampleRate: recordingSampleRate / {2,3,4,6}
+  // options.sampleRate: recordingSampleRate / {1,2,3,4,6}
 
   // Select sensible options if not provided.
   if (!options) {
