@@ -55,7 +55,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
          if (state.isPaused)
             return reject('not paused');
          // Add a null event at the end of the stream to avoid stopping the
-         // sound track prematurely.
+         // sound track prematurely during replay.
          service.addEvent(['', '']);
          var duration = Date.now() - state.startTime;
          var segment = {
@@ -102,7 +102,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
    };
 
    // Stop recording.  Segments are joined and the returned promise is resolved
-   // with the completed recording.
+   // with the completed recording.  Audio encoding is handled separately.
    service.stop = function (encodingOptions) {
       return $q(function (resolve, reject) {
          if (!state.isRecording)
@@ -119,10 +119,6 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             return afterPaused();
          }
          function afterPaused () {
-            // TODO: build an object that contains all the recorded
-            // state and audio samples, with a method to complete the
-            // recording while adjusting the audio encoding options.
-            // Combine the segments.
             var duration = 0;
             var events = [];
             var audioUrls = [];
@@ -133,29 +129,30 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             });
             var result = {
                duration:  duration,
-               events: events
+               events: events,
+               audioUrls: audioUrls
             };
-            if (state.audioStream) {
-               audio.combineRecordings(audioUrls, encodingOptions).then(afterCombineRecordings, reject);
-            } else {
-               afterCombineRecordings();
+            state.isRecording = false;
+            state.isPaused = false;
+            state.segments = undefined;
+            state.options = null;
+            resolve(result);
+         }
+      });
+   };
+
+   service.finalize = function (recording, encodingOptions) {
+      return $q(function (resolve, reject) {
+         audio.combineRecordings(recording.audioUrls, encodingOptions).then(afterCombineRecordings, reject);
+         function afterCombineRecordings (combinedAudio) {
+            if (combinedAudio) {
+               var audioUrl = URL.createObjectURL(combinedAudio.wav);
+               recording.audioBlob = combinedAudio.wav;
+               recording.audioEncoding = combinedAudio.encoding;
+               recording.audioUrl = audioUrl;
+               recording.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
             }
-            function afterCombineRecordings (combinedAudio) {
-               if (combinedAudio) {
-                  var audioUrl = URL.createObjectURL(combinedAudio.wav);
-                  result.audioBlob = combinedAudio.wav;
-                  result.audioEncoding = combinedAudio.encoding;
-                  result.audioUrl = audioUrl;
-                  result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
-               }
-               // Clear the recorder state.
-               audio.clearRecordings();
-               state.isRecording = false;
-               state.isPaused = false;
-               state.segments = undefined;
-               state.options = null;
-               resolve(result);
-            }
+            resolve(recording);
          }
       });
    };
