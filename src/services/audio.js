@@ -128,6 +128,8 @@ function AudioFactory (config, $location, $rootScope, $q) {
 
    service.clearRecordings = function () {
       return $q(function (resolve, reject) {
+         if (!state.worker)
+            return resolve();
          state.worker.postMessage({
             command: "clearRecordings",
             callbackId: eventizeCallback(resolve)
