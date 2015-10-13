@@ -25,7 +25,7 @@
     "transloadit_xhr": "tim-kos/transloadit_xhr"
   },
   "devDependencies": {
-    "angular-bootstrap": "~0.13.4",
+    "angular-bootstrap": "~0.14.1",
     "bootstrap": "~3.3.5",
     "requirejs": "~2.1.20"
   }
