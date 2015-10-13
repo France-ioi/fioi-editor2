@@ -9,6 +9,7 @@ requirejs.config({
   "paths": {
     "ace": "bower_components/ace-builds/src-min-noconflict/ace",
     "angular": "bower_components/angular/angular.min",
+    "angular-bootstrap": "bower_components/angular-bootstrap/ui-bootstrap-tpls.min",
     "angular-ui-ace": "bower_components/angular-ui-ace/ui-ace.min",
     "es5-shim": "bower_components/es5-shim/es5-shim.min",
     "jquery": "bower_components/jquery/dist/jquery.min",
@@ -18,13 +19,14 @@ requirejs.config({
   },
   "shim": {
     "angular": {"exports": "angular"},
+    "angular-bootstrap": {"deps": ["angular"]},
     "angular-ui-ace": {"deps": ["angular", "ace"]},
     "transloadit_xhr": {"deps": ["jquery"]}
   }
 });
-require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (angular) {
+require(['angular', 'es5-shim', 'transloadit_xhr', 'angular-bootstrap', 'fioi-editor2'], function (angular) {
 
-  var app = angular.module('main', ['fioi-editor2']);
+  var app = angular.module('main', ['fioi-editor2', 'ui.bootstrap']);
   var sourceLanguages = [
     {id: 'c', label: "C", ext: 'c', ace: {mode: 'c_cpp'}},
     {id: 'cpp', label: "C++", ext: 'cpp', ace: {mode: 'c_cpp'}},
@@ -77,7 +79,7 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     });
   }
 
-  app.controller('Main', ['$scope', '$timeout', '$sce', 'FioiEditor2Tabsets', 'FioiEditor2Signals', 'FioiEditor2Recorder', 'FioiEditor2Audio', 'FioiEditor2Player', function ($scope, $timeout, $sce, tabsets, signals, recorder, audio, player) {
+  app.controller('Main', ['$scope', '$timeout', '$sce', '$uibModal', 'FioiEditor2Tabsets', 'FioiEditor2Signals', 'FioiEditor2Recorder', 'FioiEditor2Audio', 'FioiEditor2Player', function ($scope, $timeout, $sce, $uibModal, tabsets, signals, recorder, audio, player) {
     var controller = this;
 
     $scope.sampleSize = 2;
@@ -228,65 +230,83 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     };
 
     $scope.stopRecording = function () {
-      var encodingOptions = {
-        numChannels: 1,
-        sampleSize: $scope.sampleSize,
-        sampleRate: $scope.sampleRate / $scope.sampleRateDiv
-      };
-      recorder.stop(encodingOptions).then(function (result) {
+      if (!$scope.isRecording)
+        return;
+      if (!$scope.isPaused) {
+        recorder.stop().then(afterStopped, function (err) {
+          console.log('recording failed to stop: ', err);
+        });
+      }
+      function afterStopped (recording) {
         $scope.isRecording = false;
         $scope.isPaused = false;
-        // window.recording = result;
-        $scope.recording = result;
+        $scope.recording = recording;
         $scope.mode = 'replay';
-        return;
-        if (result.audioUrl) {
-          $scope.audioUploadStatus = 'uploading audio...';
-          var transloadit = new TransloaditXhr({
-            params: {
-              auth: {key: "TRANSLOADIT_AUTH_KEY"},
-              template_id: "TRANSLOADIT_TEMPLATE_ID",
-              steps: {}
-            },
-            signature: "",
-            errorCb: audioUploadFailure,
-            progressCb: audioUploadProgress,
-            processCb: audioUploadProcess,
-            successCb: audioUploadSuccess
+        var modalInstance = $uibModal.open({
+          templateUrl: 'encodingOptions.html',
+          controller: 'EncodingOptionsController',
+          resolve: {
+            options: function () {
+              return {
+                // XXX total number for samples at recording sampleRate
+                numChannels: 1,
+                sampleRateDiv: 1,
+                sampleSize: $scope.sampleSize,
+                sampleRate: $scope.sampleRate
+              };
+            }
+          }
+        });
+        modalInstance.result.then(function (encodingOptions) {
+          recorder.finalize(recording, encodingOptions).then(afterFinalized, function (err) {
+            console.log('recording failed to be finalized:', err);
           });
-          transloadit.uploadFile(result.audioBlob);
-
-          function audioUploadFailure (message) {
-            $scope.$apply(function () {
-              $scope.audioUploadStatus = "uploading audio failed: " + message;
-            });
-          }
-          function audioUploadProgress (progress) {
-            $scope.$apply(function () {
-              $scope.audioUploadStatus = 'uploading audio... ' + Math.round(progress) + '%';
-            });
-          }
-          function audioUploadProcess () {
-            $scope.$apply(function () {
-              $scope.audioUploadStatus = 'processing audio...';
-            });
-          }
-          function audioUploadSuccess (result) {
-            $scope.$apply(function () {
-              $scope.audioUploadStatus = 'cleaning up...';
-              // Update recording with the encoded file's URL.
-              $scope.recording.audioUrl = result.mp3[0].ssl_url;
-            });
-            audio.clearRecordings().then(function () {
-              $scope.$apply(function () {
-                $scope.audioUploadStatus = false;
-              });
-            });
-          }
+        });
+      }
+      function afterFinalized (recording) {
+        return; // UPLOAD DISABLED
+        if (!result.audioUrl) {
+          // Encoding audio failed and there is nothing to upload.
+          return;
         }
-      }, function (err) {
-        console.log('recording failed to stop:', err);
-      });
+        $scope.audioUploadStatus = 'uploading audio...';
+        var transloadit = new TransloaditXhr({
+          params: {
+            auth: {key: "TRANSLOADIT_AUTH_KEY"},
+            template_id: "TRANSLOADIT_TEMPLATE_ID",
+            steps: {}
+          },
+          signature: "",
+          errorCb: audioUploadFailure,
+          progressCb: audioUploadProgress,
+          processCb: audioUploadProcess,
+          successCb: audioUploadSuccess
+        });
+        transloadit.uploadFile(result.audioBlob);
+
+        function audioUploadFailure (message) {
+          $scope.$apply(function () {
+            $scope.audioUploadStatus = "uploading audio failed: " + message;
+          });
+        }
+        function audioUploadProgress (progress) {
+          $scope.$apply(function () {
+            $scope.audioUploadStatus = 'uploading audio... ' + Math.round(progress) + '%';
+          });
+        }
+        function audioUploadProcess () {
+          $scope.$apply(function () {
+            $scope.audioUploadStatus = 'processing audio...';
+          });
+        }
+        function audioUploadSuccess (result) {
+          $scope.$apply(function () {
+            // Update recording with the encoded file's URL.
+            $scope.recording.audioUrl = result.mp3[0].ssl_url;
+            $scope.audioUploadStatus = false;
+          });
+        }
+      }
     };
 
     $scope.pauseRecording = function () {
@@ -320,6 +340,18 @@ require(['angular', 'es5-shim', 'transloadit_xhr', 'fioi-editor2'], function (an
     };
 
   }]);
+
+  app.controller('EncodingOptionsController', ['$scope', 'options', '$modalInstance', function ($scope, options, $modalInstance) {
+    angular.extend($scope, options);
+    $scope.ok = function () {
+      $modalInstance.close({
+        numChannels: 1,
+        sampleSize: $scope.sampleSize,
+        sampleRate: $scope.sampleRate / $scope.sampleRateDiv
+      });
+    };
+  }]);
+
   angular.element(document).ready(function () {
     angular.bootstrap(document, ['main'], {strictDi: true});
   });
@@ -371,17 +403,7 @@ body { background-color: #eee; }
       <span ng-if="isPlaying">lecture</span>
       <span ng-if="isPaused">en pause</span>
       <span ng-if="audioUploadStatus">{{audioUploadStatus}}</span>
-      <span ng-if="sampleRate">{{sampleRate}}</span>
     </div>
-
-    <label><input type="radio" ng-model="sampleSize" ng-value="1"> 8-bit</label>
-    <label><input type="radio" ng-model="sampleSize" ng-value="2"> 16-bit</label>
-
-    <label><input type="radio" ng-model="sampleRateDiv" ng-value="1"> 1</label>
-    <label><input type="radio" ng-model="sampleRateDiv" ng-value="2"> 2</label>
-    <label><input type="radio" ng-model="sampleRateDiv" ng-value="3"> 3</label>
-    <label><input type="radio" ng-model="sampleRateDiv" ng-value="4"> 4</label>
-    <label><input type="radio" ng-model="sampleRateDiv" ng-value="6"> 6</label>
 
   </div>
 
@@ -399,3 +421,30 @@ body { background-color: #eee; }
   </div>
   <p ng-if="isPlaying">playing</p>
 </div>
+
+<script type="text/ng-template" id="encodingOptions.html">
+  <form>
+    <div class="modal-header">
+      <h3 class="modal-title">Audio encoding options</h3>
+    </div>
+    <div class="modal-body">
+      <span>Native sample rate: {{sampleRate/1000}} ksps</span>
+
+      <div class="radio">
+        <label><input type="radio" ng-model="sampleSize" ng-value="1"> 8-bit</label>
+        <label><input type="radio" ng-model="sampleSize" ng-value="2"> 16-bit</label>
+      </div>
+
+      <div class="radio">
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="1"> 1</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="2"> 2</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="3"> 3</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="4"> 4</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="6"> 6</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" ng-click="ok()">Encode</button>
+    </div>
+  </form>
+</script>
