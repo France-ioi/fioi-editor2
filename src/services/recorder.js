@@ -22,6 +22,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
       return $q(function (resolve, reject) {
          if (state.isRecording)
             return reject('an operation is already in progress');
+         audio.clearRecordings();
          audio.prepareRecording(function (err, stream) {
             if (err)
                return reject(err);
