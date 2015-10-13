@@ -8,7 +8,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    var service = {
       error: null
    };
-   var workerPath = config.rootUri + "/audio-worker.js";
+   var workerPath = config.rootUri + "/audio-worker.min.js";
    var state = {
       nextCallbackId: 1,
       source: null,
