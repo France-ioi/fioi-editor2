@@ -1,12 +1,10 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
 
 /**
 This service stores tabsets.
 */
-m.factory('FioiEditor2Tabsets', TabsetsServiceFactory);
 TabsetsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Tabs', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
-function TabsetsServiceFactory (signals, tabs, recorder, registry) {
+export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 
    var service = {};
    var tabsets = {};
@@ -189,5 +187,3 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 
    return service;
 }
-
-};

@@ -1,5 +1,5 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
+import editorTemplate from './editor.jade!';
 
 /**
 This directive inserts the editor component.
@@ -19,15 +19,14 @@ The API includes function to:
 - …
 
 */
-m.directive('fioiEditor2', editorDirective);
 editorDirective.$inject = ['FioiEditor2Signals'];
-function editorDirective (signals) {
+export function editorDirective (signals) {
    return {
       restrict: 'A',
       scope: {
          fioiEditor2: '&'
       },
-      template: require('./editor.jade'),
+      template: editorTemplate({}),
       controllerAs: 'vm',
       bindToController: true,
       replace: true,
@@ -105,5 +104,3 @@ function EditorController (tabsets) {
    };
 
 }
-
-};

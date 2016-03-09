@@ -1,12 +1,10 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
 
 /**
 This service maintains a set of buffers.
 */
-m.factory('FioiEditor2Buffers', BuffersFactory);
 BuffersFactory.$inject = ['FioiEditor2Recorder', 'FioiEditor2Registry'];
-function BuffersFactory (recorder, registry) {
+export function BuffersFactory (recorder, registry) {
 
    var service = {};
    var buffers = {};
@@ -123,5 +121,3 @@ function BuffersFactory (recorder, registry) {
 
    return service;
 }
-
-};

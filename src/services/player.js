@@ -1,9 +1,5 @@
-module.exports = function (m) {
-'use strict';
-
-m.factory('FioiEditor2Player', PlayerFactory);
 PlayerFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio', 'FioiEditor2Registry', 'FioiEditor2Signals'];
-function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
+export function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
    var service = {};
    var state = {
       options: null, // object with the dumpState() and loadState(state) functions.
@@ -160,5 +156,3 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
 
    return service;
 }
-
-};

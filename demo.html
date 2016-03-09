@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<title>Editor component testing</title>
+
+<script type="text/javascript" src="jspm_packages/system.src.js"></script>
+<script type="text/javascript" src="jspm-0.16.config.js"></script>
+<script type="text/javascript">SystemJS.import('./demo.js');</script>
+
+<style type="text/css">
+*[ng-cloak] { display: none !important; }
+body { background-color: #eee; }
+.fioi-editor2 { background-color: #fff; }
+.toolbar > div { margin-right: 20px; }
+</style>
+
+<div ng-cloak ng-controller="Main" class="container">
+
+  <div class="form-group">
+    <label>
+      Mode
+    </label>
+    <select class="form-control" ng-model="mode" ng-options="mode.id as mode.label for mode in modes"></select>
+  </div>
+
+  <div style="margin: 10px 0;" class="clearfix toolbar">
+
+    <div class="pull-left" ng-if="mode=='normal'">
+      <button type="button" class="btn btn-default" ng-click="save()">save</button>
+    </div>
+
+    <div class="pull-left" ng-if="mode=='record'">
+      <button type="button" class="btn btn-default" ng-click="startRecording()" ng-disabled="isRecording"><i class="fa fa-circle" style="color: #a01;"></i></button>
+      <button type="button" class="btn btn-default" ng-click="pauseRecording()" ng-disabled="!isRecording"><i class="fa fa-pause"></i></button>
+      <button type="button" class="btn btn-default" ng-click="stopRecording()" ng-disabled="!isRecording"><i class="fa fa-stop"></i></button>
+    </div>
+
+    <div class="pull-left" ng-if="mode=='replay'">
+      <button type="button" class="btn btn-default" ng-click="startReplaying()" ng-disabled="isPlaying"><i class="fa fa-play"></i></button>
+      <button type="button" class="btn btn-default" ng-click="pauseReplaying()" ng-disabled="!isPlaying"><i class="fa fa-pause"></i></button>
+      <button type="button" class="btn btn-default" ng-click="stopReplaying()" ng-disabled="!(isPlaying)"><i class="fa fa-stop"></i></button>
+    </div>
+
+    <div class="pull-left">
+      <button type="button" class="btn btn-default" ng-click="submitActiveBuffer()">submit</button>
+    </div>
+
+    <div class="pull-left">
+      <span ng-if="isRecording">enregistrement</span>
+      <span ng-if="isPlaying">lecture</span>
+      <span ng-if="isPaused">en pause</span>
+      <span ng-if="audioUploadStatus">{{audioUploadStatus}}</span>
+    </div>
+
+  </div>
+
+  <div fioi-editor2="{tabset:'sources'}" style="margin-bottom: 10px;"></div>
+  <div fioi-editor2="{tabset:'tests'}"></div>
+  <ul>
+    <li ng-repeat="item in recordings">
+      <audio controls=true ng-src="{{item.url}}"></audio>
+      <a href="{{item.url}}" download="sample.wav">download</a>
+    </li>
+  </ul>
+  <div ng-if="recording.safeAudioUrl">
+    <audio controls=true ng-src="{{recording.safeAudioUrl}}"></audio>
+    <pre>{{recording.audioEncoding|json}}</pre>
+  </div>
+  <p ng-if="isPlaying">playing</p>
+</div>
+
+<script type="text/ng-template" id="encodingOptions.html">
+  <form>
+    <div class="modal-header">
+      <h3 class="modal-title">Audio encoding options</h3>
+    </div>
+    <div class="modal-body">
+      <p>Recording duration: {{duration/1000|number}} s</p>
+      <p>Native sample rate: {{sampleRate/1000|number}} ksps</p>
+      <div class="radio">
+        Sample size:
+        <label><input type="radio" ng-model="sampleSize" ng-value="1"> 8-bit</label>
+        <label><input type="radio" ng-model="sampleSize" ng-value="2"> 16-bit</label>
+      </div>
+      <div class="radio">
+        Sample rate divisor:
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="1"> 1</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="2"> 2</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="3"> 3</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="4"> 4</label>
+        <label><input type="radio" ng-model="sampleRateDiv" ng-value="6"> 6</label>
+      </div>
+      <p><strong>Estimated file size: {{duration*sampleRate*sampleSize/sampleRateDiv/(1000*1024*1024)|number}} MiB</strong></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" ng-click="ok()">Encode</button>
+    </div>
+  </form>
+</script>

@@ -1,9 +1,7 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
 
-m.factory('FioiEditor2Recorder', RecorderFactory);
 RecorderFactory.$inject = ['$q', '$interval', '$sce', 'FioiEditor2Audio'];
-function RecorderFactory ($q, $interval, $sce, audio) {
+export function RecorderFactory ($q, $interval, $sce, audio) {
    var service = {};
    var state = {
       options: null, // object with the dumpState() and loadState(state) functions.
@@ -177,5 +175,3 @@ function RecorderFactory ($q, $interval, $sce, audio) {
 
    return service;
 }
-
-};

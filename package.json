@@ -2,7 +2,6 @@
   "name": "fioi-editor2",
   "version": "4.0.1",
   "description": "An editor component based on angular.js and Ace.",
-  "main": "gulpfile.js",
   "homepage": "https://github.com/France-ioi/fioi-editor2",
   "authors": [
     "Sébastien Carlier <s.carlier@epixode.fr>"
@@ -15,31 +14,29 @@
   "bugs": {
     "url": "https://github.com/France-ioi/fioi-editor2/issues"
   },
-  "devDependencies": {
-    "browserify": "^11.0.1",
-    "browserify-through": "^2.0.0",
-    "cssify": "^0.7.0",
-    "gulp": "^3.9.0",
-    "gulp-chmod": "^1.2.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-eol": "^0.1.1",
-    "gulp-jade": "^1.1.0",
-    "gulp-minify-css": "^1.2.1",
-    "gulp-newer": "^0.5.1",
-    "gulp-r": "^1.1.3",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-uglify": "^1.3.0",
-    "gulp-util": "^3.0.6",
-    "gulp-wrap-amd": "^0.5.0",
-    "jade": "^1.11.0",
-    "jadeify": "^4.4.0",
-    "js-string-escape": "^1.0.0",
-    "lodash.assign": "^3.2.0",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.3.1"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "jspm": {
+    "main": "main.js",
+    "directories": {
+      "lib": "src"
+    },
+    "configFile": "jspm-0.16.config.js",
+    "dependencies": {
+      "ace": "github:ajaxorg/ace-builds@^1.2.3",
+      "angular": "github:angular/bower-angular@^1.5.0",
+      "angular-bootstrap": "github:angular-ui/bootstrap-bower@^1.2.4",
+      "angular-ui-ace": "npm:angular-ui-ace@^0.2.3",
+      "bootstrap": "github:twbs/bootstrap@^3.3.6",
+      "brace": "npm:brace@^0.7.0",
+      "css": "github:systemjs/plugin-css@^0.1.20",
+      "font-awesome": "npm:font-awesome@^4.5.0",
+      "jade": "github:johnsoftek/plugin-jade@^0.5.1",
+      "lodash": "npm:lodash@^4.6.1",
+      "text": "github:systemjs/plugin-text@^0.0.7"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.24",
+      "babel-runtime": "npm:babel-runtime@^5.8.24",
+      "core-js": "npm:core-js@^1.1.4"
+    }
   }
 }

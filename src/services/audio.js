@@ -1,14 +1,15 @@
-module.exports = function (m) {
-'use strict';
 
-m.factory('FioiEditor2Audio', AudioFactory);
+import audioWorkerText from '../audio-worker.js!text';
+
+var audioWorkerBlob = new Blob([audioWorkerText], {type: "application/javascript;charset=UTF-8"});
+var audioWorkerUrl = URL.createObjectURL(audioWorkerBlob);
+
 AudioFactory.$inject = ['FioiEditor2Config', '$location', '$rootScope', '$q'];
-function AudioFactory (config, $location, $rootScope, $q) {
+export function AudioFactory (config, $location, $rootScope, $q) {
 
    var service = {
       error: null
    };
-   var workerPath = config.rootUri + "/audio-worker.js";
    var state = {
       nextCallbackId: 1,
       source: null,
@@ -86,7 +87,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    };
 
    function spawnWorker (callback) {
-      state.worker = new Worker(workerPath);
+      state.worker = new Worker(audioWorkerUrl);
       state.worker.onmessage = function () {
          state.worker.onmessage = null;
          callback();
@@ -185,5 +186,3 @@ function AudioFactory (config, $location, $rootScope, $q) {
 
    return service;
 }
-
-};

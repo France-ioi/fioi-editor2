@@ -1,9 +1,7 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
 
-m.factory('FioiEditor2Signals', SignalsFactory);
 SignalsFactory.$inject = ['$rootScope'];
-function SignalsFactory ($rootScope) {
+export function SignalsFactory ($rootScope) {
 
    var prefix = 'fioi-editor2_';
    var service = {};
@@ -49,5 +47,3 @@ function SignalsFactory ($rootScope) {
 
    return service;
 }
-
-};

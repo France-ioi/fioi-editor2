@@ -1,16 +1,15 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
+import bufferTemplate from './buffer.jade!';
 
-m.directive('fioiEditor2Buffer', bufferDirective);
 bufferDirective.$inject = ['FioiEditor2Signals'];
-function bufferDirective (signals) {
+export function bufferDirective (signals) {
    return {
       restrict: 'E',
       scope: {
          buffer: '@',
          onInit: '&'
       },
-      template: require('./buffer.jade'),
+      template: bufferTemplate({}),
       controllerAs: 'vm',
       bindToController: true,
       require: '^fioiEditor2',
@@ -157,5 +156,3 @@ function BufferController (signals, buffers) {
    }
 
 }
-
-};

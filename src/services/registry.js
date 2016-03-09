@@ -1,9 +1,6 @@
-module.exports = function (m) {
-'use strict';
 
-m.factory('FioiEditor2Registry', RegistryFactory);
 RegistryFactory.$inject = [];
-function RegistryFactory () {
+export function RegistryFactory () {
    var service = {};
    var state = {
       targets: {} // record-time id --> object instance
@@ -49,5 +46,3 @@ function RegistryFactory () {
 
    return service;
 }
-
-};

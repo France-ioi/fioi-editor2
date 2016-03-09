@@ -1,5 +1,4 @@
-module.exports = function (m) {
-'use strict';
+import _ from 'lodash';
 
 /**
 This service acts as storage for sets of tabs, where each
@@ -8,9 +7,8 @@ tab holds a sequence of 1 or 2 text buffers.
 The service can dump/load its state to/from a JSON object.
 
 */
-m.factory('FioiEditor2Tabs', TabsServiceFactory);
 TabsServiceFactory.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', 'FioiEditor2Recorder', 'FioiEditor2Registry'];
-function TabsServiceFactory (signals, buffers, recorder, registry) {
+export function TabsServiceFactory (signals, buffers, recorder, registry) {
 
    var service = {};
    var tabs = {};
@@ -125,5 +123,3 @@ function TabsServiceFactory (signals, buffers, recorder, registry) {
 
    return service;
 }
-
-};
