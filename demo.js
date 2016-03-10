@@ -326,10 +326,10 @@ app.controller('Main', ['$scope', '$timeout', '$sce', '$uibModal', 'FioiEditor2T
 
 }]);
 
-app.controller('EncodingOptionsController', ['$scope', 'options', '$modalInstance', function ($scope, options, $modalInstance) {
+app.controller('EncodingOptionsController', ['$scope', 'options', '$uibModalInstance', function ($scope, options, $uibModalInstance) {
   angular.extend($scope, options);
   $scope.ok = function () {
-    $modalInstance.close({
+    $uibModalInstance.close({
       numChannels: 1,
       sampleSize: $scope.sampleSize,
       sampleRate: $scope.sampleRate / $scope.sampleRateDiv
