@@ -49,5 +49,15 @@
         }
       }
     }
+  },
+  "devDependencies": {
+    "bunyan": "^1.7.1",
+    "http2": "^3.3.2"
+  },
+  "dependencies": {
+    "bunyan": "^1.7.1",
+    "express": "^4.13.4",
+    "http2": "^3.3.2",
+    "url-parse": "^1.0.5"
   }
 }
