@@ -27,6 +27,7 @@ System.config({
     "css": "github:systemjs/plugin-css@0.1.20",
     "font-awesome": "npm:font-awesome@4.5.0",
     "jade": "github:johnsoftek/plugin-jade@0.5.1",
+    "lamejs": "npm:lamejs@1.0.0",
     "lodash": "npm:lodash@4.6.1",
     "text": "github:systemjs/plugin-text@0.0.7",
     "github:johnsoftek/plugin-jade@0.5.1": {
@@ -234,6 +235,11 @@ System.config({
     "npm:kind-of@3.0.2": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "is-buffer": "npm:is-buffer@1.1.3"
+    },
+    "npm:lamejs@1.0.0": {
+      "buffer": "github:jspm/nodelibs-buffer@0.1.0",
+      "fs": "github:jspm/nodelibs-fs@0.1.2",
+      "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:lazy-cache@1.0.3": {
       "process": "github:jspm/nodelibs-process@0.1.2"
