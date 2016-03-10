@@ -1,0 +1,26 @@
+<form>
+  <div class="modal-header">
+    <h3 class="modal-title">Audio encoding options</h3>
+  </div>
+  <div class="modal-body">
+    <p>Recording duration: {{duration/1000|number}} s</p>
+    <p>Native sample rate: {{sampleRate/1000|number}} ksps</p>
+    <div class="radio">
+      Sample size:
+      <label><input type="radio" ng-model="sampleSize" ng-value="1"> 8-bit</label>
+      <label><input type="radio" ng-model="sampleSize" ng-value="2"> 16-bit</label>
+    </div>
+    <div class="radio">
+      Sample rate divisor:
+      <label><input type="radio" ng-model="sampleRateDiv" ng-value="1"> 1</label>
+      <label><input type="radio" ng-model="sampleRateDiv" ng-value="2"> 2</label>
+      <label><input type="radio" ng-model="sampleRateDiv" ng-value="3"> 3</label>
+      <label><input type="radio" ng-model="sampleRateDiv" ng-value="4"> 4</label>
+      <label><input type="radio" ng-model="sampleRateDiv" ng-value="6"> 6</label>
+    </div>
+    <p><strong>Estimated file size: {{duration*sampleRate*sampleSize/sampleRateDiv/(1000*1024*1024)|number}} MiB</strong></p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" ng-click="ok()">Encode</button>
+  </div>
+</form>

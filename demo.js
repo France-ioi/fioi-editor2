@@ -9,6 +9,8 @@ import 'brace/worker/javascript';
 import 'fioi-editor2';
 // import 'transloadit_xhr';
 
+import encodingOptionsTemplate from './encodingOptions.html!text';
+
 var app = angular.module('main', ['fioi-editor2', 'ui.bootstrap']);
 var sourceLanguages = [
   {id: 'c', label: "C", ext: 'c', ace: {mode: 'c_cpp'}},
@@ -226,7 +228,7 @@ app.controller('Main', ['$scope', '$timeout', '$sce', '$uibModal', 'FioiEditor2T
       $scope.recording = recording;
       $scope.mode = 'replay';
       var modalInstance = $uibModal.open({
-        templateUrl: 'encodingOptions.html',
+        template: encodingOptionsTemplate,
         controller: 'EncodingOptionsController',
         resolve: {
           options: function () {
