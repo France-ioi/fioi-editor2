@@ -1,6 +1,6 @@
 {
   "name": "fioi-editor2",
-  "version": "4.0.1",
+  "version": "5.0.0",
   "description": "An editor component based on angular.js and Ace.",
   "homepage": "https://github.com/France-ioi/fioi-editor2",
   "authors": [
@@ -15,10 +15,7 @@
     "url": "https://github.com/France-ioi/fioi-editor2/issues"
   },
   "jspm": {
-    "main": "main.js",
-    "directories": {
-      "lib": "src"
-    },
+    "main": "src/main.js",
     "configFile": "jspm-0.16.config.js",
     "dependencies": {
       "ace": "github:ajaxorg/ace-builds@^1.2.3",
