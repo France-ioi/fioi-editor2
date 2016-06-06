@@ -11,7 +11,8 @@ System.config({
   paths: {
     "github:*": "jspm_packages/github/*",
     "npm:*": "jspm_packages/npm/*",
-    "fioi-editor2": "src/main.js"
+    "fioi-editor2": "src/main.js",
+    "jspm:*": "jspm_packages/jspm/*"
   },
 
   map: {
@@ -23,6 +24,7 @@ System.config({
     "babel-runtime": "npm:babel-runtime@5.8.35",
     "bootstrap": "github:twbs/bootstrap@3.3.6",
     "brace": "npm:brace@0.7.0",
+    "clean-css": "npm:clean-css@3.4.17",
     "core-js": "npm:core-js@1.2.6",
     "css": "github:systemjs/plugin-css@0.1.20",
     "font-awesome": "npm:font-awesome@4.5.0",
@@ -34,7 +36,7 @@ System.config({
       "jade-compiler": "npm:jade@1.11.0"
     },
     "github:jspm/nodelibs-assert@0.1.0": {
-      "assert": "npm:assert@1.3.0"
+      "assert": "npm:assert@1.4.1"
     },
     "github:jspm/nodelibs-buffer@0.1.0": {
       "buffer": "npm:buffer@3.6.0"
@@ -60,7 +62,7 @@ System.config({
       "path-browserify": "npm:path-browserify@0.0.0"
     },
     "github:jspm/nodelibs-process@0.1.2": {
-      "process": "npm:process@0.11.2"
+      "process": "npm:process@0.11.3"
     },
     "github:jspm/nodelibs-stream@0.1.0": {
       "stream-browserify": "npm:stream-browserify@1.0.0"
@@ -114,7 +116,10 @@ System.config({
     "npm:asap@1.0.0": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:assert@1.3.0": {
+    "npm:assert@1.4.1": {
+      "assert": "github:jspm/nodelibs-assert@0.1.0",
+      "buffer": "github:jspm/nodelibs-buffer@0.1.0",
+      "process": "github:jspm/nodelibs-process@0.1.2",
       "util": "npm:util@0.10.3"
     },
     "npm:async@0.2.10": {
@@ -126,6 +131,7 @@ System.config({
     "npm:brace@0.7.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
+      "systemjs-json": "github:systemjs/plugin-json@0.1.0",
       "w3c-blob": "npm:w3c-blob@0.0.1"
     },
     "npm:buffer@3.6.0": {
@@ -141,6 +147,19 @@ System.config({
       "lazy-cache": "npm:lazy-cache@1.0.3"
     },
     "npm:clean-css@3.4.10": {
+      "buffer": "github:jspm/nodelibs-buffer@0.1.0",
+      "commander": "npm:commander@2.8.1",
+      "fs": "github:jspm/nodelibs-fs@0.1.2",
+      "http": "github:jspm/nodelibs-http@1.7.1",
+      "https": "github:jspm/nodelibs-https@0.1.0",
+      "os": "github:jspm/nodelibs-os@0.1.0",
+      "path": "github:jspm/nodelibs-path@0.1.0",
+      "process": "github:jspm/nodelibs-process@0.1.2",
+      "source-map": "npm:source-map@0.4.4",
+      "url": "github:jspm/nodelibs-url@0.1.0",
+      "util": "github:jspm/nodelibs-util@0.1.0"
+    },
+    "npm:clean-css@3.4.17": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "commander": "npm:commander@2.8.1",
       "fs": "github:jspm/nodelibs-fs@0.1.2",
@@ -189,8 +208,7 @@ System.config({
       "css-parse": "npm:css-parse@1.0.4",
       "css-stringify": "npm:css-stringify@1.0.5",
       "fs": "github:jspm/nodelibs-fs@0.1.2",
-      "process": "github:jspm/nodelibs-process@0.1.2",
-      "systemjs-json": "github:systemjs/plugin-json@0.1.0"
+      "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:font-awesome@4.5.0": {
       "css": "github:systemjs/plugin-css@0.1.20"
@@ -265,7 +283,7 @@ System.config({
     "npm:path-browserify@0.0.0": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:process@0.11.2": {
+    "npm:process@0.11.3": {
       "assert": "github:jspm/nodelibs-assert@0.1.0"
     },
     "npm:promise@2.0.0": {
@@ -278,7 +296,7 @@ System.config({
     "npm:punycode@1.3.2": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:readable-stream@1.1.13": {
+    "npm:readable-stream@1.1.14": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "core-util-is": "npm:core-util-is@1.0.2",
       "events": "github:jspm/nodelibs-events@0.1.1",
@@ -307,7 +325,7 @@ System.config({
     "npm:stream-browserify@1.0.0": {
       "events": "github:jspm/nodelibs-events@0.1.1",
       "inherits": "npm:inherits@2.0.1",
-      "readable-stream": "npm:readable-stream@1.1.13"
+      "readable-stream": "npm:readable-stream@1.1.14"
     },
     "npm:string_decoder@0.10.31": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
