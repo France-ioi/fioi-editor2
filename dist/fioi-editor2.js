@@ -51,7 +51,8 @@ function bufferDirective (signals) {
       restrict: 'E',
       scope: {
          buffer: '@',
-         onInit: '&'
+         onInit: '&',
+         readOnly: '='
       },
       template: require('./buffer.jade'),
       controllerAs: 'vm',
@@ -204,7 +205,7 @@ function BufferController (signals, buffers) {
 };
 
 },{"./buffer.jade":2}],4:[function(require,module,exports){
-module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" title=\"ajouter un {{vm.typeName}}\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
+module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" title=\"ajouter un {{vm.typeName}}\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><div ng-if=\"vm.bufferNames\" class=\"fioi-editor2_buffer_title\">{{vm.bufferNames[$index]}}</div><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
 module.exports = function (m) {
@@ -291,12 +292,13 @@ function EditorController (tabsets) {
          return;
       }
       tabset = tabsets.find(config.tabset);
-      this.typeName = tabset.typeName;
-      this.readOnly = tabset.readOnly;
       if (!tabset) {
          classes['fioi-editor2_error'] = true;
          return;
       }
+      this.typeName = tabset.typeName;
+      this.readOnly = tabset.readOnly;
+      this.bufferNames = tabset.bufferNames;
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
@@ -322,7 +324,7 @@ function EditorController (tabsets) {
 };
 
 },{"./editor.jade":4}],6:[function(require,module,exports){
-var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 762px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 762px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n"; (require("./../node_modules/cssify"))(css); module.exports = css;
+var css = ".fioi-editor2 {\n   width: 762px;\n}\n\nul.fioi-editor2_tabs {\n   font: bold 11px Verdana, Arial, sans-serif;\n   list-style-type: none;\n   padding-bottom: 24px;\n   border-bottom: 1px solid #CCCCCC;\n   margin: 0;\n}\n\nul.fioi-editor2_tabs > li {\n   float: left;\n   height: 21px;\n   line-height: 21px;\n   padding: 0 7px;\n   background-color: #E0F3DB;\n   margin: 2px 2px 0 2px;\n   border: 1px solid #CCCCCC;\n   cursor: pointer;\n}\n\nul.fioi-editor2_tabs > li.active {\n   border-bottom: 1px solid #fff;\n   background-color: #FFFFFF;\n}\n\nul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {\n   text-decoration: underline;\n}\n\n.fioi-editor2_close-tab {\n   padding: 0px 2px;\n   margin-left: 2px;\n   border-radius: 3px;\n}\n\n.fioi-editor2_close-tab:hover {\n   background-color: #D8D8D8;\n}\n\n.fioi-editor2_buffers {\n   width: 100%;\n   overflow: hidden;\n}\n\n.fioi-editor2_empty {\n   width: 762px;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   font-style: italic;\n   padding: 10px;\n   color: #888;\n}\n\n.fioi-editor2_buffers .ace_editor {\n   height: 350px; /* 14px * 25 lines */\n   border: 1px solid #CCCCCC;\n   border-top: none;\n}\n\n.fioi-editor2_1-buffers .ace_editor {\n   width: 762px;\n}\n.fioi-editor2_2-buffers .ace_editor {\n   width: 379px;\n}\n.fioi-editor2_2-buffers > div {\n  float: left;\n}\n\n.fioi-editor2_buffer_title {\n   font: bold 11px Verdana, Arial, sans-serif;\n   border: 1px solid #CCCCCC;\n   border-top: none;\n   line-height: 20px;\n   vertical-align: middle;\n   padding-left: 10px;\n}"; (require("./../node_modules/cssify"))(css); module.exports = css;
 },{"./../node_modules/cssify":1}],7:[function(require,module,exports){
 define(['module', 'angular', 'lodash', 'angular-ui-ace'], function (module, angular, _) {
 'use strict';
