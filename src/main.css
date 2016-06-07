@@ -69,3 +69,12 @@ ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {
 .fioi-editor2_2-buffers > div {
   float: left;
 }
+
+.fioi-editor2_buffer_title {
+   font: bold 11px Verdana, Arial, sans-serif;
+   border: 1px solid #CCCCCC;
+   border-top: none;
+   line-height: 20px;
+   vertical-align: middle;
+   padding-left: 10px;
+}

@@ -9,4 +9,6 @@ div.fioi-editor2
       div(ng-if="!vm.tab.buffers")
          | no tabs
       div(ng-repeat="buffer in vm.tab.buffers track by buffer")
+         div.fioi-editor2_buffer_title(ng-if="vm.bufferNames")
+            | {{vm.bufferNames[$index]}}
          fioi-editor2-buffer(buffer="{{::buffer}}")

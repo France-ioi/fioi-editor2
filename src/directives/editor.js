@@ -82,12 +82,13 @@ function EditorController (tabsets) {
          return;
       }
       tabset = tabsets.find(config.tabset);
-      this.typeName = tabset.typeName;
-      this.readOnly = tabset.readOnly;
       if (!tabset) {
          classes['fioi-editor2_error'] = true;
          return;
       }
+      this.typeName = tabset.typeName;
+      this.readOnly = tabset.readOnly;
+      this.bufferNames = tabset.bufferNames;
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });

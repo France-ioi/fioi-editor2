@@ -8,7 +8,8 @@ function bufferDirective (signals) {
       restrict: 'E',
       scope: {
          buffer: '@',
-         onInit: '&'
+         onInit: '&',
+         readOnly: '='
       },
       template: require('./buffer.jade'),
       controllerAs: 'vm',
