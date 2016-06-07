@@ -54,6 +54,8 @@ function EditorController (tabsets) {
    var controller = this;
    var tabset = null;
 
+   this.typeName = 'onglet';
+
    this.addTab = function () {
       var tab = tabset.addTab();
       this.selectTab(tab);
@@ -80,6 +82,8 @@ function EditorController (tabsets) {
          return;
       }
       tabset = tabsets.find(config.tabset);
+      this.typeName = tabset.typeName;
+      this.readOnly = tabset.readOnly;
       if (!tabset) {
          classes['fioi-editor2_error'] = true;
          return;

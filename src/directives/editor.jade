@@ -1,6 +1,6 @@
 div.fioi-editor2
    ul.fioi-editor2_tabs
-      li.fioi-editor2_new-tab(ng-click="vm.addTab()")
+      li.fioi-editor2_new-tab(ng-click="vm.addTab()" title="ajouter un {{vm.typeName}}")
          | +
       li.fioi-editor2_tab(ng-repeat="tab in vm.tabs track by tab.id", ng-class="{'active':tab.id===vm.tab.id}", ng-click="vm.selectTab(tab)")
          span.fioi-editor2_tab-title {{tab.title}}

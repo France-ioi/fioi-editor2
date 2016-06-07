@@ -74,6 +74,12 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
          this.buffersPerTab = attrs.buffersPerTab;
+      if ('typeName' in attrs)
+         this.typeName = attrs.typeName;
+      if ('readOnly' in attrs)
+         this.readOnly = attrs.readOnly;
+      if ('bufferNames' in attrs)
+         this.bufferNames = attrs.bufferNames;
       if (!quiet) {
          recorder.addEvent([this.id, 'u', attrs]);
          signals.emitUpdate();
