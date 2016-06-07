@@ -11,10 +11,7 @@
   "ignore": [
     "**/.*",
     "bower_components",
-    "node_modules",
-    "src",
-    "gulpfile.js",
-    "package.json"
+    "node_modules"
   ],
   "dependencies": {
     "angular": "~1.4.4",
