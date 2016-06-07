@@ -38,7 +38,7 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\" ng-readonly=\"vm.readOnly\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
 module.exports = function (m) {
@@ -204,7 +204,7 @@ function BufferController (signals, buffers) {
 };
 
 },{"./buffer.jade":2}],4:[function(require,module,exports){
-module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
+module.exports = "<div class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-click=\"vm.addTab()\" title=\"ajouter un {{vm.typeName}}\" class=\"fioi-editor2_new-tab\">+</li><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{\'active\':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>";
 
 },{}],5:[function(require,module,exports){
 module.exports = function (m) {
@@ -263,6 +263,8 @@ function EditorController (tabsets) {
    var controller = this;
    var tabset = null;
 
+   this.typeName = 'onglet';
+
    this.addTab = function () {
       var tab = tabset.addTab();
       this.selectTab(tab);
@@ -289,6 +291,8 @@ function EditorController (tabsets) {
          return;
       }
       tabset = tabsets.find(config.tabset);
+      this.typeName = tabset.typeName;
+      this.readOnly = tabset.readOnly;
       if (!tabset) {
          classes['fioi-editor2_error'] = true;
          return;
@@ -359,7 +363,7 @@ function AudioFactory (config, $location, $rootScope, $q) {
    var service = {
       error: null
    };
-   var workerPath = config.rootUri + "/audio-worker.min.js";
+   var workerPath = config.rootUri + "/audio-worker.js";
    var state = {
       nextCallbackId: 1,
       source: null,
@@ -387,48 +391,62 @@ function AudioFactory (config, $location, $rootScope, $q) {
    // Start recording.  The stream argument must be obtained by calling
    // prepareRecording.
    service.startRecording = function (stream) {
+      return $q(function (resolve, reject) {
 
-      var audioContext = new AudioContext();
-      var source = state.source = audioContext.createMediaStreamSource(stream);
+         var audioContext = new AudioContext();
+         var source = state.source = audioContext.createMediaStreamSource(stream);
 
-      // Create a worker to hold and process the audio buffers.
-      // The worker is reused across calls to startRecording.
-      var worker = state.worker;
-      if (!worker) {
-         worker = state.worker = new Worker(workerPath);
-         worker.onmessage = function (e) {
-            var callbackId = e.data.callbackId;
-            $rootScope.$emit(callbackId, e.data.result);
-         };
-         worker.postMessage({
-            command: "init",
-            config: {
-               sampleRate: source.context.sampleRate
-            }
-         });
-      }
+         // XXX Make the native sample rate available on the service.
+         var sampleRate = source.context.sampleRate;
 
-      // Process the audio samples using a script function.
-      var node = state.node = source.context.createScriptProcessor(4096, 2, 2);
-      node.onaudioprocess = function (event) {
-         // Discard samples unless recording.
-         if (!state.recording)
-            return;
-         // Pass the buffer on to the worker.
-         state.worker.postMessage({
-            command: "record",
-            buffer: [
-               event.inputBuffer.getChannelData(0),
-               event.inputBuffer.getChannelData(1)
-            ]
-         });
-      };
+         // Create a worker to hold and process the audio buffers.
+         // The worker is reused across calls to startRecording.
+         state.worker ? afterWorkerLoaded() : spawnWorker(afterWorkerLoaded);
 
-      source.connect(node);
-      node.connect(audioContext.destination);
+         function afterWorkerLoaded () {
+            state.worker.onmessage = function (e) {
+               var callbackId = e.data.callbackId;
+               $rootScope.$emit(callbackId, e.data.result);
+            };
+            state.worker.postMessage({
+               command: "init",
+               config: {
+                  sampleRate: sampleRate
+               }
+            });
 
-      state.recording = true;
+            // Process the audio samples using a script function.
+            var node = state.node = source.context.createScriptProcessor(4096, 2, 2);
+            node.onaudioprocess = function (event) {
+               // Discard samples unless recording.
+               if (!state.recording)
+                  return;
+               // Pass the buffer on to the worker.
+               state.worker.postMessage({
+                  command: "record",
+                  buffer: [
+                     event.inputBuffer.getChannelData(0),
+                     event.inputBuffer.getChannelData(1)
+                  ]
+               });
+            };
+
+            source.connect(node);
+            node.connect(audioContext.destination);
+
+            state.recording = true;
+            resolve({sampleRate: sampleRate});
+         }
+      });
    };
+
+   function spawnWorker (callback) {
+      state.worker = new Worker(workerPath);
+      state.worker.onmessage = function () {
+         state.worker.onmessage = null;
+         callback();
+      };
+   }
 
    // Stop recording.  Returns a promise which will resolve to the
    // recording result.
@@ -446,11 +464,12 @@ function AudioFactory (config, $location, $rootScope, $q) {
       });
    };
 
-   service.combineRecordings = function (urls) {
+   service.combineRecordings = function (urls, encodingOptions) {
       return $q(function (resolve, reject) {
          state.worker.postMessage({
             command: "combineRecordings",
             recordings: urls,
+            options: encodingOptions,
             callbackId: eventizeCallback(resolve)
          });
       });
@@ -464,6 +483,8 @@ function AudioFactory (config, $location, $rootScope, $q) {
 
    service.clearRecordings = function () {
       return $q(function (resolve, reject) {
+         if (!state.worker)
+            return resolve();
          state.worker.postMessage({
             command: "clearRecordings",
             callbackId: eventizeCallback(resolve)
@@ -748,6 +769,10 @@ function PlayerFactory ($q, $interval, $sce, audio, registry, signals) {
       });
    };
 
+   service.rewind = function () {
+      // audio.currentTime = 0;
+   }
+
    function playTick () {
       // Discard a tick event that was queued before playing was paused or stopped.
       if (!state.playInterval)
@@ -838,6 +863,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
       return $q(function (resolve, reject) {
          if (state.isRecording)
             return reject('an operation is already in progress');
+         audio.clearRecordings();
          audio.prepareRecording(function (err, stream) {
             if (err)
                return reject(err);
@@ -853,9 +879,11 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             state.lastEventTime = 0;
             state.events = [[0, '', '0', state.options.dumpState()]];
             state.segments = [];
-            if (state.audioStream)
-               audio.startRecording(state.audioStream);
-            resolve();
+            if (state.audioStream) {
+               audio.startRecording(state.audioStream).then(resolve, reject);
+            } else {
+               resolve({});
+            }
          }
       });
    };
@@ -868,7 +896,7 @@ function RecorderFactory ($q, $interval, $sce, audio) {
          if (state.isPaused)
             return reject('not paused');
          // Add a null event at the end of the stream to avoid stopping the
-         // sound track prematurely.
+         // sound track prematurely during replay.
          service.addEvent(['', '']);
          var duration = Date.now() - state.startTime;
          var segment = {
@@ -906,15 +934,17 @@ function RecorderFactory ($q, $interval, $sce, audio) {
          state.isPaused = false;
          state.startTime = Date.now();
          state.events = [[0, '', '0', state.options.dumpState()]];
-         if (state.audioStream)
-            audio.startRecording(state.audioStream);
-         return resolve();
+         if (state.audioStream) {
+            audio.startRecording(state.audioStream).then(resolve, reject);
+         } else {
+            resolve();
+         }
       });
    };
 
    // Stop recording.  Segments are joined and the returned promise is resolved
-   // with the completed recording.
-   service.stop = function () {
+   // with the completed recording.  Audio encoding is handled separately.
+   service.stop = function (encodingOptions) {
       return $q(function (resolve, reject) {
          if (!state.isRecording)
             reject('not recording');
@@ -930,7 +960,6 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             return afterPaused();
          }
          function afterPaused () {
-            // Combine the segments.
             var duration = 0;
             var events = [];
             var audioUrls = [];
@@ -941,29 +970,30 @@ function RecorderFactory ($q, $interval, $sce, audio) {
             });
             var result = {
                duration:  duration,
-               events: events
+               events: events,
+               audioUrls: audioUrls
             };
-            if (state.audioStream) {
-               audio.combineRecordings(audioUrls).then(afterCombineRecordings, reject);
-            } else {
-               afterCombineRecordings();
+            state.isRecording = false;
+            state.isPaused = false;
+            state.segments = undefined;
+            state.options = null;
+            resolve(result);
+         }
+      });
+   };
+
+   service.finalize = function (recording, encodingOptions) {
+      return $q(function (resolve, reject) {
+         audio.combineRecordings(recording.audioUrls, encodingOptions).then(afterCombineRecordings, reject);
+         function afterCombineRecordings (combinedAudio) {
+            if (combinedAudio) {
+               var audioUrl = URL.createObjectURL(combinedAudio.wav);
+               recording.audioBlob = combinedAudio.wav;
+               recording.audioEncoding = combinedAudio.encoding;
+               recording.audioUrl = audioUrl;
+               recording.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
             }
-            function afterCombineRecordings (combinedAudio) {
-               if (combinedAudio) {
-                  var audioUrl = URL.createObjectURL(combinedAudio.wav);
-                  result.audioBlob = combinedAudio.wav;
-                  result.audioEncoding = combinedAudio.encoding;
-                  result.audioUrl = audioUrl;
-                  result.safeAudioUrl = $sce.trustAsResourceUrl(audioUrl);
-               }
-               // Clear the recorder state.
-               audio.clearRecordings();
-               state.isRecording = false;
-               state.isPaused = false;
-               state.segments = undefined;
-               state.options = null;
-               resolve(result);
-            }
+            resolve(recording);
          }
       });
    };
@@ -1309,6 +1339,12 @@ function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
          this.buffersPerTab = attrs.buffersPerTab;
+      if ('typeName' in attrs)
+         this.typeName = attrs.typeName;
+      if ('readOnly' in attrs)
+         this.readOnly = attrs.readOnly;
+      if ('bufferNames' in attrs)
+         this.bufferNames = attrs.bufferNames;
       if (!quiet) {
          recorder.addEvent([this.id, 'u', attrs]);
          signals.emitUpdate();
