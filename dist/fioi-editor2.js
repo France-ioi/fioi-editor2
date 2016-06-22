@@ -38,7 +38,7 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\" ng-readonly=\"vm.readOnly\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Language du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
+module.exports = "<div><div ui-ace=\"{onLoad: vm.aceLoaded}\" ng-readonly=\"vm.readOnly\"></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :</span><select ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select></div></div>";
 
 },{}],3:[function(require,module,exports){
 module.exports = function (m) {
