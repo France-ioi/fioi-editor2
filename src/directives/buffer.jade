@@ -1,5 +1,32 @@
 div
-   div(ui-ace="{onLoad: vm.aceLoaded}")
+   div(ng-if="vm.isAce")
+      div(ui-ace="{onLoad: vm.aceLoaded}")
+   div(ng-if="vm.isBlockly")
+    #blocklyEditor(onmouseup="blocklyHelper.updateSize()")
+      #blocklyContainer(style="height: 600px; padding-bottom:10px")
+        #toolbox(style="display: none;")
+        #blocklyDiv.language_blockly(style="height: 100%; width: 100%",onresize="blocklyHelper.updateSize()")
+        textarea#program.language_python(style="width: 100%;height: 100%;display:none;", readonly)
+      p#error(style="color:red")
    div(ng-if="vm.showLanguageSelector")
-      span Langage du fichier :
-      select(ng-model="vm.language", ng-options="option as option.label for option in vm.languageOptions track by option.id", ng-change="vm.languageChanged()")
+      span Langage du fichier :&nbsp;
+      select#languageSelector(ng-model="vm.language", ng-options="option as option.label for option in vm.languageOptions track by option.id", ng-change="vm.languageChanged()")
+      | &nbsp;
+      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly",ng-click="vm.blocklyToTab()") Convertir en Python
+      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly",ng-click="vm.blocklyToJsTab()") Convertir en JavaScript
+   div#langChangeModal.modal.fade(role="dialog")
+      div.modal-dialog(role="document")
+        div.modal-content
+          div.modal-header
+            button.close(type="button",data-dismiss="modal",aria-label="Fermer")
+              span(aria-hidden="true") &times;
+            h4.modal-title Changer le langage
+          div.modal-body
+            div.alert.alert-danger(role="alert")
+              span.glyphicon.glyphicon-exclamation-sign(aria-hidden="true")
+              span#modalMsg
+            p
+              i Vous pouvez aussi créer un nouvel onglet avec le bouton "+" en haut à gauche afin de conserver vos sources.
+          div.modal-footer
+            button.btn.btn-default(data-dismiss="modal") Fermer
+            button#btnConfirm.btn.btn-danger(ng-click="vm.langConfirm()") Confirmer

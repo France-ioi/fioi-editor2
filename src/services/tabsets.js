@@ -51,10 +51,13 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
 
    function Tabset (id) {
       this.id = id;
+
       this.buffersPerTab = 1;
       this.titlePrefix = 'Tab';
       this.languages = [{id: 'text', label: "Text", ext: 'txt'}];
       this.defaultLanguage = 'text';
+      this.readOnly = false;
+
       this.tabs = {};
       this.tabIds = [];
       this.activeTabId = null;
@@ -68,6 +71,8 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
+      if ('readOnly' in attrs)
+         this.readOnly = attrs.readOnly;
       if ('activeTabId' in attrs)
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
@@ -81,6 +86,7 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
    Tabset.prototype.addTab = function (id) {
       var tab = tabs.add(id).update({
          tabset: this,
+         readOnly: this.readOnly,
          title: this._unusedTabTitle()
       });
       var new_id = tab.id;

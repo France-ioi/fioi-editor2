@@ -33,7 +33,11 @@ export function BuffersFactory (recorder, registry) {
       this.selection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
       this.languages = null; // inherit from tab
       this.language = null; // must be set explicitly
+      this.readOnly = false;
       this.control = null;
+      this.isBlockly = false;
+      this.blocklySource = '';
+      this.workspace = null;
    }
    Buffer.prototype.dump = function () {
       return {
@@ -55,8 +59,17 @@ export function BuffersFactory (recorder, registry) {
          this.text = attrs.text.toString();
       if ('language' in attrs)
          this.language = attrs.language;
+      if ('readOnly' in attrs)
+         this.readOnly = attrs.readOnly;
       if ('selection' in attrs)
          this.selection = _.clone(attrs.selection);
+      if ('isBlockly' in attrs) {
+         this.isBlockly = attrs.isBlockly;
+      } else {
+         this.isBlockly = false;
+      }
+      if ('blocklySource' in attrs)
+         this.blocklySource = attrs.blocklySource;
       if (!quiet)
          this.pushToControl();
       return this;
