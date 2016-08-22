@@ -52,6 +52,8 @@ function EditorController (tabsets) {
 
    var controller = this;
    var tabset = null;
+   var fullscreen = false;
+   var fullscreenEvents = false;
 
    this.addTab = function () {
       var tab = tabset.addTab();
@@ -66,6 +68,49 @@ function EditorController (tabsets) {
 
    this.selectTab = function (tab) {
       tabset.update({activeTabId: tab.id});
+   };
+
+   this.toggleFullscreen = function () {
+      if (!controller.fullscreenEvents) {
+        document.addEventListener("fullscreenchange", updateFullscreen);
+        document.addEventListener("webkitfullscreenchange", updateFullscreen);
+        document.addEventListener("mozfullscreenchange", updateFullscreen);
+        document.addEventListener("MSFullscreenChange", updateFullscreen);
+        controller.fullscreenEvents = true;
+      }
+      if (controller.fullscreen) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      } else {
+        var editor = document.getElementById("fioi-editor2");
+        if (editor.requestFullscreen) {
+          editor.requestFullscreen();
+        } else if (editor.mozRequestFullScreen) {
+          editor.mozRequestFullScreen();
+        } else if (editor.webkitRequestFullscreen) {
+          editor.webkitRequestFullscreen();
+        }
+      }
+   };
+
+   function updateFullscreen () {
+      var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+      if (curFullscreen == controller.fullscreen) return;
+      controller.fullscreen = curFullscreen;
+      if (curFullscreen) {
+        $(document.body).css('width', $(window).width() + 'px');
+        $("#fioi-editor2").css('width', $(window).width() + 'px');
+      } else {
+        $(document.body).css('width', '762px');
+        $("#fioi-editor2").css('width', '762px');
+      }
    };
 
    // Update state from the tabs service.

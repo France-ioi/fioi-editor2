@@ -38,6 +38,7 @@ export function TabsServiceFactory (signals, buffers, recorder, registry) {
       this.buffers = [];
       this.languages = null; // inherit from tabset
       this.defaultLanguage = null;
+      this.readOnly = false;
    }
    Tab.prototype.update = function (attrs, quiet) {
       if ('tabset' in attrs)
@@ -48,6 +49,8 @@ export function TabsServiceFactory (signals, buffers, recorder, registry) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
+      if ('readOnly' in attrs)
+         this.readOnly = attrs.readOnly;
       if (!quiet) {
          recorder.addEvent([this.id, 'u', attrs]);
          signals.emitUpdate();
@@ -57,6 +60,7 @@ export function TabsServiceFactory (signals, buffers, recorder, registry) {
    Tab.prototype.addBuffer = function (id) {
       var buffer = buffers.add(id).update({
          tab: this,
+         readOnly: this.readOnly,
          language: this.getDefaultLanguage()
       });
       this.buffers.push(buffer.id);
