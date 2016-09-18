@@ -178,27 +178,29 @@ function BufferController (signals, buffers) {
    function loadBlockly () {
     if (!blocklyLoading && controller.isBlockly && ($("#editor").css('display') != 'none')) {
       blocklyLoading = true;
-      blocklyHelper.mainContext = {"nbRobots": 1};
-      blocklyHelper.prevWidth = 0;
-      setTimeout(function() {
-         blocklyHelper.load("fr", "blocklyDiv", true, controller.readOnly);
-         blocklyHelper.updateSize();
-         Blockly.Blocks.ONE_BASED_INDEXING = true;
-         Blockly.Python.ONE_BASED_INDEXING = true;
-         Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
-         Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
-         $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
-      }, 50);
-      setTimeout(function() {
-         if (blocklyLoading) {
-           if (buffer && buffer.text && !blocklyLoaded) {
-             Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), blocklyHelper.workspace);
+      require(['blockly-lib'], function () {
+        blocklyHelper.mainContext = {"nbRobots": 1};
+        blocklyHelper.prevWidth = 0;
+        setTimeout(function() {
+           blocklyHelper.load("fr", "blocklyDiv", true, controller.readOnly);
+           blocklyHelper.updateSize();
+           Blockly.Blocks.ONE_BASED_INDEXING = true;
+           Blockly.Python.ONE_BASED_INDEXING = true;
+           Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
+           Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
+           $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
+        }, 50);
+        setTimeout(function() {
+           if (blocklyLoading) {
+             if (buffer && buffer.text && !blocklyLoaded) {
+               Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), blocklyHelper.workspace);
+             }
+             blocklyLoaded = true;
+             Blockly.clipboardXml_ = window.blocklyClipboard;
+             Blockly.clipboardSource_ = blocklyHelper.workspace;
            }
-           blocklyLoaded = true;
-           Blockly.clipboardXml_ = window.blocklyClipboard;
-           Blockly.clipboardSource_ = blocklyHelper.workspace;
-         }
-      }, 100);
+        }, 100);
+      });
     } 
    }
 
