@@ -1,4 +1,5 @@
 div
+   div(ng-if="vm.description != ''", ng-bind="vm.description")
    div(ng-if="vm.isAce")
       div(ui-ace="{onLoad: vm.aceLoaded}")
    div(ng-if="vm.isBlockly")

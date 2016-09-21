@@ -42,6 +42,8 @@ function BufferController (signals, buffers) {
    var buffer = null;
    var aceEditor = null; // the ACE object
 
+   var description = '';
+
    var readOnly = false;
 
    var isAce = false;
@@ -235,12 +237,12 @@ function BufferController (signals, buffers) {
       var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
       if (controller.isAce) {
         if (curFullscreen) {
-          $(".ace_editor").css('width', $(window).width() + 'px');
-          $(".ace_editor").css('height', ($(window).height() - 50) + 'px');
+          $(".fioi-editor2_1-buffers .ace_editor").css('width', $(window).width() + 'px');
+          $(".fioi-editor2_1-buffers .ace_editor").css('height', ($(window).height() - 50) + 'px');
         } else {
           $(document.body).css('width', '762px');
-          $(".ace_editor").css('width', '762px');
-          $(".ace_editor").css('height', '350px');
+          $(".fioi-editor2_1-buffers .ace_editor").css('width', '762px');
+          $(".fioi-editor2_1-buffers .ace_editor").css('height', '350px');
         }
       } else if (controller.isBlockly) {
         if (curFullscreen) {
@@ -265,6 +267,7 @@ function BufferController (signals, buffers) {
         controller.fullscreenEvents = true;
       }
 
+      controller.description = buffer.description;
       controller.readOnly = buffer.readOnly;
       controller.languageOptions = buffer.getLanguages();
       controller.showLanguageSelector = controller.languageOptions.length > 1;

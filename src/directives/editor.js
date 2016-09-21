@@ -106,10 +106,10 @@ function EditorController (tabsets) {
       controller.fullscreen = curFullscreen;
       if (curFullscreen) {
         $(document.body).css('width', $(window).width() + 'px');
-        $("#fioi-editor2").css('width', $(window).width() + 'px');
+        $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', $(window).width() + 'px');
       } else {
         $(document.body).css('width', '762px');
-        $("#fioi-editor2").css('width', '762px');
+        $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', '762px');
       }
    };
 

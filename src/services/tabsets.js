@@ -53,6 +53,7 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       this.id = id;
 
       this.buffersPerTab = 1;
+      this.bufferNames = null;
       this.titlePrefix = 'Tab';
       this.languages = [{id: 'text', label: "Text", ext: 'txt'}];
       this.defaultLanguage = 'text';
@@ -77,6 +78,8 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = attrs.activeTabId;
       if ('buffersPerTab' in attrs)
          this.buffersPerTab = attrs.buffersPerTab;
+      if ('bufferNames' in attrs)
+         this.bufferNames = attrs.bufferNames;
       if (!quiet) {
          recorder.addEvent([this.id, 'u', attrs]);
          signals.emitUpdate();
@@ -97,8 +100,13 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
       if (!id) {
          this.activeTabId = new_id;
          recorder.addEvent([this.id, 'n', new_id]);
-         for (var i = 0; i < this.buffersPerTab; i += 1)
-            tab.addBuffer();
+         for (var i = 0; i < this.buffersPerTab; i += 1) {
+           if (this.bufferNames && this.bufferNames.length > i) {
+             tab.addBuffer().update({description: this.bufferNames[i]});
+           } else {
+             tab.addBuffer();
+           }
+         }
       }
       signals.emitUpdate();
       return tab;

@@ -17886,6 +17886,7 @@ $__System.register('c', ['d'], function (_export) {
       function Buffer(id) {
          this.id = id;
          this.text = '';
+         this.description = '';
          this.selection = { start: { row: 0, column: 0 }, end: { row: 0, column: 0 } };
          this.languages = null; // inherit from tab
          this.language = null; // must be set explicitly
@@ -17913,6 +17914,7 @@ $__System.register('c', ['d'], function (_export) {
          if ('language' in attrs) this.language = attrs.language;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('selection' in attrs) this.selection = _.clone(attrs.selection);
+         if ('description' in attrs) this.description = attrs.description;
          if ('isBlockly' in attrs) {
             this.isBlockly = attrs.isBlockly;
          } else {
@@ -18652,6 +18654,7 @@ $__System.register('13', ['d'], function (_export) {
          this.id = id;
 
          this.buffersPerTab = 1;
+         this.bufferNames = null;
          this.titlePrefix = 'Tab';
          this.languages = [{ id: 'text', label: "Text", ext: 'txt' }];
          this.defaultLanguage = 'text';
@@ -18669,6 +18672,7 @@ $__System.register('13', ['d'], function (_export) {
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('activeTabId' in attrs) this.activeTabId = attrs.activeTabId;
          if ('buffersPerTab' in attrs) this.buffersPerTab = attrs.buffersPerTab;
+         if ('bufferNames' in attrs) this.bufferNames = attrs.bufferNames;
          if (!quiet) {
             recorder.addEvent([this.id, 'u', attrs]);
             signals.emitUpdate();
@@ -18689,7 +18693,13 @@ $__System.register('13', ['d'], function (_export) {
          if (!id) {
             this.activeTabId = new_id;
             recorder.addEvent([this.id, 'n', new_id]);
-            for (var i = 0; i < this.buffersPerTab; i += 1) tab.addBuffer();
+            for (var i = 0; i < this.buffersPerTab; i += 1) {
+               if (this.bufferNames && this.bufferNames.length > i) {
+                  tab.addBuffer().update({ description: this.bufferNames[i] });
+               } else {
+                  tab.addBuffer();
+               }
+            }
          }
          signals.emitUpdate();
          return tab;
@@ -18805,7 +18815,7 @@ $__System.registerDynamic("14", ["15"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" onmouseup=\"blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" onresize=\"blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" onmouseup=\"blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" onresize=\"blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -18857,6 +18867,8 @@ $__System.register('16', ['14', 'd'], function (_export) {
       var controller = this;
       var buffer = null;
       var aceEditor = null; // the ACE object
+
+      var description = '';
 
       var readOnly = false;
 
@@ -19053,12 +19065,12 @@ $__System.register('16', ['14', 'd'], function (_export) {
          var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
          if (controller.isAce) {
             if (curFullscreen) {
-               $(".ace_editor").css('width', $(window).width() + 'px');
-               $(".ace_editor").css('height', $(window).height() - 50 + 'px');
+               $(".fioi-editor2_1-buffers .ace_editor").css('width', $(window).width() + 'px');
+               $(".fioi-editor2_1-buffers .ace_editor").css('height', $(window).height() - 50 + 'px');
             } else {
                $(document.body).css('width', '762px');
-               $(".ace_editor").css('width', '762px');
-               $(".ace_editor").css('height', '350px');
+               $(".fioi-editor2_1-buffers .ace_editor").css('width', '762px');
+               $(".fioi-editor2_1-buffers .ace_editor").css('height', '350px');
             }
          } else if (controller.isBlockly) {
             if (curFullscreen) {
@@ -19083,6 +19095,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
             controller.fullscreenEvents = true;
          }
 
+         controller.description = buffer.description;
          controller.readOnly = buffer.readOnly;
          controller.languageOptions = buffer.getLanguages();
          controller.showLanguageSelector = controller.languageOptions.length > 1;
@@ -26272,10 +26285,10 @@ $__System.register('27', ['26', 'd'], function (_export) {
          controller.fullscreen = curFullscreen;
          if (curFullscreen) {
             $(document.body).css('width', $(window).width() + 'px');
-            $("#fioi-editor2").css('width', $(window).width() + 'px');
+            $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', $(window).width() + 'px');
          } else {
             $(document.body).css('width', '762px');
-            $("#fioi-editor2").css('width', '762px');
+            $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', '762px');
          }
       };
 

@@ -30,6 +30,7 @@ export function BuffersFactory (recorder, registry) {
    function Buffer (id) {
       this.id = id;
       this.text = '';
+      this.description = '';
       this.selection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
       this.languages = null; // inherit from tab
       this.language = null; // must be set explicitly
@@ -63,6 +64,8 @@ export function BuffersFactory (recorder, registry) {
          this.readOnly = attrs.readOnly;
       if ('selection' in attrs)
          this.selection = _.clone(attrs.selection);
+      if ('description' in attrs)
+         this.description = attrs.description;
       if ('isBlockly' in attrs) {
          this.isBlockly = attrs.isBlockly;
       } else {
