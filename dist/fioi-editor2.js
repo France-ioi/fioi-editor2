@@ -18850,7 +18850,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
                $("#choose-view").off('click', scope.vm.updateBlockly);
                scope.vm.cleanup();
             });
-            scope.vm.update();
+            scope.vm.update(iElement);
             function update() {
                scope.$apply(function () {
                   scope.vm.update();
@@ -18865,6 +18865,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
    function BufferController(signals, buffers) {
 
       var controller = this;
+      var domElement = null;
       var buffer = null;
       var aceEditor = null; // the ACE object
 
@@ -18880,8 +18881,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
       var newLang = '';
       var fullscreenEvents = false;
 
-      this.update = function () {
+      this.update = function (iElement) {
          this.cleanup();
+         if (typeof iElement !== "undefined") {
+            controller.domElement = iElement[0];
+         }
          buffer = buffers.get(this.buffer);
          // Expose our API to the buffer service.
          buffer.attachControl({
@@ -18952,15 +18956,15 @@ $__System.register('16', ['14', 'd'], function (_export) {
       this.languageChanged = function () {
          if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
             controller.newLang = controller.language.id;
-            $("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
-            $("#langChangeModal").modal("show");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
+            $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = _.find(controller.languageOptions, function (language) {
                return language.id == buffer.language;
             });
          } else if (controller.isBlockly && !('blockly' in controller.language)) {
             controller.newLang = controller.language.id;
-            $("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
-            $("#langChangeModal").modal("show");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
+            $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = _.find(controller.languageOptions, function (language) {
                return language.id == buffer.language;
             });
@@ -18970,7 +18974,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
       };
 
       this.langConfirm = function () {
-         $("#langChangeModal").modal("hide");
+         $(controller.domElement).find("#langChangeModal").modal("hide");
          changeLanguage(controller.newLang, true);
       };
 
@@ -19065,12 +19069,14 @@ $__System.register('16', ['14', 'd'], function (_export) {
          var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
          if (controller.isAce) {
             if (curFullscreen) {
-               $(".fioi-editor2_1-buffers .ace_editor").css('width', $(window).width() + 'px');
-               $(".fioi-editor2_1-buffers .ace_editor").css('height', $(window).height() - 50 + 'px');
+               $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
+               $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', $(window).width() / 2 + 'px');
+               $(controller.domElement).find(".ace_editor").css('height', $(window).height() - 50 + 'px');
             } else {
                $(document.body).css('width', '762px');
-               $(".fioi-editor2_1-buffers .ace_editor").css('width', '762px');
-               $(".fioi-editor2_1-buffers .ace_editor").css('height', '350px');
+               $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
+               $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
+               $(controller.domElement).find(".ace_editor").css('height', '350px');
             }
          } else if (controller.isBlockly) {
             if (curFullscreen) {
@@ -26217,7 +26223,7 @@ $__System.register('27', ['26', 'd'], function (_export) {
             scope.$on('$destroy', function () {
                unhookUpdate();
             });
-            scope.vm.update();
+            scope.vm.update(iElement);
             function update() {
                scope.$apply(function () {
                   scope.vm.update();
@@ -26230,6 +26236,7 @@ $__System.register('27', ['26', 'd'], function (_export) {
    function EditorController(tabsets) {
 
       var controller = this;
+      var editor = null;
       var tabset = null;
       var fullscreen = false;
       var fullscreenEvents = false;
@@ -26268,13 +26275,13 @@ $__System.register('27', ['26', 'd'], function (_export) {
                document.msExitFullscreen();
             }
          } else {
-            var editor = document.getElementById("fioi-editor2");
-            if (editor.requestFullscreen) {
-               editor.requestFullscreen();
-            } else if (editor.mozRequestFullScreen) {
-               editor.mozRequestFullScreen();
-            } else if (editor.webkitRequestFullscreen) {
-               editor.webkitRequestFullscreen();
+            //        var editor = document.getElementById("fioi-editor2");
+            if (controller.editor.requestFullscreen) {
+               controller.editor.requestFullscreen();
+            } else if (controller.editor.mozRequestFullScreen) {
+               controller.editor.mozRequestFullScreen();
+            } else if (controller.editor.webkitRequestFullscreen) {
+               controller.editor.webkitRequestFullscreen();
             }
          }
       };
@@ -26285,19 +26292,26 @@ $__System.register('27', ['26', 'd'], function (_export) {
          controller.fullscreen = curFullscreen;
          if (curFullscreen) {
             $(document.body).css('width', $(window).width() + 'px');
-            $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', $(window).width() + 'px');
+            $(controller.editor).parents(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', $(window).width() + 'px');
+            $(controller.editor).parents(".fioi-editor2_2-buffers").parents("#fioi-editor2").css('width', $(window).width() / 2 + 'px');
          } else {
             $(document.body).css('width', '762px');
-            $(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', '762px');
+            $(controller.editor).parents(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', '762px');
+            $(controller.editor).parents(".fioi-editor2_2-buffers").parents("#fioi-editor2").css('width', '379px');
          }
       };
 
       // Update state from the tabs service.
-      this.update = function () {
+      this.update = function (iElement) {
          var config = controller.fioiEditor2();
          var classes = controller.buffersClasses = {};
          controller.tabs = [];
          controller.tab = null;
+
+         if (typeof iElement !== "undefined") {
+            controller.editor = iElement[0];
+         }
+
          if (!config) {
             classes['fioi-editor2_error'] = true;
             return;

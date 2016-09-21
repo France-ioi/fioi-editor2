@@ -23,7 +23,7 @@ export function bufferDirective (signals) {
             $("#choose-view").off('click', scope.vm.updateBlockly);
             scope.vm.cleanup();
          });
-         scope.vm.update();
+         scope.vm.update(iElement);
          function update() {
             scope.$apply(function () {
                scope.vm.update();
@@ -39,6 +39,7 @@ BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
 function BufferController (signals, buffers) {
 
    var controller = this;
+   var domElement = null;
    var buffer = null;
    var aceEditor = null; // the ACE object
 
@@ -54,8 +55,11 @@ function BufferController (signals, buffers) {
    var newLang = '';
    var fullscreenEvents = false;
 
-   this.update = function () {
+   this.update = function (iElement) {
       this.cleanup();
+      if(typeof iElement !== "undefined") {
+         controller.domElement = iElement[0];
+      }
       buffer = buffers.get(this.buffer);
       // Expose our API to the buffer service.
       buffer.attachControl({
@@ -126,14 +130,14 @@ function BufferController (signals, buffers) {
    this.languageChanged = function () {
       if (controller.isAce && ('blockly' in controller.language) && (aceEditor.getValue() != '')) {
         controller.newLang = controller.language.id;
-        $("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
-        $("#langChangeModal").modal("show");
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
+        $(controller.domElement).find("#langChangeModal").modal("show");
         controller.language = _.find(controller.languageOptions,
            function (language) { return language.id == buffer.language; });
       } else if (controller.isBlockly && !('blockly' in controller.language)) {
         controller.newLang = controller.language.id;
-        $("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
-        $("#langChangeModal").modal("show");
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
+        $(controller.domElement).find("#langChangeModal").modal("show");
         controller.language = _.find(controller.languageOptions,
            function (language) { return language.id == buffer.language; });
       } else {
@@ -142,7 +146,7 @@ function BufferController (signals, buffers) {
    }
 
    this.langConfirm = function () {
-      $("#langChangeModal").modal("hide");
+      $(controller.domElement).find("#langChangeModal").modal("hide");
       changeLanguage(controller.newLang, true);
    }
 
@@ -237,12 +241,14 @@ function BufferController (signals, buffers) {
       var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
       if (controller.isAce) {
         if (curFullscreen) {
-          $(".fioi-editor2_1-buffers .ace_editor").css('width', $(window).width() + 'px');
-          $(".fioi-editor2_1-buffers .ace_editor").css('height', ($(window).height() - 50) + 'px');
+          $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
+          $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', $(window).width()/2 + 'px');
+          $(controller.domElement).find(".ace_editor").css('height', ($(window).height() - 50) + 'px');
         } else {
           $(document.body).css('width', '762px');
-          $(".fioi-editor2_1-buffers .ace_editor").css('width', '762px');
-          $(".fioi-editor2_1-buffers .ace_editor").css('height', '350px');
+          $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
+          $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
+          $(controller.domElement).find(".ace_editor").css('height', '350px');
         }
       } else if (controller.isBlockly) {
         if (curFullscreen) {
