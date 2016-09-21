@@ -37,7 +37,7 @@ export function editorDirective (signals) {
          scope.$on('$destroy', function () {
             unhookUpdate();
          });
-         scope.vm.update();
+         scope.vm.update(iElement);
          function update() {
             scope.$apply(function () {
                scope.vm.update();
@@ -51,6 +51,7 @@ EditorController.$inject = ['FioiEditor2Tabsets'];
 function EditorController (tabsets) {
 
    var controller = this;
+   var editor = null;
    var tabset = null;
    var fullscreen = false;
    var fullscreenEvents = false;
@@ -89,13 +90,13 @@ function EditorController (tabsets) {
           document.msExitFullscreen();
         }
       } else {
-        var editor = document.getElementById("fioi-editor2");
-        if (editor.requestFullscreen) {
-          editor.requestFullscreen();
-        } else if (editor.mozRequestFullScreen) {
-          editor.mozRequestFullScreen();
-        } else if (editor.webkitRequestFullscreen) {
-          editor.webkitRequestFullscreen();
+//        var editor = document.getElementById("fioi-editor2");
+        if (controller.editor.requestFullscreen) {
+          controller.editor.requestFullscreen();
+        } else if (controller.editor.mozRequestFullScreen) {
+          controller.editor.mozRequestFullScreen();
+        } else if (controller.editor.webkitRequestFullscreen) {
+          controller.editor.webkitRequestFullscreen();
         }
       }
    };
@@ -106,19 +107,24 @@ function EditorController (tabsets) {
       controller.fullscreen = curFullscreen;
       if (curFullscreen) {
         $(document.body).css('width', $(window).width() + 'px');
-        $("#fioi-editor2").css('width', $(window).width() + 'px');
+        $(controller.editor).css('width', $(window).width() + 'px');
       } else {
         $(document.body).css('width', '762px');
-        $("#fioi-editor2").css('width', '762px');
+        $(controller.editor).css('width', '762px');
       }
    };
 
    // Update state from the tabs service.
-   this.update = function () {
+   this.update = function (iElement) {
       var config = controller.fioiEditor2();
       var classes = controller.buffersClasses = {};
       controller.tabs = [];
       controller.tab = null;
+
+      if (typeof iElement !== "undefined") {
+         controller.editor = iElement[0];
+      }
+
       if (!config) {
          classes['fioi-editor2_error'] = true;
          return;

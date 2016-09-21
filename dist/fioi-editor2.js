@@ -17886,6 +17886,7 @@ $__System.register('c', ['d'], function (_export) {
       function Buffer(id) {
          this.id = id;
          this.text = '';
+         this.description = '';
          this.selection = { start: { row: 0, column: 0 }, end: { row: 0, column: 0 } };
          this.languages = null; // inherit from tab
          this.language = null; // must be set explicitly
@@ -17913,6 +17914,7 @@ $__System.register('c', ['d'], function (_export) {
          if ('language' in attrs) this.language = attrs.language;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('selection' in attrs) this.selection = _.clone(attrs.selection);
+         if ('description' in attrs) this.description = attrs.description;
          if ('isBlockly' in attrs) {
             this.isBlockly = attrs.isBlockly;
          } else {
@@ -18652,6 +18654,7 @@ $__System.register('13', ['d'], function (_export) {
          this.id = id;
 
          this.buffersPerTab = 1;
+         this.bufferNames = null;
          this.titlePrefix = 'Tab';
          this.languages = [{ id: 'text', label: "Text", ext: 'txt' }];
          this.defaultLanguage = 'text';
@@ -18669,6 +18672,7 @@ $__System.register('13', ['d'], function (_export) {
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('activeTabId' in attrs) this.activeTabId = attrs.activeTabId;
          if ('buffersPerTab' in attrs) this.buffersPerTab = attrs.buffersPerTab;
+         if ('bufferNames' in attrs) this.bufferNames = attrs.bufferNames;
          if (!quiet) {
             recorder.addEvent([this.id, 'u', attrs]);
             signals.emitUpdate();
@@ -18689,7 +18693,13 @@ $__System.register('13', ['d'], function (_export) {
          if (!id) {
             this.activeTabId = new_id;
             recorder.addEvent([this.id, 'n', new_id]);
-            for (var i = 0; i < this.buffersPerTab; i += 1) tab.addBuffer();
+            for (var i = 0; i < this.buffersPerTab; i += 1) {
+               if (this.bufferNames && this.bufferNames.length > i) {
+                  tab.addBuffer().update({ description: this.bufferNames[i] });
+               } else {
+                  tab.addBuffer();
+               }
+            }
          }
          signals.emitUpdate();
          return tab;
@@ -18805,7 +18815,7 @@ $__System.registerDynamic("14", ["15"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" onmouseup=\"blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" onresize=\"blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" onmouseup=\"blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" onresize=\"blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -18840,7 +18850,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
                $("#choose-view").off('click', scope.vm.updateBlockly);
                scope.vm.cleanup();
             });
-            scope.vm.update();
+            scope.vm.update(iElement);
             function update() {
                scope.$apply(function () {
                   scope.vm.update();
@@ -18855,8 +18865,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
    function BufferController(signals, buffers) {
 
       var controller = this;
+      var domElement = null;
       var buffer = null;
       var aceEditor = null; // the ACE object
+
+      var description = '';
 
       var readOnly = false;
 
@@ -18868,8 +18881,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
       var newLang = '';
       var fullscreenEvents = false;
 
-      this.update = function () {
+      this.update = function (iElement) {
          this.cleanup();
+         if (typeof iElement !== "undefined") {
+            controller.domElement = iElement[0];
+         }
          buffer = buffers.get(this.buffer);
          // Expose our API to the buffer service.
          buffer.attachControl({
@@ -18940,15 +18956,15 @@ $__System.register('16', ['14', 'd'], function (_export) {
       this.languageChanged = function () {
          if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
             controller.newLang = controller.language.id;
-            $("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
-            $("#langChangeModal").modal("show");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
+            $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = _.find(controller.languageOptions, function (language) {
                return language.id == buffer.language;
             });
          } else if (controller.isBlockly && !('blockly' in controller.language)) {
             controller.newLang = controller.language.id;
-            $("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
-            $("#langChangeModal").modal("show");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
+            $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = _.find(controller.languageOptions, function (language) {
                return language.id == buffer.language;
             });
@@ -18958,7 +18974,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
       };
 
       this.langConfirm = function () {
-         $("#langChangeModal").modal("hide");
+         $(controller.domElement).find("#langChangeModal").modal("hide");
          changeLanguage(controller.newLang, true);
       };
 
@@ -18997,27 +19013,29 @@ $__System.register('16', ['14', 'd'], function (_export) {
       function loadBlockly() {
          if (!blocklyLoading && controller.isBlockly && $("#editor").css('display') != 'none') {
             blocklyLoading = true;
-            blocklyHelper.mainContext = { "nbRobots": 1 };
-            blocklyHelper.prevWidth = 0;
-            setTimeout(function () {
-               blocklyHelper.load("fr", "blocklyDiv", true, controller.readOnly);
-               blocklyHelper.updateSize();
-               Blockly.Blocks.ONE_BASED_INDEXING = true;
-               Blockly.Python.ONE_BASED_INDEXING = true;
-               Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
-               Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
-               $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
-            }, 50);
-            setTimeout(function () {
-               if (blocklyLoading) {
-                  if (buffer && buffer.text && !blocklyLoaded) {
-                     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), blocklyHelper.workspace);
+            require(['blockly-lib'], function () {
+               blocklyHelper.mainContext = { "nbRobots": 1 };
+               blocklyHelper.prevWidth = 0;
+               setTimeout(function () {
+                  blocklyHelper.load("fr", "blocklyDiv", true, controller.readOnly);
+                  blocklyHelper.updateSize();
+                  Blockly.Blocks.ONE_BASED_INDEXING = true;
+                  Blockly.Python.ONE_BASED_INDEXING = true;
+                  Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
+                  Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
+                  $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
+               }, 50);
+               setTimeout(function () {
+                  if (blocklyLoading) {
+                     if (buffer && buffer.text && !blocklyLoaded) {
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), blocklyHelper.workspace);
+                     }
+                     blocklyLoaded = true;
+                     Blockly.clipboardXml_ = window.blocklyClipboard;
+                     Blockly.clipboardSource_ = blocklyHelper.workspace;
                   }
-                  blocklyLoaded = true;
-                  Blockly.clipboardXml_ = window.blocklyClipboard;
-                  Blockly.clipboardSource_ = blocklyHelper.workspace;
-               }
-            }, 100);
+               }, 100);
+            });
          }
       }
 
@@ -19051,12 +19069,14 @@ $__System.register('16', ['14', 'd'], function (_export) {
          var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
          if (controller.isAce) {
             if (curFullscreen) {
-               $(".ace_editor").css('width', $(window).width() + 'px');
-               $(".ace_editor").css('height', $(window).height() - 50 + 'px');
+               $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
+               $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', $(window).width() / 2 + 'px');
+               $(controller.domElement).find(".ace_editor").css('height', $(window).height() - 50 + 'px');
             } else {
                $(document.body).css('width', '762px');
-               $(".ace_editor").css('width', '762px');
-               $(".ace_editor").css('height', '350px');
+               $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
+               $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
+               $(controller.domElement).find(".ace_editor").css('height', '350px');
             }
          } else if (controller.isBlockly) {
             if (curFullscreen) {
@@ -19081,6 +19101,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
             controller.fullscreenEvents = true;
          }
 
+         controller.description = buffer.description;
          controller.readOnly = buffer.readOnly;
          controller.languageOptions = buffer.getLanguages();
          controller.showLanguageSelector = controller.languageOptions.length > 1;
@@ -26202,7 +26223,7 @@ $__System.register('27', ['26', 'd'], function (_export) {
             scope.$on('$destroy', function () {
                unhookUpdate();
             });
-            scope.vm.update();
+            scope.vm.update(iElement);
             function update() {
                scope.$apply(function () {
                   scope.vm.update();
@@ -26215,6 +26236,7 @@ $__System.register('27', ['26', 'd'], function (_export) {
    function EditorController(tabsets) {
 
       var controller = this;
+      var editor = null;
       var tabset = null;
       var fullscreen = false;
       var fullscreenEvents = false;
@@ -26253,13 +26275,13 @@ $__System.register('27', ['26', 'd'], function (_export) {
                document.msExitFullscreen();
             }
          } else {
-            var editor = document.getElementById("fioi-editor2");
-            if (editor.requestFullscreen) {
-               editor.requestFullscreen();
-            } else if (editor.mozRequestFullScreen) {
-               editor.mozRequestFullScreen();
-            } else if (editor.webkitRequestFullscreen) {
-               editor.webkitRequestFullscreen();
+            //        var editor = document.getElementById("fioi-editor2");
+            if (controller.editor.requestFullscreen) {
+               controller.editor.requestFullscreen();
+            } else if (controller.editor.mozRequestFullScreen) {
+               controller.editor.mozRequestFullScreen();
+            } else if (controller.editor.webkitRequestFullscreen) {
+               controller.editor.webkitRequestFullscreen();
             }
          }
       };
@@ -26270,19 +26292,24 @@ $__System.register('27', ['26', 'd'], function (_export) {
          controller.fullscreen = curFullscreen;
          if (curFullscreen) {
             $(document.body).css('width', $(window).width() + 'px');
-            $("#fioi-editor2").css('width', $(window).width() + 'px');
+            $(controller.editor).css('width', $(window).width() + 'px');
          } else {
             $(document.body).css('width', '762px');
-            $("#fioi-editor2").css('width', '762px');
+            $(controller.editor).css('width', '762px');
          }
       };
 
       // Update state from the tabs service.
-      this.update = function () {
+      this.update = function (iElement) {
          var config = controller.fioiEditor2();
          var classes = controller.buffersClasses = {};
          controller.tabs = [];
          controller.tab = null;
+
+         if (typeof iElement !== "undefined") {
+            controller.editor = iElement[0];
+         }
+
          if (!config) {
             classes['fioi-editor2_error'] = true;
             return;
