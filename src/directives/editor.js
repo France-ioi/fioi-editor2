@@ -107,12 +107,10 @@ function EditorController (tabsets) {
       controller.fullscreen = curFullscreen;
       if (curFullscreen) {
         $(document.body).css('width', $(window).width() + 'px');
-        $(controller.editor).parents(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', $(window).width() + 'px');
-        $(controller.editor).parents(".fioi-editor2_2-buffers").parents("#fioi-editor2").css('width', $(window).width()/2 + 'px');
+        $(controller.editor).css('width', $(window).width() + 'px');
       } else {
         $(document.body).css('width', '762px');
-        $(controller.editor).parents(".fioi-editor2_1-buffers").parents("#fioi-editor2").css('width', '762px');
-        $(controller.editor).parents(".fioi-editor2_2-buffers").parents("#fioi-editor2").css('width', '379px');
+        $(controller.editor).css('width', '762px');
       }
    };
 
