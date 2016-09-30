@@ -18867,7 +18867,9 @@ $__System.register('16', ['14', 'd'], function (_export) {
       var controller = this;
       var domElement = null;
       var buffer = null;
+
       var aceEditor = null; // the ACE object
+      var aceOnLoad = null;
 
       var description = '';
 
@@ -18951,6 +18953,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
             var r = aceEditor.selection.getRange();
             buffer.logSelect(r.start.row, r.start.column, r.end.row, r.end.column);
          }, true);
+
+         if (aceOnLoad && buffer) {
+            aceOnLoad();
+            aceOnLoad = null;
+         }
       };
 
       this.languageChanged = function () {
@@ -19114,7 +19121,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
 
          if (controller.isAce) {
             if (blocklyLoading) unloadBlockly();
-            setTimeout(function () {
+            aceOnLoad = function () {
+               if (buffer == null) {
+                  var abcdef = 5;
+                  abcdef = 6;
+               }
                if (aceEditor) {
                   if (controller.language && typeof controller.language === 'object') {
                      aceEditor.session.setMode('ace/mode/' + controller.language.ace.mode);
@@ -19123,7 +19134,11 @@ $__System.register('16', ['14', 'd'], function (_export) {
                   aceEditor.selection.setRange(buffer.selection);
                   aceEditor.setReadOnly(controller.readOnly);
                }
-            }, 100);
+            };
+            if (aceEditor && buffer) {
+               aceOnLoad();
+               aceOnLoad = null;
+            }
          }
          setTimeout(function () {
             updateFullscreen();

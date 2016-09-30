@@ -41,7 +41,9 @@ function BufferController (signals, buffers) {
    var controller = this;
    var domElement = null;
    var buffer = null;
+
    var aceEditor = null; // the ACE object
+   var aceOnLoad = null;
 
    var description = '';
 
@@ -125,6 +127,11 @@ function BufferController (signals, buffers) {
          var r = aceEditor.selection.getRange();
          buffer.logSelect(r.start.row, r.start.column, r.end.row, r.end.column);
       }, true);
+
+      if (aceOnLoad && buffer) {
+        aceOnLoad();
+        aceOnLoad = null;
+      }
    };
 
    this.languageChanged = function () {
@@ -286,15 +293,23 @@ function BufferController (signals, buffers) {
       if (controller.isAce) {
         if (blocklyLoading)
           unloadBlockly();
-        setTimeout(function () {
-        if (aceEditor) {
-         if (controller.language && typeof controller.language === 'object') {
-            aceEditor.session.setMode('ace/mode/' + controller.language.ace.mode);
-         }
-         aceEditor.setValue(buffer.text);
-         aceEditor.selection.setRange(buffer.selection);
-         aceEditor.setReadOnly(controller.readOnly);
-        }}, 100);
+        aceOnLoad = function () {
+          if (buffer == null) {
+            var abcdef = 5;
+            abcdef = 6;
+          }
+          if (aceEditor) {
+            if (controller.language && typeof controller.language === 'object') {
+              aceEditor.session.setMode('ace/mode/' + controller.language.ace.mode);
+            }
+            aceEditor.setValue(buffer.text);
+            aceEditor.selection.setRange(buffer.selection);
+            aceEditor.setReadOnly(controller.readOnly);
+        }};
+        if (aceEditor && buffer) {
+          aceOnLoad();
+          aceOnLoad = null
+        }
       }
       setTimeout(function () { updateFullscreen(); }, 10);
    }
