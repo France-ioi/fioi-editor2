@@ -18878,6 +18878,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
       var isAce = false;
       var isBlockly = false;
 
+      var blocklyHelper = null;
       var blocklyLoading = false;
       var blocklyLoaded = false;
       var newLang = '';
@@ -18990,7 +18991,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
          var newTab = buffer.tab.tabset.addTab();
 
          newTab.getBuffer().update({
-            text: Blockly.Python.workspaceToCode(blocklyHelper.workspace),
+            text: Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace),
             language: controller.language.blockly.dstlang
          });
       };
@@ -19000,7 +19001,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
          var newTab = buffer.tab.tabset.addTab();
 
          newTab.getBuffer().update({
-            text: Blockly.JavaScript.workspaceToCode(blocklyHelper.workspace),
+            text: Blockly.JavaScript.workspaceToCode(controller.blocklyHelper.workspace),
             language: 'java'
          });
       };
@@ -19021,25 +19022,26 @@ $__System.register('16', ['14', 'd'], function (_export) {
          if (!blocklyLoading && controller.isBlockly && $("#editor").css('display') != 'none') {
             blocklyLoading = true;
             require(['blockly-lib'], function () {
-               blocklyHelper.mainContext = { "nbRobots": 1 };
-               blocklyHelper.prevWidth = 0;
+               controller.blocklyHelper.mainContext = { "nbRobots": 1 };
+               controller.blocklyHelper.prevWidth = 0;
                setTimeout(function () {
-                  blocklyHelper.load("fr", "blocklyDiv", true, controller.readOnly);
-                  blocklyHelper.updateSize();
+                  var blocklyOpts = { divId: "blocklyDiv", noRobot: true, readOnly: controller.readOnly };
+                  controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
+                  controller.blocklyHelper.updateSize();
                   Blockly.Blocks.ONE_BASED_INDEXING = true;
                   Blockly.Python.ONE_BASED_INDEXING = true;
                   Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
                   Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
-                  $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
+                  //           $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
                }, 50);
                setTimeout(function () {
                   if (blocklyLoading) {
                      if (buffer && buffer.text && !blocklyLoaded) {
-                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), blocklyHelper.workspace);
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
                      }
                      blocklyLoaded = true;
                      Blockly.clipboardXml_ = window.blocklyClipboard;
-                     Blockly.clipboardSource_ = blocklyHelper.workspace;
+                     Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
                   }
                }, 100);
             });
@@ -19051,7 +19053,7 @@ $__System.register('16', ['14', 'd'], function (_export) {
             window.blocklyClipboard = Blockly.clipboardXml_;
             $(".blocklyWidgetDiv").hide();
             $(".blocklyTooltipDiv").hide();
-            blocklyHelper.workspace.dispose();
+            controller.blocklyHelper.workspace.dispose();
             $("#blocklyDiv").html("");
             blocklyLoading = false;
          }
@@ -19119,6 +19121,8 @@ $__System.register('16', ['14', 'd'], function (_export) {
          controller.isAce = !('blockly' in controller.language);
          controller.isBlockly = 'blockly' in controller.language;
 
+         controller.blocklyHelper = getBlocklyHelper();
+
          if (controller.isAce) {
             if (blocklyLoading) unloadBlockly();
             aceOnLoad = function () {
@@ -19153,8 +19157,8 @@ $__System.register('16', ['14', 'd'], function (_export) {
                selection: aceEditor.selection.getRange()
             };
          } else if (controller.isBlockly) {
-            var blocklyXml = blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyHelper.workspace)) : buffer.text;
-            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + Blockly.Python.workspaceToCode(blocklyHelper.workspace);
+            var blocklyXml = blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
+            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace);
 
             window.blocklyClipboard = Blockly.clipboardXml_;
 
