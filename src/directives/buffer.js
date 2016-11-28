@@ -292,7 +292,16 @@ function BufferController (signals, buffers) {
       controller.isAce = !('blockly' in controller.language);
       controller.isBlockly = ('blockly' in controller.language);
 
-      controller.blocklyHelper = getBlocklyHelper();
+      if(!controller.blocklyHelper) {
+         controller.blocklyHelper = getBlocklyHelper();
+      }
+
+      // taskSettings is a global variable (for now)
+      if(typeof taskSettings !== 'undefined' && typeof taskSettings.blocklyOpts !== 'undefined') {
+         Object.keys(taskSettings.blocklyOpts).forEach(function(key, idx) {
+            controller.blocklyHelper[key] = taskSettings.blocklyOpts[key];
+            });
+      }
 
       if (controller.isAce) {
         if (blocklyLoading)
