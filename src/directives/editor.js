@@ -106,10 +106,10 @@ function EditorController (tabsets) {
       if (curFullscreen == controller.fullscreen) return;
       controller.fullscreen = curFullscreen;
       if (curFullscreen) {
-        $(document.body).css('width', $(window).width() + 'px');
+//        $(document.body).css('width', $(window).width() + 'px');
         $(controller.editor).css('width', $(window).width() + 'px');
       } else {
-        $(document.body).css('width', '762px');
+//        $(document.body).css('width', '762px');
         $(controller.editor).css('width', '762px');
       }
    };

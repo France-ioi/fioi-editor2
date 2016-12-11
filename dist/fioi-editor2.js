@@ -19053,7 +19053,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             var unhookUpdate = signals.on('update', update);
             scope.$on('$destroy', function () {
                unhookUpdate();
-               $("#choose-view").off('click', scope.vm.updateBlockly);
+               $("#editor").off('show', scope.vm.reloadBlockly);
                scope.vm.cleanup();
             });
             scope.vm.update(iElement);
@@ -19063,7 +19063,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                });
             }
 
-            $("#choose-view").on('click', scope.vm.updateBlockly);
+            $("#editor").on('show', scope.vm.reloadBlockly);
          }
       };
    }
@@ -19225,27 +19225,26 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
 
       function loadBlockly() {
-         if (!blocklyLoading && controller.isBlockly && $("#editor").css('display') != 'none') {
-            blocklyLoading = true;
+         if (!controller.blocklyLoading && controller.isBlockly) {
+            // && ($("#editor").css('display') != 'none')) {
+            controller.blocklyLoading = true;
+            window.getEditorBlockly = getEditorBlockly;
             require(['blockly-lib'], function () {
                controller.blocklyHelper.mainContext = { "nbRobots": 1 };
                controller.blocklyHelper.prevWidth = 0;
+               var blocklyOpts = { divId: "blocklyDiv", noRobot: true, readOnly: controller.readOnly };
+               controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
+               controller.blocklyHelper.updateSize();
+               Blockly.Blocks.ONE_BASED_INDEXING = true;
+               Blockly.Python.ONE_BASED_INDEXING = true;
+               Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
+               Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
                setTimeout(function () {
-                  var blocklyOpts = { divId: "blocklyDiv", noRobot: true, readOnly: controller.readOnly };
-                  controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
-                  controller.blocklyHelper.updateSize();
-                  Blockly.Blocks.ONE_BASED_INDEXING = true;
-                  Blockly.Python.ONE_BASED_INDEXING = true;
-                  Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
-                  Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
-                  //           $(".blocklyToolboxDiv").appendTo("#blocklyDiv");
-               }, 50);
-               setTimeout(function () {
-                  if (blocklyLoading) {
-                     if (buffer && buffer.text && !blocklyLoaded) {
+                  if (controller.blocklyLoading) {
+                     if (buffer && buffer.text && !controller.blocklyLoaded) {
                         Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
                      }
-                     blocklyLoaded = true;
+                     controller.blocklyLoaded = true;
                      Blockly.clipboardXml_ = window.blocklyClipboard;
                      Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
                   }
@@ -19255,30 +19254,43 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       }
 
       function unloadBlockly() {
-         if (blocklyLoading) {
+         if (controller.blocklyLoading) {
             window.blocklyClipboard = Blockly.clipboardXml_;
             $(".blocklyWidgetDiv").hide();
             $(".blocklyTooltipDiv").hide();
-            controller.blocklyHelper.workspace.dispose();
+            if (controller.blocklyHelper.workspace) {
+               controller.blocklyHelper.workspace.dispose();
+            }
             $("#blocklyDiv").html("");
-            blocklyLoading = false;
+            controller.blocklyLoading = false;
          }
-         blocklyLoaded = false;
+         controller.blocklyLoaded = false;
       }
 
       this.updateBlockly = function () {
-         setTimeout(function () {
-            if (blocklyLoading) {
-               if ($("#editor").css('display') == 'none') {
-                  unloadBlockly();
-               } else {
-                  $(".blocklyToolboxDiv").show();
-               }
+         if (controller.blocklyLoading) {
+            if ($("#editor").css('display') == 'none') {
+               unloadBlockly();
             } else {
-               if ($("#editor").css('display') != 'none') loadBlockly();
+               $(".blocklyToolboxDiv").show();
             }
-         }, 0);
+         } else {
+            if ($("#editor").css('display') != 'none') loadBlockly();
+         }
       };
+
+      this.reloadBlockly = function () {
+         if (controller.blocklyHelper && controller.blocklyHelper.workspace) {
+            buffer.pullFromControl();
+         }
+         unloadBlockly();
+         loadBlockly();
+      };
+
+      function getEditorBlockly() {
+         var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
+         return blocklyXml.replace(/'/g, "&#39;");
+      }
 
       function updateFullscreen() {
          var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
@@ -19288,7 +19300,6 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', $(window).width() / 2 + 'px');
                $(controller.domElement).find(".ace_editor").css('height', $(window).height() - 50 + 'px');
             } else {
-               $(document.body).css('width', '762px');
                $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
                $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
                $(controller.domElement).find(".ace_editor").css('height', '350px');
@@ -19299,7 +19310,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             } else {
                $("#blocklyEditor #blocklyContainer").css('height', '600px');
             }
-            if (blocklyLoading) {
+            if (controller.blocklyLoading) {
                buffer.pullFromControl();
                unloadBlockly();
             }
@@ -19339,7 +19350,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          }
 
          if (controller.isAce) {
-            if (blocklyLoading) unloadBlockly();
+            if (controller.blocklyLoading) unloadBlockly();
             aceOnLoad = function () {
                if (buffer == null) {
                   var abcdef = 5;
@@ -19359,9 +19370,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                aceOnLoad = null;
             }
          }
-         setTimeout(function () {
-            updateFullscreen();
-         }, 10);
+         updateFullscreen();
       }
 
       function dump() {
@@ -19372,8 +19381,8 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                selection: aceEditor.selection.getRange()
             };
          } else if (controller.isBlockly) {
-            var blocklyXml = blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace);
+            var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
+            var blocklyPython = controller.blocklyLoaded ? '# blocklyXml: ' + blocklyXml + '\n\n' + Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace) : '';
 
             window.blocklyClipboard = Blockly.clipboardXml_;
 
@@ -19431,6 +19440,19 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          'use strict';
 
          _export('bufferDirective', bufferDirective);
+
+         (function ($) {
+            $.each(['show', 'hide'], function (i, ev) {
+               var el = $.fn[ev];
+               $.fn[ev] = function () {
+                  var t = this;
+                  setTimeout(function () {
+                     t.trigger(ev);
+                  }, 0);
+                  return el.apply(this, arguments);
+               };
+            });
+         })(jQuery);
 
          bufferDirective.$inject = ['FioiEditor2Signals'];
 
@@ -26530,10 +26552,10 @@ $__System.register('33', ['32', 'd'], function (_export) {
          if (curFullscreen == controller.fullscreen) return;
          controller.fullscreen = curFullscreen;
          if (curFullscreen) {
-            $(document.body).css('width', $(window).width() + 'px');
+            //        $(document.body).css('width', $(window).width() + 'px');
             $(controller.editor).css('width', $(window).width() + 'px');
          } else {
-            $(document.body).css('width', '762px');
+            //        $(document.body).css('width', '762px');
             $(controller.editor).css('width', '762px');
          }
       };
