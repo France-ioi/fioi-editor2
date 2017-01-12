@@ -19025,7 +19025,7 @@ $__System.registerDynamic("20", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.getEditorBlockly()\" class=\"btn btn-default btn-xs\">&lt;&gt;</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -19083,6 +19083,9 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
       var isAce = false;
       var isBlockly = false;
+
+      var hasPython = false;
+      var hasJavascript = false;
 
       var blocklyHelper = null;
       var blocklyLoading = false;
@@ -19228,7 +19231,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          if (!controller.blocklyLoading && controller.isBlockly) {
             // && ($("#editor").css('display') != 'none')) {
             controller.blocklyLoading = true;
-            window.getEditorBlockly = getEditorBlockly;
+            window.getEditorBlockly = controller.getEditorBlockly;
             require(['blockly-lib'], function () {
                controller.blocklyHelper.mainContext = { "nbRobots": 1 };
                controller.blocklyHelper.prevWidth = 0;
@@ -19287,10 +19290,11 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          loadBlockly();
       };
 
-      function getEditorBlockly() {
+      this.getEditorBlockly = function () {
          var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-         return blocklyXml.replace(/'/g, "&#39;");
-      }
+         console.log(blocklyXml.replace(/'/g, "&#39;"));
+         alert("Le code XML des blocs courants a été copié dans la console.");
+      };
 
       function updateFullscreen() {
          var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
@@ -19337,6 +19341,13 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
          controller.isAce = !('blockly' in controller.language);
          controller.isBlockly = 'blockly' in controller.language;
+
+         controller.hasPython = !!_.find(controller.languageOptions, function (language) {
+            return language.id == 'python';
+         });
+         controller.hasJavascript = !!_.find(controller.languageOptions, function (language) {
+            return language.id == 'javascript';
+         });
 
          if (!controller.blocklyHelper) {
             controller.blocklyHelper = getBlocklyHelper();

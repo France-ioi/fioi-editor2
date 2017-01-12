@@ -63,6 +63,9 @@ function BufferController (signals, buffers) {
    var isAce = false;
    var isBlockly = false;
 
+   var hasPython = false;
+   var hasJavascript = false;
+
    var blocklyHelper = null;
    var blocklyLoading = false;
    var blocklyLoaded = false;
@@ -203,7 +206,7 @@ function BufferController (signals, buffers) {
    function loadBlockly () {
     if (!controller.blocklyLoading && controller.isBlockly) { // && ($("#editor").css('display') != 'none')) {
       controller.blocklyLoading = true;
-      window.getEditorBlockly = getEditorBlockly;
+      window.getEditorBlockly = controller.getEditorBlockly;
       require(['blockly-lib'], function () {
         controller.blocklyHelper.mainContext = {"nbRobots": 1};
         controller.blocklyHelper.prevWidth = 0;
@@ -263,9 +266,10 @@ function BufferController (signals, buffers) {
      loadBlockly();
    }
 
-   function getEditorBlockly () {
+   this.getEditorBlockly = function () {
       var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-      return blocklyXml.replace(/'/g, "&#39;");
+      console.log(blocklyXml.replace(/'/g, "&#39;"));
+      alert("Le code XML des blocs courants a été copié dans la console.");
    }
 
    function updateFullscreen () {
@@ -312,6 +316,11 @@ function BufferController (signals, buffers) {
 
       controller.isAce = !('blockly' in controller.language);
       controller.isBlockly = ('blockly' in controller.language);
+
+      controller.hasPython = !!(_.find(controller.languageOptions,
+         function (language) { return language.id == 'python'; }));
+      controller.hasJavascript = !!(_.find(controller.languageOptions,
+         function (language) { return language.id == 'javascript'; }));
 
       if(!controller.blocklyHelper) {
          controller.blocklyHelper = getBlocklyHelper();
