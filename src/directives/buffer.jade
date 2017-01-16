@@ -15,6 +15,7 @@ div
       | &nbsp;
       button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasPython",ng-click="vm.blocklyToTab()") Convertir en Python
       button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasJavascript",ng-click="vm.blocklyToJsTab()") Convertir en JavaScript
+      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly",ng-click="vm.downloadBlocklyPNG()") Sauvegarder en image
       button.btn.btn-default.btn-xs(ng-if="vm.isBlockly",ng-click="vm.getEditorBlockly()") &lt;&gt;
    div#langChangeModal.modal.fade(role="dialog")
       div.modal-dialog(role="document")

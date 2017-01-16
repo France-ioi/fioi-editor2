@@ -272,6 +272,23 @@ function BufferController (signals, buffers) {
       alert("Le code XML des blocs courants a été copié dans la console.");
    }
 
+   this.downloadBlocklyPNG = function () {
+      var svg = $('#blocklyDiv svg').clone();
+      svg.find('.blocklyFlyout, .blocklyMainBackground, .blocklyTrash, .blocklyBubbleCanvas, .blocklyScrollbarVertical, .blocklyScrollbarHorizontal, .blocklyScrollbarBackground').remove();
+      svg.find('.blocklyBlockCanvas').attr('transform', '');
+      var bbox = $('#blocklyDiv svg .blocklyBlockCanvas')[0].getBBox();
+      var options = {
+         backgroundColor: '#FFFFFF',
+         top: 40,
+         left: 34,
+         width: bbox.width+4,
+         height: bbox.height+4
+        };
+      require(['save-svg-as-png'], function (ssap) {
+         ssap.saveSvgAsPng(svg[0], 'blockly.png', options);
+      });
+   }
+
    function updateFullscreen () {
       var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
       if (controller.isAce) {
