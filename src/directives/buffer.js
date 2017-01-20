@@ -206,15 +206,14 @@ function BufferController (signals, buffers) {
    function loadBlockly () {
     if (!controller.blocklyLoading && controller.isBlockly) { // && ($("#editor").css('display') != 'none')) {
       controller.blocklyLoading = true;
-      window.getEditorBlockly = controller.getEditorBlockly;
+      window.getBlocklyXML = controller.getBlocklyXML;
+      window.getBlocklyPNG = controller.getBlocklyPNG;
       require(['blockly-lib'], function () {
         controller.blocklyHelper.mainContext = {"nbRobots": 1};
         controller.blocklyHelper.prevWidth = 0;
-        var blocklyOpts = {divId: "blocklyDiv", noRobot: true, readOnly: controller.readOnly};
+        var blocklyOpts = {divId: "blocklyDiv", readOnly: controller.readOnly};
         controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
         controller.blocklyHelper.updateSize();
-        Blockly.Blocks.ONE_BASED_INDEXING = true;
-        Blockly.Python.ONE_BASED_INDEXING = true;
         Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
         Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
         setTimeout(function() {
@@ -266,26 +265,27 @@ function BufferController (signals, buffers) {
      loadBlockly();
    }
 
-   this.getEditorBlockly = function () {
+   this.getBlocklyXML = function () {
       var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
       console.log(blocklyXml.replace(/'/g, "&#39;"));
       alert("Le code XML des blocs courants a été copié dans la console.");
    }
 
-   this.downloadBlocklyPNG = function () {
+   this.getBlocklyPNG = function () {
+      var svgBbox = $('#blocklyDiv svg')[0].getBoundingClientRect();
+      var blocksBbox = $('#blocklyDiv svg > .blocklyWorkspace > .blocklyBlockCanvas')[0].getBoundingClientRect();
       var svg = $('#blocklyDiv svg').clone();
       svg.find('.blocklyFlyout, .blocklyMainBackground, .blocklyTrash, .blocklyBubbleCanvas, .blocklyScrollbarVertical, .blocklyScrollbarHorizontal, .blocklyScrollbarBackground').remove();
-      svg.find('.blocklyBlockCanvas').attr('transform', '');
-      var bbox = $('#blocklyDiv svg .blocklyBlockCanvas')[0].getBBox();
       var options = {
          backgroundColor: '#FFFFFF',
-         top: 40,
-         left: 34,
-         width: bbox.width+4,
-         height: bbox.height+4
+         top: blocksBbox.top - svgBbox.top - 4,
+         left: blocksBbox.left - svgBbox.left - 4,
+         width: blocksBbox.width + 8,
+         height: blocksBbox.height + 8
         };
       require(['save-svg-as-png'], function (ssap) {
          ssap.saveSvgAsPng(svg[0], 'blockly.png', options);
+         svg.remove();
       });
    }
 
@@ -341,6 +341,7 @@ function BufferController (signals, buffers) {
 
       if(!controller.blocklyHelper) {
          controller.blocklyHelper = getBlocklyHelper();
+         controller.blocklyHelper.startingBlock = false;
       }
 
       // taskSettings is a global variable (for now)

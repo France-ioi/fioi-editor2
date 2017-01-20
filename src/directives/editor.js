@@ -55,6 +55,7 @@ function EditorController (tabsets) {
    var tabset = null;
    var fullscreen = false;
    var fullscreenEvents = false;
+   var hasConcepts = false;
 
    this.addTab = function () {
       var tab = tabset.addTab();
@@ -90,7 +91,6 @@ function EditorController (tabsets) {
           document.msExitFullscreen();
         }
       } else {
-//        var editor = document.getElementById("fioi-editor2");
         if (controller.editor.requestFullscreen) {
           controller.editor.requestFullscreen();
         } else if (controller.editor.mozRequestFullScreen) {
@@ -106,10 +106,8 @@ function EditorController (tabsets) {
       if (curFullscreen == controller.fullscreen) return;
       controller.fullscreen = curFullscreen;
       if (curFullscreen) {
-//        $(document.body).css('width', $(window).width() + 'px');
         $(controller.editor).css('width', $(window).width() + 'px');
       } else {
-//        $(document.body).css('width', '762px');
         $(controller.editor).css('width', '762px');
       }
    };
@@ -152,6 +150,8 @@ function EditorController (tabsets) {
          buffers: tab.buffers
       };
       classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
+
+      controller.hasConcepts = (typeof conceptViewer !== 'undefined' && typeof taskSettings !== 'undefined') ? !!taskSettings.conceptViewer : false;
    };
 
 }

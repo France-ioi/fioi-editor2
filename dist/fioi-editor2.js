@@ -19025,7 +19025,7 @@ $__System.registerDynamic("20", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.downloadBlocklyPNG()\" class=\"btn btn-default btn-xs\">Sauvegarder en image</button><button ng-if=\"vm.isBlockly\" ng-click=\"vm.getEditorBlockly()\" class=\"btn btn-default btn-xs\">&lt;&gt;</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -19231,15 +19231,14 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          if (!controller.blocklyLoading && controller.isBlockly) {
             // && ($("#editor").css('display') != 'none')) {
             controller.blocklyLoading = true;
-            window.getEditorBlockly = controller.getEditorBlockly;
+            window.getBlocklyXML = controller.getBlocklyXML;
+            window.getBlocklyPNG = controller.getBlocklyPNG;
             require(['blockly-lib'], function () {
                controller.blocklyHelper.mainContext = { "nbRobots": 1 };
                controller.blocklyHelper.prevWidth = 0;
-               var blocklyOpts = { divId: "blocklyDiv", noRobot: true, readOnly: controller.readOnly };
+               var blocklyOpts = { divId: "blocklyDiv", readOnly: controller.readOnly };
                controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
                controller.blocklyHelper.updateSize();
-               Blockly.Blocks.ONE_BASED_INDEXING = true;
-               Blockly.Python.ONE_BASED_INDEXING = true;
                Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
                Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
                setTimeout(function () {
@@ -19290,26 +19289,27 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          loadBlockly();
       };
 
-      this.getEditorBlockly = function () {
+      this.getBlocklyXML = function () {
          var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
          console.log(blocklyXml.replace(/'/g, "&#39;"));
          alert("Le code XML des blocs courants a été copié dans la console.");
       };
 
-      this.downloadBlocklyPNG = function () {
+      this.getBlocklyPNG = function () {
+         var svgBbox = $('#blocklyDiv svg')[0].getBoundingClientRect();
+         var blocksBbox = $('#blocklyDiv svg > .blocklyWorkspace > .blocklyBlockCanvas')[0].getBoundingClientRect();
          var svg = $('#blocklyDiv svg').clone();
          svg.find('.blocklyFlyout, .blocklyMainBackground, .blocklyTrash, .blocklyBubbleCanvas, .blocklyScrollbarVertical, .blocklyScrollbarHorizontal, .blocklyScrollbarBackground').remove();
-         svg.find('.blocklyBlockCanvas').attr('transform', '');
-         var bbox = $('#blocklyDiv svg .blocklyBlockCanvas')[0].getBBox();
          var options = {
             backgroundColor: '#FFFFFF',
-            top: 40,
-            left: 34,
-            width: bbox.width + 4,
-            height: bbox.height + 4
+            top: blocksBbox.top - svgBbox.top - 4,
+            left: blocksBbox.left - svgBbox.left - 4,
+            width: blocksBbox.width + 8,
+            height: blocksBbox.height + 8
          };
          require(['save-svg-as-png'], function (ssap) {
             ssap.saveSvgAsPng(svg[0], 'blockly.png', options);
+            svg.remove();
          });
       };
 
@@ -19368,6 +19368,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
          if (!controller.blocklyHelper) {
             controller.blocklyHelper = getBlocklyHelper();
+            controller.blocklyHelper.startingBlock = false;
          }
 
          // taskSettings is a global variable (for now)
@@ -26462,7 +26463,7 @@ $__System.registerDynamic("32", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
+    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
     ;
     return buf.join("");
   };
@@ -26529,6 +26530,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
       var tabset = null;
       var fullscreen = false;
       var fullscreenEvents = false;
+      var hasConcepts = false;
 
       this.addTab = (function () {
          var tab = tabset.addTab();
@@ -26564,7 +26566,6 @@ $__System.register('33', ['32', 'd'], function (_export) {
                document.msExitFullscreen();
             }
          } else {
-            //        var editor = document.getElementById("fioi-editor2");
             if (controller.editor.requestFullscreen) {
                controller.editor.requestFullscreen();
             } else if (controller.editor.mozRequestFullScreen) {
@@ -26580,10 +26581,8 @@ $__System.register('33', ['32', 'd'], function (_export) {
          if (curFullscreen == controller.fullscreen) return;
          controller.fullscreen = curFullscreen;
          if (curFullscreen) {
-            //        $(document.body).css('width', $(window).width() + 'px');
             $(controller.editor).css('width', $(window).width() + 'px');
          } else {
-            //        $(document.body).css('width', '762px');
             $(controller.editor).css('width', '762px');
          }
       };
@@ -26626,6 +26625,8 @@ $__System.register('33', ['32', 'd'], function (_export) {
             buffers: tab.buffers
          };
          classes['fioi-editor2_' + tab.buffers.length + '-buffers'] = true;
+
+         controller.hasConcepts = typeof conceptViewer !== 'undefined' && typeof taskSettings !== 'undefined' ? !!taskSettings.conceptViewer : false;
       };
    }
    return {
