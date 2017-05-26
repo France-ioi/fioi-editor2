@@ -187,7 +187,7 @@ function BufferController (signals, buffers) {
       var newTab = buffer.tab.tabset.addTab()
       
       newTab.getBuffer().update({
-        text: Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace),
+        text: controller.blocklyHelper.getCode('python'),
         language: controller.language.blockly.dstlang
       });
    }
@@ -197,7 +197,7 @@ function BufferController (signals, buffers) {
       var newTab = buffer.tab.tabset.addTab()
       
       newTab.getBuffer().update({
-        text: Blockly.JavaScript.workspaceToCode(controller.blocklyHelper.workspace),
+        text: controller.blocklyHelper.getCode('javascript'),
         language: 'java'
       });
    }
@@ -239,7 +239,11 @@ function BufferController (signals, buffers) {
 
         controller.blocklyHelper.mainContext = {"nbRobots": 1};
         controller.blocklyHelper.prevWidth = 0;
-        var blocklyOpts = {divId: "blocklyDiv", readOnly: controller.readOnly};
+        var blocklyOpts = {
+           divId: "blocklyDiv",
+           readOnly: controller.readOnly,
+           startingBlockName: "Programme du robot"
+           };
         controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
         controller.blocklyHelper.updateSize();
         Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
@@ -388,7 +392,7 @@ function BufferController (signals, buffers) {
 
       if(!controller.blocklyHelper) {
          controller.blocklyHelper = getBlocklyHelper();
-         controller.blocklyHelper.startingBlock = false;
+//         controller.blocklyHelper.startingBlock = false;
       }
 
       // taskSettings is a global variable (for now)
@@ -431,7 +435,7 @@ function BufferController (signals, buffers) {
       };
     } else if (controller.isBlockly) {
       var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-      var blocklyPython = controller.blocklyLoaded ? '# blocklyXml: ' + blocklyXml + '\n\n' + Blockly.Python.workspaceToCode(controller.blocklyHelper.workspace) : '';
+      var blocklyPython = controller.blocklyLoaded ? '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang) : '';
 
       window.blocklyClipboard = Blockly.clipboardXml_;
       
