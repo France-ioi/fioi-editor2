@@ -68,7 +68,7 @@ function BufferController (signals, buffers) {
    var hasJavascript = false;
 
    var blocklyHelper = null;
-   var blocklyLoading = false;
+   var blocklyLoading = null;
    var blocklyLoaded = false;
    var newLang = '';
    var fullscreenEvents = false;
@@ -216,14 +216,27 @@ function BufferController (signals, buffers) {
    function loadBlockly () {
     if (!controller.blocklyLoading && controller.isBlockly) { // && ($("#editor").css('display') != 'none')) {
       if(controller.blocklyLoading) { return; }
-      controller.blocklyLoading = true;
-      setTimeout(function () {
+      controller.blocklyLoading = setTimeout(function () {
         window.getBlocklyXML = controller.getBlocklyXML;
         window.getBlocklyPNG = controller.getBlocklyPNG;
+
+        if(!controller.blocklyLoading) { return; }
+
         if(!$('#blocklyDiv').length) {
           console.log('blocklyDiv not ready yet.');
           return;
         }
+
+        // Add CSS fix for Blockly and Scratch
+        if(!$('#fioiEditor2BlocklyStyle').length) {
+          $('head').append('<style id="fioiEditor2BlocklyStyle"></style>');
+          if(controller.language.id == 'blockly') {
+            $('#fioiEditor2BlocklyStyle').text('.blocklyWidgetDiv { position: fixed !important; }');
+          } else if(controller.language.id == 'scratch') {
+            $('#fioiEditor2BlocklyStyle').text('.blocklyWidgetDiv { margin-top: -20px; }');
+          }
+        }
+
         controller.blocklyHelper.mainContext = {"nbRobots": 1};
         controller.blocklyHelper.prevWidth = 0;
         var blocklyOpts = {divId: "blocklyDiv", readOnly: controller.readOnly};
@@ -246,6 +259,9 @@ function BufferController (signals, buffers) {
 
    function unloadBlockly () {
       if (controller.blocklyLoading) {
+        if (controller.blocklyLoading !== true) {
+          clearTimeout(controller.blocklyLoading);
+        }
         window.blocklyClipboard = Blockly.clipboardXml_;
         $(".blocklyWidgetDiv").hide();
         $(".blocklyTooltipDiv").hide();
@@ -308,7 +324,7 @@ function BufferController (signals, buffers) {
    }
 
    function updateFullscreen () {
-      var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+      var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
       if (controller.isAce) {
         if (curFullscreen) {
           $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
@@ -322,8 +338,14 @@ function BufferController (signals, buffers) {
       } else if (controller.isBlockly) {
         if (curFullscreen) {
           $("#blocklyEditor #blocklyContainer").css('height', ($(window).height() - 60) + 'px');
+          if (controller.language.id == 'scratch') {
+            $('#fioiEditor2BlocklyStyle').text('');
+          }
         } else {
           $("#blocklyEditor #blocklyContainer").css('height', '600px');
+          if (controller.language.id == 'scratch') {
+            $('#fioiEditor2BlocklyStyle').text('.blocklyWidgetDiv { margin-top: -20px; }');
+          }
         }
         if (controller.blocklyLoading) {
           buffer.pullFromControl();
