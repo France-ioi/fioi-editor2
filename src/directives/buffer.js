@@ -62,6 +62,7 @@ function BufferController (signals, buffers) {
 
    var isAce = false;
    var isBlockly = false;
+   var wrongBlockly = false;
 
    var hasPython = false;
    var hasJavascript = false;
@@ -150,18 +151,27 @@ function BufferController (signals, buffers) {
    };
 
    this.languageChanged = function () {
+      if (controller.language.id == buffer.language) { return; }
+
+      var oldLanguage = _.find(controller.languageOptions,
+           function (language) { return language.id == buffer.language; });
+
+      if ('blockly' in controller.language && window.blocklySwitcher.mode != controller.language.id) {
+        controller.newLang = controller.language.id;
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers entre Blockly et Scratch effacera vos blocs actuels !");
+        $(controller.domElement).find("#langChangeModal").modal("show");
+      }
+
       if (controller.isAce && ('blockly' in controller.language) && (aceEditor.getValue() != '')) {
         controller.newLang = controller.language.id;
         $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
         $(controller.domElement).find("#langChangeModal").modal("show");
-        controller.language = _.find(controller.languageOptions,
-           function (language) { return language.id == buffer.language; });
+        controller.language = oldLanguage;
       } else if (controller.isBlockly && !('blockly' in controller.language)) {
         controller.newLang = controller.language.id;
         $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
         $(controller.domElement).find("#langChangeModal").modal("show");
-        controller.language = _.find(controller.languageOptions,
-           function (language) { return language.id == buffer.language; });
+        controller.language = oldLanguage;
       } else {
         changeLanguage(controller.language.id, false);
       }
@@ -205,10 +215,15 @@ function BufferController (signals, buffers) {
 
    function loadBlockly () {
     if (!controller.blocklyLoading && controller.isBlockly) { // && ($("#editor").css('display') != 'none')) {
+      if(controller.blocklyLoading) { return; }
       controller.blocklyLoading = true;
-      window.getBlocklyXML = controller.getBlocklyXML;
-      window.getBlocklyPNG = controller.getBlocklyPNG;
-      require(['blockly-lib'], function () {
+      setTimeout(function () {
+        window.getBlocklyXML = controller.getBlocklyXML;
+        window.getBlocklyPNG = controller.getBlocklyPNG;
+        if(!$('#blocklyDiv').length) {
+          console.log('blocklyDiv not ready yet.');
+          return;
+        }
         controller.blocklyHelper.mainContext = {"nbRobots": 1};
         controller.blocklyHelper.prevWidth = 0;
         var blocklyOpts = {divId: "blocklyDiv", readOnly: controller.readOnly};
@@ -217,16 +232,15 @@ function BufferController (signals, buffers) {
         Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
         Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
         setTimeout(function() {
-           if (controller.blocklyLoading) {
-             if (buffer && buffer.text && !controller.blocklyLoaded) {
-               Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
-             }
-             controller.blocklyLoaded = true;
-             Blockly.clipboardXml_ = window.blocklyClipboard;
-             Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
+           if (!controller.blocklyLoading) { return; }
+           if (buffer && buffer.text && !controller.blocklyLoaded) {
+             Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
            }
+           controller.blocklyLoaded = true;
+           Blockly.clipboardXml_ = window.blocklyClipboard;
+           Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
         }, 100);
-      });
+      }, 0);
     } 
    }
 
@@ -263,6 +277,10 @@ function BufferController (signals, buffers) {
      }
      unloadBlockly();
      loadBlockly();
+   }
+
+   this.switchBlocklyMode = function () {
+      window.blocklySwitcher.switchMode();
    }
 
    this.getBlocklyXML = function () {
@@ -334,6 +352,13 @@ function BufferController (signals, buffers) {
       controller.isAce = !('blockly' in controller.language);
       controller.isBlockly = ('blockly' in controller.language);
 
+      if(controller.isBlockly && controller.language.id != window.blocklySwitcher.mode) {
+         controller.wrongBlockly = true;
+         controller.isBlockly = false;
+      } else {
+         controller.wrongBlockly = false;
+      }
+
       controller.hasPython = !!(_.find(controller.languageOptions,
          function (language) { return language.id == 'python'; }));
       controller.hasJavascript = !!(_.find(controller.languageOptions,
@@ -392,6 +417,14 @@ function BufferController (signals, buffers) {
          text: blocklyXml,
          isBlockly: true,
          blocklySource: blocklyPython,
+         language: controller.language && controller.language.id,
+         selection: (0, 0, 0, 0)
+      };
+    } else if (controller.wrongBlockly) {
+      return {
+         text: buffer.text,
+         isBlockly: true,
+         blocklySource: '',
          language: controller.language && controller.language.id,
          selection: (0, 0, 0, 0)
       };

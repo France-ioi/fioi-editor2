@@ -9,6 +9,13 @@ div
         #blocklyDiv.language_blockly(style="height: 100%; width: 100%",ng-resize="vm.blocklyHelper.updateSize()")
         textarea#program.language_python(style="width: 100%;height: 100%;display:none;", readonly)
       p#error(style="color:red")
+   div(ng-if="vm.wrongBlockly")
+    div(style="height: 600px; border: 1px solid black; text-align: center; padding: 50px;")
+      | Impossible d'afficher le langage {{ vm.language.label }} dans le mode Blockly/Scratch actuel.
+      br
+      button.btn.btn-default(ng-click="vm.switchBlocklyMode()") Changer le mode
+      br
+      i (cela rafraîchira la page)
    div(ng-if="vm.showLanguageSelector")
       span Langage du fichier :&nbsp;
       select#languageSelector(ng-model="vm.language", ng-options="option as option.label for option in vm.languageOptions track by option.id", ng-change="vm.languageChanged()")

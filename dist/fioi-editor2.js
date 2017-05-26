@@ -19025,7 +19025,7 @@ $__System.registerDynamic("20", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.wrongBlockly\"><div style=\"height: 600px; border: 1px solid black; text-align: center; padding: 50px;\">Impossible d'afficher le langage {{ vm.language.label }} dans le mode Blockly/Scratch actuel.<br/><button ng-click=\"vm.switchBlocklyMode()\" class=\"btn btn-default\">Changer le mode</button><br/><i>(cela rafraîchira la page)</i></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -19083,6 +19083,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
       var isAce = false;
       var isBlockly = false;
+      var wrongBlockly = false;
 
       var hasPython = false;
       var hasJavascript = false;
@@ -19171,20 +19172,30 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
 
       this.languageChanged = function () {
+         if (controller.language.id == buffer.language) {
+            return;
+         }
+
+         var oldLanguage = _.find(controller.languageOptions, function (language) {
+            return language.id == buffer.language;
+         });
+
+         if ('blockly' in controller.language && window.blocklySwitcher.mode != controller.language.id) {
+            controller.newLang = controller.language.id;
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers entre Blockly et Scratch effacera vos blocs actuels !");
+            $(controller.domElement).find("#langChangeModal").modal("show");
+         }
+
          if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
             controller.newLang = controller.language.id;
             $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
             $(controller.domElement).find("#langChangeModal").modal("show");
-            controller.language = _.find(controller.languageOptions, function (language) {
-               return language.id == buffer.language;
-            });
+            controller.language = oldLanguage;
          } else if (controller.isBlockly && !('blockly' in controller.language)) {
             controller.newLang = controller.language.id;
             $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
             $(controller.domElement).find("#langChangeModal").modal("show");
-            controller.language = _.find(controller.languageOptions, function (language) {
-               return language.id == buffer.language;
-            });
+            controller.language = oldLanguage;
          } else {
             changeLanguage(controller.language.id, false);
          }
@@ -19230,10 +19241,17 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       function loadBlockly() {
          if (!controller.blocklyLoading && controller.isBlockly) {
             // && ($("#editor").css('display') != 'none')) {
+            if (controller.blocklyLoading) {
+               return;
+            }
             controller.blocklyLoading = true;
-            window.getBlocklyXML = controller.getBlocklyXML;
-            window.getBlocklyPNG = controller.getBlocklyPNG;
-            require(['blockly-lib'], function () {
+            setTimeout(function () {
+               window.getBlocklyXML = controller.getBlocklyXML;
+               window.getBlocklyPNG = controller.getBlocklyPNG;
+               if (!$('#blocklyDiv').length) {
+                  console.log('blocklyDiv not ready yet.');
+                  return;
+               }
                controller.blocklyHelper.mainContext = { "nbRobots": 1 };
                controller.blocklyHelper.prevWidth = 0;
                var blocklyOpts = { divId: "blocklyDiv", readOnly: controller.readOnly };
@@ -19242,16 +19260,17 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
                Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
                setTimeout(function () {
-                  if (controller.blocklyLoading) {
-                     if (buffer && buffer.text && !controller.blocklyLoaded) {
-                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
-                     }
-                     controller.blocklyLoaded = true;
-                     Blockly.clipboardXml_ = window.blocklyClipboard;
-                     Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
+                  if (!controller.blocklyLoading) {
+                     return;
                   }
+                  if (buffer && buffer.text && !controller.blocklyLoaded) {
+                     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
+                  }
+                  controller.blocklyLoaded = true;
+                  Blockly.clipboardXml_ = window.blocklyClipboard;
+                  Blockly.clipboardSource_ = controller.blocklyHelper.workspace;
                }, 100);
-            });
+            }, 0);
          }
       }
 
@@ -19287,6 +19306,10 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          }
          unloadBlockly();
          loadBlockly();
+      };
+
+      this.switchBlocklyMode = function () {
+         window.blocklySwitcher.switchMode();
       };
 
       this.getBlocklyXML = function () {
@@ -19359,6 +19382,13 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          controller.isAce = !('blockly' in controller.language);
          controller.isBlockly = 'blockly' in controller.language;
 
+         if (controller.isBlockly && controller.language.id != window.blocklySwitcher.mode) {
+            controller.wrongBlockly = true;
+            controller.isBlockly = false;
+         } else {
+            controller.wrongBlockly = false;
+         }
+
          controller.hasPython = !!_.find(controller.languageOptions, function (language) {
             return language.id == 'python';
          });
@@ -19419,6 +19449,14 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                text: blocklyXml,
                isBlockly: true,
                blocklySource: blocklyPython,
+               language: controller.language && controller.language.id,
+               selection: (0, 0, 0, 0)
+            };
+         } else if (controller.wrongBlockly) {
+            return {
+               text: buffer.text,
+               isBlockly: true,
+               blocklySource: '',
                language: controller.language && controller.language.id,
                selection: (0, 0, 0, 0)
             };
