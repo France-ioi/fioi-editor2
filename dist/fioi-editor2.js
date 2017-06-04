@@ -19283,7 +19283,8 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                      return;
                   }
                   if (buffer && buffer.text && !controller.blocklyLoaded) {
-                     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(buffer.text), controller.blocklyHelper.workspace);
+                     controller.blocklyHelper.programs[controller.blocklyHelper.player].blockly = buffer.text;
+                     controller.blocklyHelper.loadPrograms();
                   }
                   controller.blocklyLoaded = true;
                   Blockly.clipboardXml_ = window.blocklyClipboard;
