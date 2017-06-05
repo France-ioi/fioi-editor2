@@ -19180,10 +19180,11 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             return language.id == buffer.language;
          });
 
-         if ('blockly' in controller.language && window.blocklySwitcher.mode != controller.language.id) {
+         if (controller.language['blockly']) {
             controller.newLang = controller.language.id;
             $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers entre Blockly et Scratch effacera vos blocs actuels !");
             $(controller.domElement).find("#langChangeModal").modal("show");
+            controller.language = oldLanguage;
          }
 
          if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
@@ -19227,14 +19228,11 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
 
       function changeLanguage(lang, wipesrc) {
-         controller.language = _.find(controller.languageOptions, function (language) {
-            return language.id == lang;
-         });
-
          buffer.pullFromControl();
          if (wipesrc) {
             buffer.text = '';
          }
+         buffer.language = lang;
          buffer.pushToControl();
       };
 
@@ -19449,7 +19447,9 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                      aceEditor.session.setMode('ace/mode/' + controller.language.ace.mode);
                   }
                   aceEditor.setValue(buffer.text);
-                  aceEditor.selection.setRange(buffer.selection);
+                  if (buffer.selection) {
+                     aceEditor.selection.setRange(buffer.selection);
+                  }
                   aceEditor.setReadOnly(controller.readOnly);
                }
             };
