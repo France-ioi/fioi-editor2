@@ -46,8 +46,8 @@ export function bufferDirective (signals) {
    };
 }
 
-BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
-function BufferController (signals, buffers) {
+BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope'];
+function BufferController (signals, buffers, $rootScope) {
 
    var controller = this;
    var domElement = null;
@@ -300,6 +300,7 @@ function BufferController (signals, buffers) {
    }
 
    this.switchBlocklyMode = function () {
+      $rootScope.$broadcast('fioi-editor2.requireSave');
       window.blocklySwitcher.switchMode();
    }
 
@@ -429,34 +430,40 @@ function BufferController (signals, buffers) {
    }
 
    function dump () {
-    if (controller.isAce) {
-      return {
-         text: aceEditor.getValue(),
-         language: controller.language && controller.language.id,
-         selection: aceEditor.selection.getRange()
-      };
-    } else if (controller.isBlockly) {
-      var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-      var blocklyPython = controller.blocklyLoaded ? '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang) : '';
+      if (controller.isAce) {
+         return {
+            text: aceEditor.getValue(),
+            language: controller.language && controller.language.id,
+            selection: aceEditor.selection.getRange()
+         };
+      } else if (controller.isBlockly) {
+         if(!controller.blocklyLoaded) {
+            return {
+               isBlockly: true,
+               language: controller.language && controller.language.id,
+               selection: (0, 0, 0, 0)
+            };
+         }
 
-      window.blocklyClipboard = Blockly.clipboardXml_;
-      
-      return {
-         text: blocklyXml,
-         isBlockly: true,
-         blocklySource: blocklyPython,
-         language: controller.language && controller.language.id,
-         selection: (0, 0, 0, 0)
-      };
-    } else if (controller.wrongBlockly) {
-      return {
-         text: buffer.text,
-         isBlockly: true,
-         blocklySource: '',
-         language: controller.language && controller.language.id,
-         selection: (0, 0, 0, 0)
-      };
-    }
+         var blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace));
+         var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang);
+
+         window.blocklyClipboard = Blockly.clipboardXml_;
+
+         return {
+            text: blocklyXml,
+            isBlockly: true,
+            blocklySource: blocklyPython,
+            language: controller.language && controller.language.id,
+            selection: (0, 0, 0, 0)
+         };
+      } else if (controller.wrongBlockly) {
+        return {
+           isBlockly: true,
+           language: controller.language && controller.language.id,
+           selection: (0, 0, 0, 0)
+        };
+      }
    }
 
    function focus () {

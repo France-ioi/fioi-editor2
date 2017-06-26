@@ -19068,7 +19068,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
    }
 
-   function BufferController(signals, buffers) {
+   function BufferController(signals, buffers, $rootScope) {
 
       var controller = this;
       var domElement = null;
@@ -19330,6 +19330,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
 
       this.switchBlocklyMode = function () {
+         $rootScope.$broadcast('fioi-editor2.requireSave');
          window.blocklySwitcher.switchMode();
       };
 
@@ -19469,8 +19470,16 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                selection: aceEditor.selection.getRange()
             };
          } else if (controller.isBlockly) {
-            var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
-            var blocklyPython = controller.blocklyLoaded ? '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang) : '';
+            if (!controller.blocklyLoaded) {
+               return {
+                  isBlockly: true,
+                  language: controller.language && controller.language.id,
+                  selection: (0, 0, 0, 0)
+               };
+            }
+
+            var blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace));
+            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang);
 
             window.blocklyClipboard = Blockly.clipboardXml_;
 
@@ -19483,9 +19492,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             };
          } else if (controller.wrongBlockly) {
             return {
-               text: buffer.text,
                isBlockly: true,
-               blocklySource: '',
                language: controller.language && controller.language.id,
                selection: (0, 0, 0, 0)
             };
@@ -19552,7 +19559,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
          bufferDirective.$inject = ['FioiEditor2Signals'];
 
-         BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers'];
+         BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope'];
       }
    };
 });
@@ -26590,7 +26597,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
       };
    }
 
-   function EditorController(tabsets) {
+   function EditorController(tabsets, $rootScope) {
 
       var controller = this;
       var editor = null;
@@ -26602,6 +26609,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
       this.addTab = (function () {
          var tab = tabset.addTab();
          this.selectTab(tab);
+         $rootScope.$broadcast('fioi-editor2.requireSave');
       }).bind(this);
 
       this.closeTab = function (tab, event) {
@@ -26612,6 +26620,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
 
       this.selectTab = function (tab) {
          tabset.update({ activeTabId: tab.id });
+         $rootScope.$broadcast('fioi-editor2.requireSave');
       };
 
       this.toggleFullscreen = function () {
@@ -26705,7 +26714,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
       execute: function () {
          editorDirective.$inject = ['FioiEditor2Signals'];
 
-         EditorController.$inject = ['FioiEditor2Tabsets'];
+         EditorController.$inject = ['FioiEditor2Tabsets', '$rootScope'];
       }
    };
 });

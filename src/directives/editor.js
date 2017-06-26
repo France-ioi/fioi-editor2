@@ -47,8 +47,8 @@ export function editorDirective (signals) {
    };
 }
 
-EditorController.$inject = ['FioiEditor2Tabsets'];
-function EditorController (tabsets) {
+EditorController.$inject = ['FioiEditor2Tabsets', '$rootScope'];
+function EditorController (tabsets, $rootScope) {
 
    var controller = this;
    var editor = null;
@@ -60,6 +60,7 @@ function EditorController (tabsets) {
    this.addTab = function () {
       var tab = tabset.addTab();
       this.selectTab(tab);
+      $rootScope.$broadcast('fioi-editor2.requireSave');
    }.bind(this);
 
    this.closeTab = function (tab, event) {
@@ -70,6 +71,7 @@ function EditorController (tabsets) {
 
    this.selectTab = function (tab) {
       tabset.update({activeTabId: tab.id});
+      $rootScope.$broadcast('fioi-editor2.requireSave');
    };
 
    this.toggleFullscreen = function () {
