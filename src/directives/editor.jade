@@ -5,6 +5,8 @@ div#fioi-editor2.fioi-editor2
          span.fioi-editor2_close-tab(ng-click="vm.closeTab(tab, $event)") ×
       li.fioi-editor2_new-tab(ng-click="vm.addTab()")
          | +
+      li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()")
+         span.glyphicon.glyphicon-time
       li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;")
          span.glyphicon.glyphicon-fullscreen
       li.fioi-editor2_fullscreen(ng-if="vm.hasConcepts",onclick="conceptViewer.show()",style="float: right;")

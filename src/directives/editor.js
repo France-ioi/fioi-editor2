@@ -114,6 +114,10 @@ function EditorController (tabsets, $rootScope) {
       }
    };
 
+   this.toggleHistory = function () {
+      $rootScope.$broadcast('fioi-editor2.toggleHistory');
+   };
+
    // Update state from the tabs service.
    this.update = function (iElement) {
       var config = controller.fioiEditor2();
