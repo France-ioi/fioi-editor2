@@ -46,8 +46,8 @@ export function bufferDirective (signals) {
    };
 }
 
-BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope'];
-function BufferController (signals, buffers, $rootScope) {
+BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope', '$i18next'];
+function BufferController (signals, buffers, $rootScope, $i18next) {
 
    var controller = this;
    var domElement = null;
@@ -158,19 +158,19 @@ function BufferController (signals, buffers, $rootScope) {
 
       if (controller.language['blockly']) {
         controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers entre Blockly et Scratch effacera vos blocs actuels !");
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_blockly_scratch'));
         $(controller.domElement).find("#langChangeModal").modal("show");
         controller.language = oldLanguage;
       }
 
       if (controller.isAce && ('blockly' in controller.language) && (aceEditor.getValue() != '')) {
         controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_blockly'));
         $(controller.domElement).find("#langChangeModal").modal("show");
         controller.language = oldLanguage;
       } else if (controller.isBlockly && !('blockly' in controller.language)) {
         controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
+        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_normal'));
         $(controller.domElement).find("#langChangeModal").modal("show");
         controller.language = oldLanguage;
       } else {
@@ -243,7 +243,7 @@ function BufferController (signals, buffers, $rootScope) {
            readOnly: controller.readOnly,
            startingBlockName: "Programme du robot"
            };
-        controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
+        controller.blocklyHelper.load($rootScope.sLanguage, true, 1, blocklyOpts);
         controller.blocklyHelper.updateSize();
         Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
         Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
@@ -307,7 +307,7 @@ function BufferController (signals, buffers, $rootScope) {
    this.getBlocklyXML = function () {
       var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
       console.log(blocklyXml.replace(/'/g, "&#39;"));
-      alert("Le code XML des blocs courants a été copié dans la console.");
+      alert($i18next.t('editor_getblocklyxml'));
    }
 
    this.getBlocklyPNG = function () {

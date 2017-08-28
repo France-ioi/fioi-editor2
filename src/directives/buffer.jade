@@ -11,30 +11,33 @@ div
       p#error(style="color:red")
    div(ng-if="vm.wrongBlockly")
     div(style="height: 600px; border: 1px solid black; text-align: center; padding: 50px;")
-      | Impossible d'afficher le langage {{ vm.language.label }} dans le mode Blockly/Scratch actuel.
+      span(ng-i18next="editor_blockly_cantdisplay1")
+      | &nbsp;{{ vm.language.label }}&nbsp;
+      span(ng-i18next="editor_blockly_cantdisplay2")
       br
-      button.btn.btn-default(ng-click="vm.switchBlocklyMode()") Changer le mode
+      button.btn.btn-default(ng-click="vm.switchBlocklyMode()",ng-i18next="editor_blockly_changemode")
       br
-      i (cela nécessitera le rechargement de la page)
+      i(ng-i18next="editor_blockly_changemode_warning")
    div(ng-if="vm.showLanguageSelector")
-      span Langage du fichier :&nbsp;
+      ispan(ng-i18next="editor_language")
+      | &nbsp;
       select#languageSelector(ng-model="vm.language", ng-options="option as option.label for option in vm.languageOptions track by option.id", ng-change="vm.languageChanged()")
       | &nbsp;
-      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasPython",ng-click="vm.blocklyToTab()") Convertir en Python
-      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasJavascript",ng-click="vm.blocklyToJsTab()") Convertir en JavaScript
+      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasPython",ng-click="vm.blocklyToTab()",ng-i18next="editor_convert_python")
+      button.btn.btn-default.btn-xs(ng-if="vm.isBlockly && vm.hasJavascript",ng-click="vm.blocklyToJsTab()",ng-i18next="editor_convert_javascript")
    div#langChangeModal.modal.fade(role="dialog")
       div.modal-dialog(role="document")
         div.modal-content
           div.modal-header
-            button.close(type="button",data-dismiss="modal",aria-label="Fermer")
+            button.close(type="button",data-dismiss="modal")
               span(aria-hidden="true") &times;
-            h4.modal-title Changer le langage
+            h4.modal-title(ng-i18next="editor_change_language")
           div.modal-body
             div.alert.alert-danger(role="alert")
               span.glyphicon.glyphicon-exclamation-sign(aria-hidden="true")
               span#modalMsg
             p
-              i Vous pouvez aussi créer un nouvel onglet avec le bouton "+" en haut à gauche afin de conserver vos sources.
+              i(ng-i18next="editor_change_language_help")
           div.modal-footer
-            button.btn.btn-default(data-dismiss="modal") Fermer
-            button#btnConfirm.btn.btn-danger(ng-click="vm.langConfirm()") Confirmer
+            button.btn.btn-default(data-dismiss="modal",ng-i18next="close")
+            button#btnConfirm.btn.btn-danger(ng-click="vm.langConfirm()",ng-i18next="confirm")

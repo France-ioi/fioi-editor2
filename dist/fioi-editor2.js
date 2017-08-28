@@ -19025,7 +19025,7 @@ $__System.registerDynamic("20", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.wrongBlockly\"><div style=\"height: 600px; border: 1px solid black; text-align: center; padding: 50px;\">Impossible d'afficher le langage {{ vm.language.label }} dans le mode Blockly/Scratch actuel.<br/><button ng-click=\"vm.switchBlocklyMode()\" class=\"btn btn-default\">Changer le mode</button><br/><i>(cela nécessitera le rechargement de la page)</i></div></div><div ng-if=\"vm.showLanguageSelector\"><span>Langage du fichier :&nbsp;</span><select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" class=\"btn btn-default btn-xs\">Convertir en Python</button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" class=\"btn btn-default btn-xs\">Convertir en JavaScript</button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" aria-label=\"Fermer\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\">Changer le langage</h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i>Vous pouvez aussi créer un nouvel onglet avec le bouton \"+\" en haut à gauche afin de conserver vos sources.</i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" class=\"btn btn-default\">Fermer</button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" class=\"btn btn-danger\">Confirmer</button></div></div></div></div></div>");
+    buf.push("<div><div ng-if=\"vm.description != ''\" ng-bind=\"vm.description\"></div><div ng-if=\"vm.isAce\"><div ui-ace=\"{onLoad: vm.aceLoaded}\"></div></div><div ng-if=\"vm.isBlockly\"><div id=\"blocklyEditor\" ng-mouseup=\"vm.blocklyHelper.updateSize()\"><div id=\"blocklyContainer\" style=\"height: 600px; padding-bottom:10px\"><div id=\"toolbox\" style=\"display: none;\"></div><div id=\"blocklyDiv\" style=\"height: 100%; width: 100%\" ng-resize=\"vm.blocklyHelper.updateSize()\" class=\"language_blockly\"></div><textarea id=\"program\" style=\"width: 100%;height: 100%;display:none;\" readonly=\"readonly\" class=\"language_python\"></textarea></div><p id=\"error\" style=\"color:red\"></p></div></div><div ng-if=\"vm.wrongBlockly\"><div style=\"height: 600px; border: 1px solid black; text-align: center; padding: 50px;\"><span ng-i18next=\"editor_blockly_cantdisplay1\"></span>&nbsp;{{ vm.language.label }}&nbsp;<span ng-i18next=\"editor_blockly_cantdisplay2\"></span><br/><button ng-click=\"vm.switchBlocklyMode()\" ng-i18next=\"editor_blockly_changemode\" class=\"btn btn-default\"></button><br/><i ng-i18next=\"editor_blockly_changemode_warning\"></i></div></div><div ng-if=\"vm.showLanguageSelector\"><ispan ng-i18next=\"editor_language\"></ispan>&nbsp;<select id=\"languageSelector\" ng-model=\"vm.language\" ng-options=\"option as option.label for option in vm.languageOptions track by option.id\" ng-change=\"vm.languageChanged()\"></select>&nbsp;<button ng-if=\"vm.isBlockly &amp;&amp; vm.hasPython\" ng-click=\"vm.blocklyToTab()\" ng-i18next=\"editor_convert_python\" class=\"btn btn-default btn-xs\"></button><button ng-if=\"vm.isBlockly &amp;&amp; vm.hasJavascript\" ng-click=\"vm.blocklyToJsTab()\" ng-i18next=\"editor_convert_javascript\" class=\"btn btn-default btn-xs\"></button></div><div id=\"langChangeModal\" role=\"dialog\" class=\"modal fade\"><div role=\"document\" class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" data-dismiss=\"modal\" class=\"close\"><span aria-hidden=\"true\">&times;</span></button><h4 ng-i18next=\"editor_change_language\" class=\"modal-title\"></h4></div><div class=\"modal-body\"><div role=\"alert\" class=\"alert alert-danger\"><span aria-hidden=\"true\" class=\"glyphicon glyphicon-exclamation-sign\"></span><span id=\"modalMsg\"></span></div><p><i ng-i18next=\"editor_change_language_help\"></i></p></div><div class=\"modal-footer\"><button data-dismiss=\"modal\" ng-i18next=\"close\" class=\"btn btn-default\"></button><button id=\"btnConfirm\" ng-click=\"vm.langConfirm()\" ng-i18next=\"confirm\" class=\"btn btn-danger\"></button></div></div></div></div></div>");
     ;
     return buf.join("");
   };
@@ -19068,7 +19068,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       };
    }
 
-   function BufferController(signals, buffers, $rootScope) {
+   function BufferController(signals, buffers, $rootScope, $i18next) {
 
       var controller = this;
       var domElement = null;
@@ -19182,19 +19182,19 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
          if (controller.language['blockly']) {
             controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers entre Blockly et Scratch effacera vos blocs actuels !");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_blockly_scratch'));
             $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = oldLanguage;
          }
 
          if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
             controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode Blockly effacera votre code actuel !");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_blockly'));
             $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = oldLanguage;
          } else if (controller.isBlockly && !('blockly' in controller.language)) {
             controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(" Changer vers le mode normal effacera vos blocs actuels !");
+            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_normal'));
             $(controller.domElement).find("#langChangeModal").modal("show");
             controller.language = oldLanguage;
          } else {
@@ -19272,7 +19272,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                   readOnly: controller.readOnly,
                   startingBlockName: "Programme du robot"
                };
-               controller.blocklyHelper.load("fr", true, 1, blocklyOpts);
+               controller.blocklyHelper.load($rootScope.sLanguage, true, 1, blocklyOpts);
                controller.blocklyHelper.updateSize();
                Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
                Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
@@ -19337,7 +19337,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       this.getBlocklyXML = function () {
          var blocklyXml = controller.blocklyLoaded ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace)) : buffer.text;
          console.log(blocklyXml.replace(/'/g, "&#39;"));
-         alert("Le code XML des blocs courants a été copié dans la console.");
+         alert($i18next.t('editor_getblocklyxml'));
       };
 
       this.getBlocklyPNG = function () {
@@ -19559,7 +19559,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
 
          bufferDirective.$inject = ['FioiEditor2Signals'];
 
-         BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope'];
+         BufferController.$inject = ['FioiEditor2Signals', 'FioiEditor2Buffers', '$rootScope', '$i18next'];
       }
    };
 });
@@ -26537,7 +26537,7 @@ $__System.registerDynamic("32", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\">no tabs</div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
+    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\" ng-i18next=\"editor_notabs\"></div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
     ;
     return buf.join("");
   };
@@ -26760,7 +26760,7 @@ $__System.register('1', ['3', '6', '8', '9', '10', '11', '12', '13', '22', '33',
          RecorderFactory = _f.RecorderFactory;
       }],
       execute: function () {
-         angular.module('fioi-editor2', ['ui.ace']).factory('FioiEditor2Config', Config).factory('FioiEditor2Registry', RegistryFactory).factory('FioiEditor2Signals', SignalsFactory).factory('FioiEditor2Audio', AudioFactory).factory('FioiEditor2Recorder', RecorderFactory).factory('FioiEditor2Player', PlayerFactory).factory('FioiEditor2Buffers', BuffersFactory).factory('FioiEditor2Tabs', TabsServiceFactory).factory('FioiEditor2Tabsets', TabsetsServiceFactory).directive('fioiEditor2Buffer', bufferDirective).directive('fioiEditor2', editorDirective);
+         angular.module('fioi-editor2', ['ui.ace', 'jm.i18next']).factory('FioiEditor2Config', Config).factory('FioiEditor2Registry', RegistryFactory).factory('FioiEditor2Signals', SignalsFactory).factory('FioiEditor2Audio', AudioFactory).factory('FioiEditor2Recorder', RecorderFactory).factory('FioiEditor2Player', PlayerFactory).factory('FioiEditor2Buffers', BuffersFactory).factory('FioiEditor2Tabs', TabsServiceFactory).factory('FioiEditor2Tabsets', TabsetsServiceFactory).directive('fioiEditor2Buffer', bufferDirective).directive('fioiEditor2', editorDirective);
       }
    };
 });

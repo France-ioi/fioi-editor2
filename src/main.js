@@ -25,7 +25,7 @@ function Config () {
 }
 
 angular
-   .module('fioi-editor2', ['ui.ace'])
+   .module('fioi-editor2', ['ui.ace', 'jm.i18next'])
    .factory('FioiEditor2Config', Config)
    .factory('FioiEditor2Registry', RegistryFactory)
    .factory('FioiEditor2Signals', SignalsFactory)
