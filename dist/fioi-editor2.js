@@ -19272,7 +19272,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                   readOnly: controller.readOnly,
                   startingBlockName: "Programme du robot"
                };
-               controller.blocklyHelper.load($rootScope.sLanguage, true, 1, blocklyOpts);
+               controller.blocklyHelper.load($rootScope.sLocale, true, 1, blocklyOpts);
                controller.blocklyHelper.updateSize();
                Blockly.WidgetDiv.DIV = $(".blocklyWidgetDiv").clone().appendTo("#blocklyDiv")[0];
                Blockly.Tooltip.DIV = $(".blocklyTooltipDiv").clone().appendTo("#blocklyDiv")[0];
