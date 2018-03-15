@@ -376,6 +376,11 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       controller.showLanguageSelector = controller.languageOptions.length > 1;
       controller.language = _.find(controller.languageOptions,
          function (language) { return language.id == buffer.language; });
+      if(!controller.language) {
+         // Default to first language if no corresponding language was found
+         controller.language = controller.languageOptions[0];
+         console.log('Defaulted to language ' + controller.language.id);
+      }
 
       controller.isAce = !('blockly' in controller.language);
       controller.isBlockly = ('blockly' in controller.language);
