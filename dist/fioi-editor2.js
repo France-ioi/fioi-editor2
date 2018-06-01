@@ -19435,6 +19435,8 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             //         controller.blocklyHelper.startingBlock = false;
          }
 
+         $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+
          // taskSettings is a global variable (for now)
          if (typeof taskSettings !== 'undefined' && typeof taskSettings.blocklyOpts !== 'undefined') {
             _Object$keys(taskSettings.blocklyOpts).forEach(function (key, idx) {

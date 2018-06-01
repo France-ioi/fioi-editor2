@@ -402,6 +402,8 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
 //         controller.blocklyHelper.startingBlock = false;
       }
 
+      $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+
       // taskSettings is a global variable (for now)
       if(typeof taskSettings !== 'undefined' && typeof taskSettings.blocklyOpts !== 'undefined') {
          Object.keys(taskSettings.blocklyOpts).forEach(function(key, idx) {
