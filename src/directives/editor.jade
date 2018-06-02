@@ -7,7 +7,7 @@ div#fioi-editor2.fioi-editor2
          | +
       li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()")
          span.glyphicon.glyphicon-time
-      li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;")
+      li.fioi-editor2_fullscreen(ng-if="vm.fullscreenAllowed",ng-click="vm.toggleFullscreen()",style="float: right;")
          span.glyphicon.glyphicon-fullscreen
       li.fioi-editor2_fullscreen(ng-if="vm.hasConcepts",onclick="conceptViewer.show()",style="float: right;")
          | ?

@@ -55,23 +55,32 @@ function EditorController (tabsets, $rootScope) {
    var tabset = null;
    var fullscreen = false;
    var fullscreenEvents = false;
-   var hasConcepts = false;
+
+   this.fullscreenAllowed = true;
+   this.hasConcepts = false;
 
    this.addTab = function () {
       var tab = tabset.addTab();
       this.selectTab(tab);
+      controller.updateFullscreenAllowed();
       $rootScope.$broadcast('fioi-editor2.requireSave');
    }.bind(this);
 
    this.closeTab = function (tab, event) {
       tabset.removeTab(tab.id);
+      controller.updateFullscreenAllowed();
       // Prevent the click event from triggering selectTab for the removed tab.
       event.stopPropagation();
    };
 
    this.selectTab = function (tab) {
       tabset.update({activeTabId: tab.id});
+      controller.updateFullscreenAllowed();
       $rootScope.$broadcast('fioi-editor2.requireSave');
+   };
+
+   this.updateFullscreenAllowed = function() {
+      controller.fullscreenAllowed = !(tabset.getActiveTab().getBuffer().language == 'scratch');
    };
 
    this.toggleFullscreen = function () {
@@ -158,6 +167,7 @@ function EditorController (tabsets, $rootScope) {
       classes['fioi-editor2_'+tab.buffers.length+'-buffers'] = true;
 
       controller.hasConcepts = (typeof conceptViewer !== 'undefined' && typeof taskSettings !== 'undefined') ? !!taskSettings.conceptViewer : false;
+      controller.updateFullscreenAllowed();
    };
 
 }

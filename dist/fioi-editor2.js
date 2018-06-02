@@ -26545,7 +26545,7 @@ $__System.registerDynamic("32", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\" ng-i18next=\"editor_notabs\"></div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
+    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-if=\"vm.fullscreenAllowed\" ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\" ng-i18next=\"editor_notabs\"></div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
     ;
     return buf.join("");
   };
@@ -26612,23 +26612,32 @@ $__System.register('33', ['32', 'd'], function (_export) {
       var tabset = null;
       var fullscreen = false;
       var fullscreenEvents = false;
-      var hasConcepts = false;
+
+      this.fullscreenAllowed = true;
+      this.hasConcepts = false;
 
       this.addTab = (function () {
          var tab = tabset.addTab();
          this.selectTab(tab);
+         controller.updateFullscreenAllowed();
          $rootScope.$broadcast('fioi-editor2.requireSave');
       }).bind(this);
 
       this.closeTab = function (tab, event) {
          tabset.removeTab(tab.id);
+         controller.updateFullscreenAllowed();
          // Prevent the click event from triggering selectTab for the removed tab.
          event.stopPropagation();
       };
 
       this.selectTab = function (tab) {
          tabset.update({ activeTabId: tab.id });
+         controller.updateFullscreenAllowed();
          $rootScope.$broadcast('fioi-editor2.requireSave');
+      };
+
+      this.updateFullscreenAllowed = function () {
+         controller.fullscreenAllowed = !(tabset.getActiveTab().getBuffer().language == 'scratch');
       };
 
       this.toggleFullscreen = function () {
@@ -26715,6 +26724,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
          classes['fioi-editor2_' + tab.buffers.length + '-buffers'] = true;
 
          controller.hasConcepts = typeof conceptViewer !== 'undefined' && typeof taskSettings !== 'undefined' ? !!taskSettings.conceptViewer : false;
+         controller.updateFullscreenAllowed();
       };
    }
    return {
