@@ -29,6 +29,7 @@ export function bufferDirective (signals) {
       link: function (scope, iElement, iAttrs, editorController) {
          // Bind update events to the controller's update() function.
          var unhookUpdate = signals.on('update', update);
+         scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
          scope.$on('$destroy', function () {
             unhookUpdate();
             $("#editor").off('show', scope.vm.reloadBlockly);
@@ -150,32 +151,46 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       }
    };
 
+   this.isSourceEmpty = function() {
+      var bufferLanguage = _.find(controller.languageOptions,
+           function (language) { return language.id == buffer.language; });
+      if(!bufferLanguage) { return false; }
+      if(bufferLanguage.blockly) {
+         return controller.blocklyLoaded && controller.blocklyHelper.isEmpty();
+      } else {
+         return aceEditor.getValue() == '';
+      }
+   };
+
    this.languageChanged = function () {
       if (controller.language.id == buffer.language) { return; }
 
       var oldLanguage = _.find(controller.languageOptions,
            function (language) { return language.id == buffer.language; });
 
-      if (controller.language['blockly']) {
-        controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_blockly_scratch'));
-        $(controller.domElement).find("#langChangeModal").modal("show");
-        controller.language = oldLanguage;
+      if(controller.isSourceEmpty()) {
+         // Empty source, just change language
+         changeLanguage(controller.language.id, true);
+         return;
+      }
+      if(controller.isAce && !controller.language.blockly) {
+         // We're switching between two ace-supported languages, just change
+         changeLanguage(controller.language.id, false);
+         return;
       }
 
-      if (controller.isAce && ('blockly' in controller.language) && (aceEditor.getValue() != '')) {
-        controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_blockly'));
-        $(controller.domElement).find("#langChangeModal").modal("show");
-        controller.language = oldLanguage;
-      } else if (controller.isBlockly && !('blockly' in controller.language)) {
-        controller.newLang = controller.language.id;
-        $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t('editor_change_msg_normal'));
-        $(controller.domElement).find("#langChangeModal").modal("show");
-        controller.language = oldLanguage;
+      if(controller.language.blockly) {
+         // Switching towards a Blockly language
+         var msg = oldLanguage.blockly ? 'editor_change_msg_blockly_scratch' : 'editor_change_msg_blockly';
       } else {
-        changeLanguage(controller.language.id, false);
+         // Switching from Blockly to Ace
+         var msg = 'editor_change_msg_normal';
       }
+      // Display change popup
+      controller.newLang = controller.language.id;
+      controller.language = oldLanguage;
+      $(controller.domElement).find("#langChangeModal #modalMsg").text(' '+$i18next.t(msg));
+      $(controller.domElement).find("#langChangeModal").modal("show");
    }
 
    this.langConfirm = function () {
@@ -210,6 +225,12 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       }
       buffer.language = lang;
       buffer.pushToControl();
+   };
+
+   this.platformLanguageUpdated = function(e, lang) {
+      if(controller.isSourcesEditor && buffer.lang != lang && controller.isSourceEmpty()) {
+         changeLanguage(lang, true);
+      }
    };
 
    function loadBlockly () {
@@ -371,6 +392,7 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       }
 
       controller.description = buffer.description;
+      controller.isSourcesEditor = buffer.isSourcesEditor;
       controller.readOnly = buffer.readOnly;
       controller.languageOptions = buffer.getLanguages();
       controller.showLanguageSelector = controller.languageOptions.length > 1;
@@ -402,7 +424,9 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
 //         controller.blocklyHelper.startingBlock = false;
       }
 
-      $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+      if(controller.isSourcesEditor) {
+         $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+      }
 
       // taskSettings is a global variable (for now)
       if(typeof taskSettings !== 'undefined' && typeof taskSettings.blocklyOpts !== 'undefined') {
@@ -453,8 +477,10 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
             };
          }
 
+         var bufferLanguage = _.find(controller.languageOptions,
+            function (language) { return language.id == buffer.language; });
          var blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace));
-         var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang);
+         var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(bufferLanguage.blockly.dstlang);
 
          window.blocklyClipboard = Blockly.clipboardXml_;
 

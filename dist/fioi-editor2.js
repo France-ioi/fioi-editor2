@@ -17912,6 +17912,7 @@ $__System.register('c', ['d'], function (_export) {
          if ('languages' in attrs) this.languages = attrs.languages;
          if ('text' in attrs) this.text = attrs.text.toString();
          if ('language' in attrs) this.language = attrs.language;
+         if ('isSourcesEditor' in attrs) this.isSourcesEditor = attrs.isSourcesEditor;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('selection' in attrs) this.selection = _.clone(attrs.selection);
          if ('description' in attrs) this.description = attrs.description;
@@ -18500,6 +18501,7 @@ $__System.register('12', ['d'], function (_export) {
          this.buffers = [];
          this.languages = null; // inherit from tabset
          this.defaultLanguage = null;
+         this.isSourcesEditor = false;
          this.readOnly = false;
       }
       Tab.prototype.update = function (attrs, quiet) {
@@ -18507,6 +18509,7 @@ $__System.register('12', ['d'], function (_export) {
          if ('title' in attrs) this.title = attrs.title;
          if ('languages' in attrs) this.languages = attrs.languages;
          if ('defaultLanguage' in attrs) this.defaultLanguage = attrs.defaultLanguage;
+         if ('isSourcesEditor' in attrs) this.isSourcesEditor = attrs.isSourcesEditor;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if (!quiet) {
             recorder.addEvent([this.id, 'u', attrs]);
@@ -18517,6 +18520,7 @@ $__System.register('12', ['d'], function (_export) {
       Tab.prototype.addBuffer = function (id) {
          var buffer = buffers.add(id).update({
             tab: this,
+            isSourcesEditor: this.isSourcesEditor,
             readOnly: this.readOnly,
             language: this.getDefaultLanguage()
          });
@@ -18658,6 +18662,7 @@ $__System.register('13', ['d'], function (_export) {
          this.titlePrefix = 'Tab';
          this.languages = [{ id: 'text', label: "Text", ext: 'txt' }];
          this.defaultLanguage = 'text';
+         this.isSourcesEditor = false;
          this.readOnly = false;
 
          this.tabs = {};
@@ -18669,6 +18674,7 @@ $__System.register('13', ['d'], function (_export) {
          if ('titlePrefix' in attrs) this.titlePrefix = attrs.titlePrefix;
          if ('languages' in attrs) this.languages = attrs.languages;
          if ('defaultLanguage' in attrs) this.defaultLanguage = attrs.defaultLanguage;
+         if ('isSourcesEditor' in attrs) this.isSourcesEditor = attrs.isSourcesEditor;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('activeTabId' in attrs) this.activeTabId = attrs.activeTabId;
          if ('buffersPerTab' in attrs) this.buffersPerTab = attrs.buffersPerTab;
@@ -18682,6 +18688,7 @@ $__System.register('13', ['d'], function (_export) {
       Tabset.prototype.addTab = function (id) {
          var tab = tabs.add(id).update({
             tabset: this,
+            isSourcesEditor: this.isSourcesEditor,
             readOnly: this.readOnly,
             title: this._unusedTabTitle()
          });
@@ -19051,6 +19058,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          link: function link(scope, iElement, iAttrs, editorController) {
             // Bind update events to the controller's update() function.
             var unhookUpdate = signals.on('update', update);
+            scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
             scope.$on('$destroy', function () {
                unhookUpdate();
                $("#editor").off('show', scope.vm.reloadBlockly);
@@ -19171,6 +19179,20 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          }
       };
 
+      this.isSourceEmpty = function () {
+         var bufferLanguage = _.find(controller.languageOptions, function (language) {
+            return language.id == buffer.language;
+         });
+         if (!bufferLanguage) {
+            return false;
+         }
+         if (bufferLanguage.blockly) {
+            return controller.blocklyLoaded && controller.blocklyHelper.isEmpty();
+         } else {
+            return aceEditor.getValue() == '';
+         }
+      };
+
       this.languageChanged = function () {
          if (controller.language.id == buffer.language) {
             return;
@@ -19180,26 +19202,29 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             return language.id == buffer.language;
          });
 
-         if (controller.language['blockly']) {
-            controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_blockly_scratch'));
-            $(controller.domElement).find("#langChangeModal").modal("show");
-            controller.language = oldLanguage;
+         if (controller.isSourceEmpty()) {
+            // Empty source, just change language
+            changeLanguage(controller.language.id, true);
+            return;
+         }
+         if (controller.isAce && !controller.language.blockly) {
+            // We're switching between two ace-supported languages, just change
+            changeLanguage(controller.language.id, false);
+            return;
          }
 
-         if (controller.isAce && 'blockly' in controller.language && aceEditor.getValue() != '') {
-            controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_blockly'));
-            $(controller.domElement).find("#langChangeModal").modal("show");
-            controller.language = oldLanguage;
-         } else if (controller.isBlockly && !('blockly' in controller.language)) {
-            controller.newLang = controller.language.id;
-            $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t('editor_change_msg_normal'));
-            $(controller.domElement).find("#langChangeModal").modal("show");
-            controller.language = oldLanguage;
+         if (controller.language.blockly) {
+            // Switching towards a Blockly language
+            var msg = oldLanguage.blockly ? 'editor_change_msg_blockly_scratch' : 'editor_change_msg_blockly';
          } else {
-            changeLanguage(controller.language.id, false);
+            // Switching from Blockly to Ace
+            var msg = 'editor_change_msg_normal';
          }
+         // Display change popup
+         controller.newLang = controller.language.id;
+         controller.language = oldLanguage;
+         $(controller.domElement).find("#langChangeModal #modalMsg").text(' ' + $i18next.t(msg));
+         $(controller.domElement).find("#langChangeModal").modal("show");
       };
 
       this.langConfirm = function () {
@@ -19234,6 +19259,12 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          }
          buffer.language = lang;
          buffer.pushToControl();
+      };
+
+      this.platformLanguageUpdated = function (e, lang) {
+         if (controller.isSourcesEditor && buffer.lang != lang && controller.isSourceEmpty()) {
+            changeLanguage(lang, true);
+         }
       };
 
       function loadBlockly() {
@@ -19401,6 +19432,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          }
 
          controller.description = buffer.description;
+         controller.isSourcesEditor = buffer.isSourcesEditor;
          controller.readOnly = buffer.readOnly;
          controller.languageOptions = buffer.getLanguages();
          controller.showLanguageSelector = controller.languageOptions.length > 1;
@@ -19435,7 +19467,9 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             //         controller.blocklyHelper.startingBlock = false;
          }
 
-         $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+         if (controller.isSourcesEditor) {
+            $rootScope.$broadcast('fioi-editor2.languageChanged', controller.language.id);
+         }
 
          // taskSettings is a global variable (for now)
          if (typeof taskSettings !== 'undefined' && typeof taskSettings.blocklyOpts !== 'undefined') {
@@ -19486,8 +19520,11 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                };
             }
 
+            var bufferLanguage = _.find(controller.languageOptions, function (language) {
+               return language.id == buffer.language;
+            });
             var blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace));
-            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(controller.language.blockly.dstlang);
+            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(bufferLanguage.blockly.dstlang);
 
             window.blocklyClipboard = Blockly.clipboardXml_;
 

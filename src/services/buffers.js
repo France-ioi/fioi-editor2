@@ -60,6 +60,8 @@ export function BuffersFactory (recorder, registry) {
          this.text = attrs.text.toString();
       if ('language' in attrs)
          this.language = attrs.language;
+      if ('isSourcesEditor' in attrs)
+         this.isSourcesEditor = attrs.isSourcesEditor;
       if ('readOnly' in attrs)
          this.readOnly = attrs.readOnly;
       if ('selection' in attrs)
