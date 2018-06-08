@@ -19177,6 +19177,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             aceOnLoad();
             aceOnLoad = null;
          }
+         updateFullscreen();
       };
 
       this.isSourceEmpty = function () {
@@ -19401,6 +19402,10 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
                $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
                $(controller.domElement).find(".ace_editor").css('height', '350px');
+            }
+            if (aceEditor) {
+               aceEditor.resize();
+               aceEditor.renderer.updateFull();
             }
          } else if (controller.isBlockly) {
             if (curFullscreen) {

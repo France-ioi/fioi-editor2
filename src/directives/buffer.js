@@ -149,6 +149,7 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
         aceOnLoad();
         aceOnLoad = null;
       }
+      updateFullscreen();
    };
 
    this.isSourceEmpty = function() {
@@ -361,6 +362,10 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
           $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', '762px');
           $(controller.domElement).parents(".fioi-editor2_2-buffers").find(".ace_editor").css('width', '379px');
           $(controller.domElement).find(".ace_editor").css('height', '350px');
+        }
+        if(aceEditor) {
+          aceEditor.resize();
+          aceEditor.renderer.updateFull();
         }
       } else if (controller.isBlockly) {
         if (curFullscreen) {
