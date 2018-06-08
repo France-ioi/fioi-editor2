@@ -1,4 +1,4 @@
-div#fioi-editor2.fioi-editor2
+div#fioi-editor2.fioi-editor2(ng-class="{'fioi-editor2_fullscreen': vm.ownFullscreen}")
    ul.fioi-editor2_tabs
       li.fioi-editor2_tab(ng-repeat="tab in vm.tabs track by tab.id", ng-class="{'active':tab.id===vm.tab.id}", ng-click="vm.selectTab(tab)")
          span.fioi-editor2_tab-title {{tab.title}}
@@ -7,7 +7,7 @@ div#fioi-editor2.fioi-editor2
          | +
       li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()")
          span.glyphicon.glyphicon-time
-      li.fioi-editor2_fullscreen(ng-if="vm.fullscreenAllowed",ng-click="vm.toggleFullscreen()",style="float: right;")
+      li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;")
          span.glyphicon.glyphicon-fullscreen
       li.fioi-editor2_fullscreen(ng-if="vm.hasConcepts",onclick="conceptViewer.show()",style="float: right;")
          | ?

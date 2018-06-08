@@ -30,6 +30,7 @@ export function bufferDirective (signals) {
          // Bind update events to the controller's update() function.
          var unhookUpdate = signals.on('update', update);
          scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
+         scope.$on('fioi-editor2.updateFullscreen', scope.vm.updateFullscreen);
          scope.$on('$destroy', function () {
             unhookUpdate();
             $("#editor").off('show', scope.vm.reloadBlockly);
@@ -72,7 +73,8 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
    var blocklyLoading = null;
    var blocklyLoaded = false;
    var newLang = '';
-   var fullscreenEvents = false;
+
+   var curFullscreen = false;
 
    this.update = function (iElement) {
       this.cleanup();
@@ -100,13 +102,6 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
          buffer = null;
       }
       unloadBlockly();
-      if (controller.fullscreenEvents) {
-        document.removeEventListener("fullscreenchange", updateFullscreen);
-        document.removeEventListener("webkitfullscreenchange", updateFullscreen);
-        document.removeEventListener("mozfullscreenchange", updateFullscreen);
-        document.removeEventListener("MSFullscreenChange", updateFullscreen);
-        controller.fullscreenEvents = false;
-      }
    };
 
    this.aceLoaded = function (aceEditor_) {
@@ -149,7 +144,7 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
         aceOnLoad();
         aceOnLoad = null;
       }
-      updateFullscreen();
+      controller.updateFullscreen();
    };
 
    this.isSourceEmpty = function() {
@@ -351,8 +346,9 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       });
    }
 
-   function updateFullscreen () {
-      var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+   this.updateFullscreen = function(e, newVal) {
+      curFullscreen = buffer.tab.tabset.editor.isFullscreen();
+
       if (controller.isAce) {
         if (curFullscreen) {
           $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
@@ -388,14 +384,6 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
    }
 
    function load () {
-      if (!controller.fullscreenEvents) {
-        document.addEventListener("fullscreenchange", updateFullscreen);
-        document.addEventListener("webkitfullscreenchange", updateFullscreen);
-        document.addEventListener("mozfullscreenchange", updateFullscreen);
-        document.addEventListener("MSFullscreenChange", updateFullscreen);
-        controller.fullscreenEvents = true;
-      }
-
       controller.description = buffer.description;
       controller.isSourcesEditor = buffer.isSourcesEditor;
       controller.readOnly = buffer.readOnly;
@@ -463,7 +451,7 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
           aceOnLoad = null
         }
       }
-      updateFullscreen();
+      controller.updateFullscreen();
    }
 
    function dump () {

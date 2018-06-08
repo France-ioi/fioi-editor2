@@ -19059,6 +19059,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             // Bind update events to the controller's update() function.
             var unhookUpdate = signals.on('update', update);
             scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
+            scope.$on('fioi-editor2.updateFullscreen', scope.vm.updateFullscreen);
             scope.$on('$destroy', function () {
                unhookUpdate();
                $("#editor").off('show', scope.vm.reloadBlockly);
@@ -19100,7 +19101,8 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
       var blocklyLoading = null;
       var blocklyLoaded = false;
       var newLang = '';
-      var fullscreenEvents = false;
+
+      var curFullscreen = false;
 
       this.update = function (iElement) {
          this.cleanup();
@@ -19128,13 +19130,6 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             buffer = null;
          }
          unloadBlockly();
-         if (controller.fullscreenEvents) {
-            document.removeEventListener("fullscreenchange", updateFullscreen);
-            document.removeEventListener("webkitfullscreenchange", updateFullscreen);
-            document.removeEventListener("mozfullscreenchange", updateFullscreen);
-            document.removeEventListener("MSFullscreenChange", updateFullscreen);
-            controller.fullscreenEvents = false;
-         }
       };
 
       this.aceLoaded = function (aceEditor_) {
@@ -19177,7 +19172,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             aceOnLoad();
             aceOnLoad = null;
          }
-         updateFullscreen();
+         controller.updateFullscreen();
       };
 
       this.isSourceEmpty = function () {
@@ -19391,8 +19386,9 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          });
       };
 
-      function updateFullscreen() {
-         var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+      this.updateFullscreen = function (e, newVal) {
+         curFullscreen = buffer.tab.tabset.editor.isFullscreen();
+
          if (controller.isAce) {
             if (curFullscreen) {
                $(controller.domElement).parents(".fioi-editor2_1-buffers").find(".ace_editor").css('width', $(window).width() + 'px');
@@ -19425,17 +19421,9 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             }
             loadBlockly();
          }
-      }
+      };
 
       function load() {
-         if (!controller.fullscreenEvents) {
-            document.addEventListener("fullscreenchange", updateFullscreen);
-            document.addEventListener("webkitfullscreenchange", updateFullscreen);
-            document.addEventListener("mozfullscreenchange", updateFullscreen);
-            document.addEventListener("MSFullscreenChange", updateFullscreen);
-            controller.fullscreenEvents = true;
-         }
-
          controller.description = buffer.description;
          controller.isSourcesEditor = buffer.isSourcesEditor;
          controller.readOnly = buffer.readOnly;
@@ -19506,7 +19494,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                aceOnLoad = null;
             }
          }
-         updateFullscreen();
+         controller.updateFullscreen();
       }
 
       function dump() {
@@ -26587,7 +26575,7 @@ $__System.registerDynamic("32", ["21"], true, function($__require, exports, modu
     var buf = [];
     var jade_mixins = {};
     var jade_interp;
-    buf.push("<div id=\"fioi-editor2\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-if=\"vm.fullscreenAllowed\" ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\" ng-i18next=\"editor_notabs\"></div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
+    buf.push("<div id=\"fioi-editor2\" ng-class=\"{'fioi-editor2_fullscreen': vm.ownFullscreen}\" class=\"fioi-editor2\"><ul class=\"fioi-editor2_tabs\"><li ng-repeat=\"tab in vm.tabs track by tab.id\" ng-class=\"{'active':tab.id===vm.tab.id}\" ng-click=\"vm.selectTab(tab)\" class=\"fioi-editor2_tab\"><span class=\"fioi-editor2_tab-title\">{{tab.title}}</span><span ng-click=\"vm.closeTab(tab, $event)\" class=\"fioi-editor2_close-tab\">×</span></li><li ng-click=\"vm.addTab()\" class=\"fioi-editor2_new-tab\">+</li><li ng-click=\"vm.toggleHistory()\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-time\"></span></li><li ng-click=\"vm.toggleFullscreen()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\"><span class=\"glyphicon glyphicon-fullscreen\"></span></li><li ng-if=\"vm.hasConcepts\" onclick=\"conceptViewer.show()\" style=\"float: right;\" class=\"fioi-editor2_fullscreen\">?</li></ul><div ng-class=\"vm.buffersClasses\" class=\"fioi-editor2_buffers\"><div ng-if=\"!vm.tab.buffers\" ng-i18next=\"editor_notabs\"></div><div ng-repeat=\"buffer in vm.tab.buffers track by buffer\"><fioi-editor2-buffer buffer=\"{{::buffer}}\"></fioi-editor2-buffer></div></div></div>");
     ;
     return buf.join("");
   };
@@ -26652,10 +26640,12 @@ $__System.register('33', ['32', 'd'], function (_export) {
       var controller = this;
       var editor = null;
       var tabset = null;
-      var fullscreen = false;
+
+      var browserFullscreen = false;
+      this.ownFullscreen = false;
+      var browserFullscreenAllowed = true;
       var fullscreenEvents = false;
 
-      this.fullscreenAllowed = true;
       this.hasConcepts = false;
 
       this.addTab = (function () {
@@ -26679,10 +26669,25 @@ $__System.register('33', ['32', 'd'], function (_export) {
       };
 
       this.updateFullscreenAllowed = function () {
-         controller.fullscreenAllowed = !(tabset.getActiveTab().getBuffer().language == 'scratch');
+         // Update whether the inner editor supports using browser fullscreen
+         var newVal = !(tabset.getActiveTab().getBuffer().language == 'scratch');
+         if (!newVal && browserFullscreenAllowed && browserFullscreen) {
+            // We're in fullscreen and we're not allowed fullscreen anymore
+            controller.toggleFullscreen();
+         }
+         browserFullscreenAllowed = newVal;
+      };
+
+      this.isFullscreen = function () {
+         return browserFullscreen || this.ownFullscreen;
       };
 
       this.toggleFullscreen = function () {
+         if (!browserFullscreenAllowed || controller.ownFullscreen) {
+            controller.ownFullscreen = !controller.ownFullscreen;
+            updateFullscreen();
+            return;
+         }
          if (!controller.fullscreenEvents) {
             document.addEventListener("fullscreenchange", updateFullscreen);
             document.addEventListener("webkitfullscreenchange", updateFullscreen);
@@ -26690,7 +26695,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
             document.addEventListener("MSFullscreenChange", updateFullscreen);
             controller.fullscreenEvents = true;
          }
-         if (controller.fullscreen) {
+         if (browserFullscreen) {
             if (document.exitFullscreen) {
                document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
@@ -26712,10 +26717,16 @@ $__System.register('33', ['32', 'd'], function (_export) {
       };
 
       function updateFullscreen() {
-         var curFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
-         if (curFullscreen == controller.fullscreen) return;
-         controller.fullscreen = curFullscreen;
-         if (curFullscreen) {
+         var curIsFullscreen = controller.isFullscreen();
+
+         var newBrowserFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+         browserFullscreen = newBrowserFullscreen;
+
+         $rootScope.$broadcast('fioi-editor2.updateFullscreen', newBrowserFullscreen || controller.ownFullscreen);
+
+         if (controller.ownFullscreen) {
+            $(controller.editor).css('width', '');
+         } else if (browserFullscreen) {
             $(controller.editor).css('width', $(window).width() + 'px');
          } else {
             $(controller.editor).css('width', '762px');
@@ -26746,6 +26757,7 @@ $__System.register('33', ['32', 'd'], function (_export) {
             classes['fioi-editor2_error'] = true;
             return;
          }
+         tabset.editor = controller;
          controller.tabs = _.map(tabset.getTabs(), function (tab) {
             return { id: tab.id, title: tab.title };
          });
@@ -26826,7 +26838,7 @@ $__System.register('1', ['3', '6', '8', '9', '10', '11', '12', '13', '22', '33',
 });
 $__System.register('src/main.css!github:systemjs/plugin-css@0.1.20.js', [], false, function() {});
 (function(c){if (typeof document == 'undefined') return; var d=document,a='appendChild',i='styleSheet',s=d.createElement('style');s.type='text/css';d.getElementsByTagName('head')[0][a](s);s[i]?s[i].cssText=c:s[a](d.createTextNode(c));})
-(".fioi-editor2{width:762px;background-color:#FFF}ul.fioi-editor2_tabs{font:700 11px Verdana,Arial,sans-serif;list-style-type:none;padding-bottom:24px;border-bottom:1px solid #CCC;margin:0}ul.fioi-editor2_tabs>li{float:left;height:21px;line-height:21px;padding:0 7px;background-color:#E0F3DB;margin:2px 2px 0 2px;border:1px solid #CCC;cursor:pointer}ul.fioi-editor2_tabs>li.active{border-bottom:1px solid #fff;background-color:#FFF}ul.fioi-editor2_tabs>li:hover .fioi-editor2_tab-title{text-decoration:underline}.fioi-editor2_close-tab{padding:0 2px;margin-left:2px;border-radius:3px}.fioi-editor2_close-tab:hover{background-color:#D8D8D8}.fioi-editor2_buffers{width:100%;overflow:hidden}.fioi-editor2_empty{width:762px;border:1px solid #CCC;border-top:none;font-style:italic;padding:10px;color:#888}.fioi-editor2_buffers .ace_editor{height:350px;border:1px solid #CCC;border-top:none}.fioi-editor2_1-buffers .ace_editor{width:762px}.fioi-editor2_2-buffers .ace_editor{width:379px}.fioi-editor2_2-buffers>div{float:left}");
+(".fioi-editor2{width:762px;background-color:#FFF}.fioi-editor2.fioi-editor2_fullscreen{position:absolute;top:0;left:0;width:100%;height:100%;padding:16px;z-index:50}ul.fioi-editor2_tabs{font:700 11px Verdana,Arial,sans-serif;list-style-type:none;padding-bottom:24px;border-bottom:1px solid #CCC;margin:0}ul.fioi-editor2_tabs>li{float:left;height:21px;line-height:21px;padding:0 7px;background-color:#E0F3DB;margin:2px 2px 0 2px;border:1px solid #CCC;cursor:pointer}ul.fioi-editor2_tabs>li.active{border-bottom:1px solid #fff;background-color:#FFF}ul.fioi-editor2_tabs>li:hover .fioi-editor2_tab-title{text-decoration:underline}.fioi-editor2_close-tab{padding:0 2px;margin-left:2px;border-radius:3px}.fioi-editor2_close-tab:hover{background-color:#D8D8D8}.fioi-editor2_buffers{width:100%;overflow:hidden}.fioi-editor2_empty{width:762px;border:1px solid #CCC;border-top:none;font-style:italic;padding:10px;color:#888}.fioi-editor2_buffers .ace_editor{height:350px;border:1px solid #CCC;border-top:none}.fioi-editor2_1-buffers .ace_editor{width:762px}.fioi-editor2_2-buffers .ace_editor{width:379px}.fioi-editor2_2-buffers>div{float:left}");
 })
 (function(factory) {
   factory();

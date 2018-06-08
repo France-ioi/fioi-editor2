@@ -53,10 +53,12 @@ function EditorController (tabsets, $rootScope) {
    var controller = this;
    var editor = null;
    var tabset = null;
-   var fullscreen = false;
+
+   var browserFullscreen = false;
+   this.ownFullscreen = false;
+   var browserFullscreenAllowed = true;
    var fullscreenEvents = false;
 
-   this.fullscreenAllowed = true;
    this.hasConcepts = false;
 
    this.addTab = function () {
@@ -80,10 +82,25 @@ function EditorController (tabsets, $rootScope) {
    };
 
    this.updateFullscreenAllowed = function() {
-      controller.fullscreenAllowed = !(tabset.getActiveTab().getBuffer().language == 'scratch');
+      // Update whether the inner editor supports using browser fullscreen
+      var newVal = !(tabset.getActiveTab().getBuffer().language == 'scratch');
+      if(!newVal && browserFullscreenAllowed && browserFullscreen) {
+         // We're in fullscreen and we're not allowed fullscreen anymore
+         controller.toggleFullscreen();
+      }
+      browserFullscreenAllowed = newVal;
+   };
+
+   this.isFullscreen = function() {
+      return browserFullscreen || this.ownFullscreen;
    };
 
    this.toggleFullscreen = function () {
+      if(!browserFullscreenAllowed || controller.ownFullscreen) {
+        controller.ownFullscreen = !controller.ownFullscreen;
+        updateFullscreen();
+        return;
+      }
       if (!controller.fullscreenEvents) {
         document.addEventListener("fullscreenchange", updateFullscreen);
         document.addEventListener("webkitfullscreenchange", updateFullscreen);
@@ -91,7 +108,7 @@ function EditorController (tabsets, $rootScope) {
         document.addEventListener("MSFullscreenChange", updateFullscreen);
         controller.fullscreenEvents = true;
       }
-      if (controller.fullscreen) {
+      if (browserFullscreen) {
         if (document.exitFullscreen) {
           document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -110,13 +127,20 @@ function EditorController (tabsets, $rootScope) {
           controller.editor.webkitRequestFullscreen();
         }
       }
+
    };
 
    function updateFullscreen () {
-      var curFullscreen = (document.fullscreenElement ||  document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
-      if (curFullscreen == controller.fullscreen) return;
-      controller.fullscreen = curFullscreen;
-      if (curFullscreen) {
+      var curIsFullscreen = controller.isFullscreen();
+
+      var newBrowserFullscreen = (document.fullscreenElement || document.msFullscreenElement || document.mozFullScreen || document.webkitIsFullScreen) && true;
+      browserFullscreen = newBrowserFullscreen;
+
+      $rootScope.$broadcast('fioi-editor2.updateFullscreen', newBrowserFullscreen || controller.ownFullscreen);
+
+      if(controller.ownFullscreen) {
+        $(controller.editor).css('width', '');
+      } else if(browserFullscreen) {
         $(controller.editor).css('width', $(window).width() + 'px');
       } else {
         $(controller.editor).css('width', '762px');
@@ -147,6 +171,7 @@ function EditorController (tabsets, $rootScope) {
          classes['fioi-editor2_error'] = true;
          return;
       }
+      tabset.editor = controller;
       controller.tabs = _.map(tabset.getTabs(), function (tab) {
          return {id: tab.id, title: tab.title};
       });
