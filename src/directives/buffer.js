@@ -30,10 +30,11 @@ export function bufferDirective (signals) {
          // Bind update events to the controller's update() function.
          var unhookUpdate = signals.on('update', update);
          scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
+         scope.$on('TaskPlatform.refreshEditor', scope.vm.refreshEditor);
          scope.$on('fioi-editor2.updateFullscreen', scope.vm.updateFullscreen);
          scope.$on('$destroy', function () {
             unhookUpdate();
-            $("#editor").off('show', scope.vm.reloadBlockly);
+            $("#editor").off('show', scope.vm.refreshEditor);
             scope.vm.cleanup();
          });
          scope.vm.update(iElement);
@@ -43,7 +44,7 @@ export function bufferDirective (signals) {
             });
          }
 
-        $("#editor").on('show', scope.vm.reloadBlockly);
+        $("#editor").on('show', scope.vm.refreshEditor);
       }
    };
 }
@@ -345,6 +346,15 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
          svg.remove();
       });
    }
+
+   this.refreshEditor = function(e, target) {
+      if(target && target != (controller.isSourcesEditor ? 'sources' : 'tests')) { return; }
+      if(controller.isAce && aceEditor) {
+         aceEditor.resize();
+      } else if(controller.isBlockly) {
+         controller.reloadBlockly();
+      }
+   };
 
    this.updateFullscreen = function(e, newVal) {
       curFullscreen = buffer.tab.tabset.editor.isFullscreen();

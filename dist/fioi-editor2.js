@@ -19059,10 +19059,11 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             // Bind update events to the controller's update() function.
             var unhookUpdate = signals.on('update', update);
             scope.$on('TaskPlatform.languageChanged', scope.vm.platformLanguageUpdated);
+            scope.$on('TaskPlatform.refreshEditor', scope.vm.refreshEditor);
             scope.$on('fioi-editor2.updateFullscreen', scope.vm.updateFullscreen);
             scope.$on('$destroy', function () {
                unhookUpdate();
-               $("#editor").off('show', scope.vm.reloadBlockly);
+               $("#editor").off('show', scope.vm.refreshEditor);
                scope.vm.cleanup();
             });
             scope.vm.update(iElement);
@@ -19072,7 +19073,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                });
             }
 
-            $("#editor").on('show', scope.vm.reloadBlockly);
+            $("#editor").on('show', scope.vm.refreshEditor);
          }
       };
    }
@@ -19384,6 +19385,17 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             ssap.saveSvgAsPng(svg[0], 'blockly.png', options);
             svg.remove();
          });
+      };
+
+      this.refreshEditor = function (e, target) {
+         if (target && target != (controller.isSourcesEditor ? 'sources' : 'tests')) {
+            return;
+         }
+         if (controller.isAce && aceEditor) {
+            aceEditor.resize();
+         } else if (controller.isBlockly) {
+            controller.reloadBlockly();
+         }
       };
 
       this.updateFullscreen = function (e, newVal) {
