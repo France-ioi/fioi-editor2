@@ -73,6 +73,8 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.languages = attrs.languages;
       if ('defaultLanguage' in attrs)
          this.defaultLanguage = attrs.defaultLanguage;
+      if ('defaultSources' in attrs)
+         this.defaultSources = attrs.defaultSources;
       if ('isSourcesEditor' in attrs)
          this.isSourcesEditor = attrs.isSourcesEditor;
       if ('readOnly' in attrs)
@@ -105,11 +107,13 @@ export function TabsetsServiceFactory (signals, tabs, recorder, registry) {
          this.activeTabId = new_id;
          recorder.addEvent([this.id, 'n', new_id]);
          for (var i = 0; i < this.buffersPerTab; i += 1) {
-           if (this.bufferNames && this.bufferNames.length > i) {
-             tab.addBuffer().update({description: this.bufferNames[i]});
-           } else {
-             tab.addBuffer();
-           }
+            var buffer = tab.addBuffer();
+            if (this.bufferNames && this.bufferNames.length > i) {
+               buffer.update({description: this.bufferNames[i]});
+            }
+            if(this.defaultSources && this.defaultSources[buffer.language]) {
+               buffer.update({text: this.defaultSources[buffer.language]});
+            }
          }
       }
       signals.emitUpdate();

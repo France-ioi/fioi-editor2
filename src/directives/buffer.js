@@ -155,7 +155,7 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
       if(bufferLanguage.blockly) {
          return controller.blocklyLoaded && controller.blocklyHelper.isEmpty();
       } else {
-         return aceEditor.getValue() == '';
+         return aceEditor && aceEditor.getValue() == '';
       }
    };
 

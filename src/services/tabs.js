@@ -38,6 +38,7 @@ export function TabsServiceFactory (signals, buffers, recorder, registry) {
       this.buffers = [];
       this.languages = null; // inherit from tabset
       this.defaultLanguage = null;
+      this.defaultSources = null;
       this.isSourcesEditor = false;
       this.readOnly = false;
    }

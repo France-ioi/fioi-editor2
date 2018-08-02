@@ -18501,6 +18501,7 @@ $__System.register('12', ['d'], function (_export) {
          this.buffers = [];
          this.languages = null; // inherit from tabset
          this.defaultLanguage = null;
+         this.defaultSources = null;
          this.isSourcesEditor = false;
          this.readOnly = false;
       }
@@ -18674,6 +18675,7 @@ $__System.register('13', ['d'], function (_export) {
          if ('titlePrefix' in attrs) this.titlePrefix = attrs.titlePrefix;
          if ('languages' in attrs) this.languages = attrs.languages;
          if ('defaultLanguage' in attrs) this.defaultLanguage = attrs.defaultLanguage;
+         if ('defaultSources' in attrs) this.defaultSources = attrs.defaultSources;
          if ('isSourcesEditor' in attrs) this.isSourcesEditor = attrs.isSourcesEditor;
          if ('readOnly' in attrs) this.readOnly = attrs.readOnly;
          if ('activeTabId' in attrs) this.activeTabId = attrs.activeTabId;
@@ -18701,10 +18703,12 @@ $__System.register('13', ['d'], function (_export) {
             this.activeTabId = new_id;
             recorder.addEvent([this.id, 'n', new_id]);
             for (var i = 0; i < this.buffersPerTab; i += 1) {
+               var buffer = tab.addBuffer();
                if (this.bufferNames && this.bufferNames.length > i) {
-                  tab.addBuffer().update({ description: this.bufferNames[i] });
-               } else {
-                  tab.addBuffer();
+                  buffer.update({ description: this.bufferNames[i] });
+               }
+               if (this.defaultSources && this.defaultSources[buffer.language]) {
+                  buffer.update({ text: this.defaultSources[buffer.language] });
                }
             }
          }
@@ -19186,7 +19190,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
          if (bufferLanguage.blockly) {
             return controller.blocklyLoaded && controller.blocklyHelper.isEmpty();
          } else {
-            return aceEditor.getValue() == '';
+            return aceEditor && aceEditor.getValue() == '';
          }
       };
 
