@@ -3,11 +3,11 @@ div#fioi-editor2.fioi-editor2(ng-class="{'fioi-editor2_fullscreen': vm.ownFullsc
       li.fioi-editor2_tab(ng-repeat="tab in vm.tabs track by tab.id", ng-class="{'active':tab.id===vm.tab.id}", ng-click="vm.selectTab(tab)")
          span.fioi-editor2_tab-title {{tab.title}}
          span.fioi-editor2_close-tab(ng-click="vm.closeTab(tab, $event)") ×
-      li.fioi-editor2_new-tab(ng-click="vm.addTab()")
+      li.fioi-editor2_new-tab(ng-click="vm.addTab()",ng-i18next="[title]editor_tab_addtab")
          | +
-      li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()")
+      li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()",ng-i18next="[title]editor_tab_history")
          span.glyphicon.glyphicon-time
-      li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;")
+      li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;",ng-i18next="[title]editor_tab_fullscreen")
          span.glyphicon.glyphicon-fullscreen
       li.fioi-editor2_fullscreen(ng-if="vm.hasConcepts",onclick="conceptViewer.show()",style="float: right;")
          | ?
