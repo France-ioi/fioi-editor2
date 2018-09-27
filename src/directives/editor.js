@@ -81,6 +81,12 @@ function EditorController (tabsets, $rootScope) {
       $rootScope.$broadcast('fioi-editor2.requireSave');
    };
 
+   this.isFullscreenAllowed = function() {
+      // Check whether we can do fullscreen (so far, only checks whether
+      // TaskPlatform set window.disableFullscreen)
+      return !window.disableFullscreen;
+   };
+
    this.updateFullscreenAllowed = function() {
       // Update whether the inner editor supports using browser fullscreen
       var newVal = !(tabset.getActiveTab().getBuffer().language == 'scratch');

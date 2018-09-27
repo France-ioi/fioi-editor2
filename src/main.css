@@ -35,6 +35,17 @@ ul.fioi-editor2_tabs > li {
 ul.fioi-editor2_tabs > li.active {
    border-bottom: 1px solid #fff;
    background-color: #FFFFFF;
+   color: #000000;
+}
+
+body.funtelecom ul.fioi-editor2_tabs > li {
+   background-color: #0075B3;
+   color: #FFFFFF;
+}
+
+body.funtelecom ul.fioi-editor2_tabs > li.active {
+   background-color: #FFFFFF;
+   color: #000000;
 }
 
 ul.fioi-editor2_tabs > li:hover .fioi-editor2_tab-title {

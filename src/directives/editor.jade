@@ -7,7 +7,7 @@ div#fioi-editor2.fioi-editor2(ng-class="{'fioi-editor2_fullscreen': vm.ownFullsc
          | +
       li.fioi-editor2_fullscreen(ng-click="vm.toggleHistory()",ng-i18next="[title]editor_tab_history")
          span.glyphicon.glyphicon-time
-      li.fioi-editor2_fullscreen(ng-click="vm.toggleFullscreen()",style="float: right;",ng-i18next="[title]editor_tab_fullscreen")
+      li.fioi-editor2_fullscreen(ng-if="vm.isFullscreenAllowed()",ng-click="vm.toggleFullscreen()",style="float: right;",ng-i18next="[title]editor_tab_fullscreen")
          span.glyphicon.glyphicon-fullscreen
       li.fioi-editor2_fullscreen(ng-if="vm.hasConcepts",onclick="conceptViewer.show()",style="float: right;")
          | ?
