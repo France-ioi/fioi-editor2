@@ -19277,6 +19277,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             controller.blocklyLoading = setTimeout(function () {
                window.getBlocklyXML = controller.getBlocklyXML;
                window.getBlocklyPNG = controller.getBlocklyPNG;
+               window.highlightBlocklyBlocks = controller.highlightBlocklyBlocks;
 
                if (!controller.blocklyLoading) {
                   return;
@@ -19297,7 +19298,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                   }
                }
 
-               controller.blocklyHelper.mainContext = { "nbRobots": 1 };
+               controller.blocklyHelper.mainContext = { nbCodes: 1, nbNodes: 1 };
                controller.blocklyHelper.prevWidth = 0;
                var blocklyOpts = {
                   divId: "blocklyDiv",
@@ -19314,7 +19315,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                      return;
                   }
                   if (buffer && buffer.text && !controller.blocklyLoaded) {
-                     controller.blocklyHelper.programs[controller.blocklyHelper.player].blockly = buffer.text;
+                     controller.blocklyHelper.programs[controller.blocklyHelper.codeId].blockly = buffer.text;
                      controller.blocklyHelper.loadPrograms();
                   }
                   controller.blocklyLoaded = true;
@@ -19389,6 +19390,12 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
             ssap.saveSvgAsPng(svg[0], 'blockly.png', options);
             svg.remove();
          });
+      };
+
+      this.highlightBlocklyBlocks = function (blockIds) {
+         for (var i = 0; i < blockIds.length; i++) {
+            controller.blocklyHelper.highlightBlock(blockIds[i], true);
+         }
       };
 
       this.refreshEditor = function (e, target) {
@@ -19533,7 +19540,7 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                return language.id == buffer.language;
             });
             var blocklyXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyHelper.workspace));
-            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getCode(bufferLanguage.blockly.dstlang);
+            var blocklyPython = '# blocklyXml: ' + blocklyXml + '\n\n' + controller.blocklyHelper.getPyfeCode();
 
             window.blocklyClipboard = Blockly.clipboardXml_;
 
