@@ -19304,7 +19304,8 @@ $__System.register('22', ['20', '1f', 'd'], function (_export) {
                   divId: "blocklyDiv",
                   readOnly: controller.readOnly,
                   startingBlockName: "Programme du robot",
-                  noHiddenCheck: true
+                  noHiddenCheck: true,
+                  disable: false
                };
                controller.blocklyHelper.load($rootScope.sLocaleLang, true, 1, blocklyOpts);
                controller.blocklyHelper.updateSize();

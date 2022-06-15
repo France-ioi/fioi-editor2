@@ -261,7 +261,8 @@ function BufferController (signals, buffers, $rootScope, $i18next) {
            divId: "blocklyDiv",
            readOnly: controller.readOnly,
            startingBlockName: "Programme du robot",
-           noHiddenCheck: true
+           noHiddenCheck: true,
+           disable: false
            };
         controller.blocklyHelper.load($rootScope.sLocaleLang, true, 1, blocklyOpts);
         controller.blocklyHelper.updateSize();
